@@ -3,21 +3,25 @@ extends Node
 
 @export var play_areas: Array[PlayArea]
 
+## Called when the node enters the scene tree. Sets up all units in the scene.
 func _ready() -> void:
 	var units := get_tree().get_nodes_in_group("units")
 	for unit: Unit in units:
 		setup_unit(unit)
 
 
+## Connects drag-and-drop signals for a given unit to the mover's handlers.
 func setup_unit(unit: Unit) -> void:
 	unit.drag_and_drop.drag_started.connect(_on_unit_drag_started.bind(unit))
 	unit.drag_and_drop.drag_canceled.connect(_on_unit_drag_canceled.bind(unit))
 	unit.drag_and_drop.dropped.connect(_on_unit_dropped.bind(unit))
 
+## Enables or disables tile highlighters for all play areas.
 func _set_highlighters(enabled: bool) -> void:
 	for play_area: PlayArea in play_areas:
 		play_area.tile_highlighter.enabled = enabled
 
+## Returns the index of the play area containing the given global position.
 func _get_play_area_for_position(global: Vector2) -> int:
 	var dropped_area_index := -1
 
@@ -29,6 +33,7 @@ func _get_play_area_for_position(global: Vector2) -> int:
 	return dropped_area_index
 
 
+## Resets a unit to its starting position and updates the grid.
 func _reset_unit_to_starting_position(starting_position: Vector2, unit: Unit) -> void:
 	var i := _get_play_area_for_position(starting_position)
 	var tile := play_areas[i].get_tile_from_global(starting_position)
@@ -36,11 +41,13 @@ func _reset_unit_to_starting_position(starting_position: Vector2, unit: Unit) ->
 	unit.reset_after_dragging(starting_position)
 	play_areas[i].unit_grid.add_unit(tile, unit)
 
+## Moves a unit to a specific tile in a play area and updates its position.
 func _move_unit(unit: Unit, play_area: PlayArea, tile: Vector2i) -> void:
 	play_area.unit_grid.add_unit(tile, unit)
 	unit.global_position = play_area.get_global_from_tile(tile) - Arena.HALF_CELL_SIZE
 	unit.reparent(play_area.unit_grid)
 
+## Handler for when a unit starts being dragged. Removes it from its old tile.
 func _on_unit_drag_started(unit: Unit) -> void:
 	_set_highlighters(true)
 
@@ -49,10 +56,12 @@ func _on_unit_drag_started(unit: Unit) -> void:
 		var tile := play_areas[i].get_tile_from_global(unit.global_position)
 		play_areas[i].unit_grid.remove_unit(tile)
 
+## Handler for when a unit drag is canceled. Resets the unit to its original position.
 func _on_unit_drag_canceled(starting_position: Vector2, unit: Unit) -> void:
 	_set_highlighters(false)
 	_reset_unit_to_starting_position(starting_position, unit)
 
+## Handler for when a unit is dropped. Moves the unit or swaps if occupied.
 func _on_unit_dropped(starting_position: Vector2, unit: Unit) -> void:
 	_set_highlighters(false)
 

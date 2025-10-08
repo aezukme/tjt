@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://v8oorrm8p1jc"]
+[gd_scene load_steps=14 format=4 uid="uid://v8oorrm8p1jc"]
 
 [ext_resource type="TileSet" uid="uid://djkgdgbx8umwd" path="res://scenes/arena/tileset.tres" id="1_1qjuf"]
 [ext_resource type="Script" uid="uid://c10hgjyup6hw" path="res://scenes/arena/arena.gd" id="1_5tue2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://4ws5xrynj7ig" path="res://components/tile_highlighter.gd" id="6_u52cf"]
 [ext_resource type="Resource" uid="uid://cks8r0jxncpqo" path="res://data/units/mage.tres" id="8_6w4xk"]
 [ext_resource type="Script" uid="uid://xpff4so18v45" path="res://components/unit_mover.gd" id="8_ii07k"]
+[ext_resource type="Script" uid="uid://b6rjlsb7nqmne" path="res://components/unit_spawner.gd" id="10_2ml6w"]
 
 [sub_resource type="Curve" id="Curve_8trdl"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.19266054, 1), 0.0, 0.0, 0, 0, Vector2(0.77675843, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
@@ -135,3 +136,6 @@ stats = ExtResource("8_6w4xk")
 [node name="UnitMover" type="Node" parent="." node_paths=PackedStringArray("play_areas")]
 script = ExtResource("8_ii07k")
 play_areas = [NodePath("../GameArea")]
+
+[node name="UnitSpawner" type="Node" parent="."]
+script = ExtResource("10_2ml6w")

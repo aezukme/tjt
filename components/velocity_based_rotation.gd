@@ -14,6 +14,7 @@ var target_angle: float
 var just_dropped := false
 
 
+## Called when the node enters the scene tree. Initializes last position and connects drag signals.
 func _ready() -> void:
 	if target:
 		last_position = target.global_position
@@ -28,6 +29,7 @@ func _ready() -> void:
 			drag_and_drop.drag_canceled.connect(_on_drag_canceled)
 
 
+## Handles smooth rotation of the target node based on drag velocity and state.
 func _process(delta: float) -> void:
 	if not enabled or not target:
 		return
@@ -76,6 +78,7 @@ func _process(delta: float) -> void:
 		target.rotation = lerp_angle(target.rotation, target_angle, lerp_weight)
 
 
+## Enables or disables the rotation effect, resetting rotation if disabled.
 func _set_enabled(value: bool) -> void:
 	enabled = value
 	
@@ -83,12 +86,14 @@ func _set_enabled(value: bool) -> void:
 		target.rotation = 0.0
 
 
+## Resets rotation and state when the drag is dropped.
 func _on_dropped(_starting_position: Vector2) -> void:
 	if target:
 		target.rotation = 0.0
 		just_dropped = true
 
 
+## Resets rotation and state when the drag is canceled.
 func _on_drag_canceled(_starting_position: Vector2) -> void:
 	if target:
 		target.rotation = 0.0

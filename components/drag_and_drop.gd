@@ -13,16 +13,19 @@ var offset := Vector2.ZERO
 var dragging := false
 
 
+## Called when the node enters the scene tree. Asserts and connects input event.
 func _ready() -> void:
 	assert(target, "No target set for DragAndDrop Component!")
 	target.input_event.connect(_on_target_input_event.unbind(1))
 
 
+## Updates the target's position to follow the mouse while dragging.
 func _process(_delta: float) -> void:
 	if dragging and target:
 		target.global_position = target.get_global_mouse_position() + offset
 
 
+## Handles input for canceling or dropping the drag operation.
 func _input(event: InputEvent) -> void:
 	if dragging and event.is_action_pressed("cancel_drag"):
 		_cancel_dragging()
@@ -30,17 +33,20 @@ func _input(event: InputEvent) -> void:
 		_drop()
 
 
+## Ends the dragging state and resets the target's group and z-index.
 func _end_dragging() -> void:
 	dragging = false
 	target.remove_from_group("dragging")
 	target.z_index = 0
 
 
+## Cancels dragging and emits the drag_canceled signal.
 func _cancel_dragging() -> void:
 	_end_dragging()
 	drag_canceled.emit(starting_position)
 
 
+## Starts dragging, records the starting position, and emits drag_started.
 func _start_dragging() -> void:
 	dragging = true
 	starting_position = target.global_position
@@ -50,11 +56,13 @@ func _start_dragging() -> void:
 	drag_started.emit()
 
 
+## Ends dragging and emits the dropped signal.
 func _drop() -> void:
 	_end_dragging()
 	dropped.emit(starting_position)
 	
 
+## Handles input events on the target to start dragging if appropriate.
 func _on_target_input_event(_viewport: Node, event: InputEvent) -> void:
 	if not enabled:
 		return
