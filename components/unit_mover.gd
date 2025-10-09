@@ -36,6 +36,9 @@ func _get_play_area_for_position(global: Vector2) -> int:
 ## Resets a unit to its starting position and updates the grid.
 func _reset_unit_to_starting_position(starting_position: Vector2, unit: Unit) -> void:
 	var i := _get_play_area_for_position(starting_position)
+	if i == -1 or i >= play_areas.size():
+		unit.reset_after_dragging(starting_position)
+		return
 	var tile := play_areas[i].get_tile_from_global(starting_position)
 
 	unit.reset_after_dragging(starting_position)

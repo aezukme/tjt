@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://v8oorrm8p1jc"]
+[gd_scene load_steps=14 format=4 uid="uid://v8oorrm8p1jc"]
 
 [ext_resource type="TileSet" uid="uid://djkgdgbx8umwd" path="res://scenes/arena/tileset.tres" id="1_1qjuf"]
 [ext_resource type="Script" uid="uid://c10hgjyup6hw" path="res://scenes/arena/arena.gd" id="1_5tue2"]
@@ -10,8 +10,6 @@
 [ext_resource type="Resource" uid="uid://cks8r0jxncpqo" path="res://data/units/mage.tres" id="8_6w4xk"]
 [ext_resource type="Script" uid="uid://xpff4so18v45" path="res://components/unit_mover.gd" id="8_ii07k"]
 [ext_resource type="Script" uid="uid://b6rjlsb7nqmne" path="res://components/unit_spawner.gd" id="10_2ml6w"]
-[ext_resource type="PackedScene" uid="uid://io08qsmxjk6t" path="res://scenes/sell_portal/sell_portal.tscn" id="11_xgbxb"]
-[ext_resource type="Resource" uid="uid://dfl6uw6hkhahh" path="res://data/player/player_stats.tres" id="12_vmsrg"]
 
 [sub_resource type="Curve" id="Curve_8trdl"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.19266054, 1), 0.0, 0.0, 0, 0, Vector2(0.77675843, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
@@ -93,9 +91,9 @@ size = Vector2i(10, 9)
 [node name="TileHighlighter" type="Node" parent="GameArea" node_paths=PackedStringArray("play_area", "highlight_layer")]
 script = ExtResource("6_u52cf")
 enabled = false
+tile = Vector2i(3, 0)
 play_area = NodePath("..")
 highlight_layer = NodePath("../Highlight")
-tile = Vector2i(3, 0)
 
 [node name="EnemyArea" type="TileMapLayer" parent="."]
 position = Vector2(160, 0)
@@ -129,10 +127,10 @@ tile_map_data = PackedByteArray("AAAHAAcAAQAJAAwAAAAIAAcAAQAJAAwAAAAIAAgAAQAJAAw
 tile_set = ExtResource("1_1qjuf")
 
 [node name="Unit" parent="." instance=ExtResource("4_aj7ud")]
-position = Vector2(352, 288)
+position = Vector2(352, 320)
 
 [node name="Unit2" parent="." instance=ExtResource("4_aj7ud")]
-position = Vector2(256, 288)
+position = Vector2(256, 320)
 stats = ExtResource("8_6w4xk")
 
 [node name="UnitMover" type="Node" parent="."]
@@ -140,7 +138,3 @@ script = ExtResource("8_ii07k")
 
 [node name="UnitSpawner" type="Node" parent="."]
 script = ExtResource("10_2ml6w")
-
-[node name="SellPortal" parent="." instance=ExtResource("11_xgbxb")]
-position = Vector2(64, 288)
-player_stats = ExtResource("12_vmsrg")

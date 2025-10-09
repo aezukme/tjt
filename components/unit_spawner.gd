@@ -23,7 +23,7 @@ func _get_first_available_area() -> PlayArea:
 		return enemy_area
 	elif not game_area.unit_grid.is_grid_full():
 		return game_area
-    
+	
 	return null
 
 
@@ -33,7 +33,7 @@ func _get_first_available_area() -> PlayArea:
 func spawn_unit(unit: UnitStats) -> void:
 	var area := _get_first_available_area()
 	assert(area, "No available space to add unit to!")
-    
+	
 	var new_unit := UNIT.instantiate()
 	var tile := area.unit_grid.get_first_available_tile()
 	area.unit_grid.add_child(new_unit)

@@ -1,0 +1,69 @@
+[gd_scene load_steps=8 format=3 uid="uid://io08qsmxjk6t"]
+
+[ext_resource type="Script" uid="uid://b78tbchc8ij6k" path="res://scenes/sell_portal/sell_portal.gd" id="1_se251"]
+[ext_resource type="Texture2D" uid="uid://duhmvjqw3ohy6" path="res://asset/32rogues/tiles.png" id="1_x6vx3"]
+[ext_resource type="Script" uid="uid://c7nupwce5jh1q" path="res://components/outline_highlighter.gd" id="2_g4w48"]
+[ext_resource type="Material" uid="uid://bb8m5fhpi4wqn" path="res://asset/shaders/2d_outline_shader.tres" id="2_q37ab"]
+[ext_resource type="Texture2D" uid="uid://c4awhqfup7o2k" path="res://asset/sprites/gold.png" id="3_g4w48"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_se251"]
+size = Vector2(32, 32)
+
+[sub_resource type="LabelSettings" id="LabelSettings_x6vx3"]
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 0.627451)
+
+[node name="SellPortal" type="Area2D"]
+script = ExtResource("1_se251")
+
+[node name="Visuals" type="CanvasGroup" parent="."]
+material = ExtResource("2_q37ab")
+
+[node name="Sprite2D" type="Sprite2D" parent="Visuals"]
+position = Vector2(16, 19)
+texture = ExtResource("1_x6vx3")
+region_enabled = true
+region_rect = Rect2(224, 512, 32, 32)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(16, 16)
+shape = SubResource("RectangleShape2D_se251")
+
+[node name="OutlineHighlighter" type="Node" parent="." node_paths=PackedStringArray("visuals")]
+script = ExtResource("2_g4w48")
+visuals = NodePath("../Visuals")
+outline_color = Color(0.5568628, 0.9137255, 0.74509805, 1)
+outline_thickness = 2
+
+[node name="Label" type="Label" parent="."]
+offset_top = 36.0
+offset_right = 32.0
+offset_bottom = 54.0
+text = "sell"
+label_settings = SubResource("LabelSettings_x6vx3")
+horizontal_alignment = 1
+
+[node name="Gold" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_top = 52.0
+offset_right = 32.0
+offset_bottom = 70.0
+alignment = 1
+
+[node name="GoldLabel" type="Label" parent="Gold"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "452"
+label_settings = SubResource("LabelSettings_x6vx3")
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Gold"]
+custom_minimum_size = Vector2(9, 0)
+layout_mode = 2
+texture = ExtResource("3_g4w48")
+expand_mode = 1
+stretch_mode = 3
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="area_exited" from="." to="." method="_on_area_exited"]
