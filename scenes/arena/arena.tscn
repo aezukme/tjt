@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=4 uid="uid://v8oorrm8p1jc"]
+[gd_scene format=4 uid="uid://v8oorrm8p1jc"]
 
 [ext_resource type="TileSet" uid="uid://djkgdgbx8umwd" path="res://scenes/arena/tileset.tres" id="1_1qjuf"]
 [ext_resource type="Script" uid="uid://c10hgjyup6hw" path="res://scenes/arena/arena.gd" id="1_5tue2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://4ws5xrynj7ig" path="res://components/tile_highlighter.gd" id="6_u52cf"]
 [ext_resource type="Resource" uid="uid://cks8r0jxncpqo" path="res://data/units/mage_ally.tres" id="8_6w4xk"]
 [ext_resource type="Script" uid="uid://xpff4so18v45" path="res://components/unit_mover.gd" id="8_ii07k"]
+[ext_resource type="Resource" path="res://data/units/sage_ally.tres" id="8_sage"]
 [ext_resource type="Script" uid="uid://b6rjlsb7nqmne" path="res://components/unit_spawner.gd" id="10_2ml6w"]
 [ext_resource type="PackedScene" uid="uid://io08qsmxjk6t" path="res://scenes/sell_portal/sell_portal.tscn" id="11_xgbxb"]
 [ext_resource type="Resource" uid="uid://dfl6uw6hkhahh" path="res://data/player/player_stats.tres" id="12_vmsrg"]
@@ -18,10 +19,10 @@
 [ext_resource type="Script" uid="uid://de3i018dnetpo" path="res://components/wave_manager.gd" id="16_wave_mgr"]
 [ext_resource type="Resource" uid="uid://b5qakdx3jh5s" path="res://data/waves/wave_1.tres" id="17_w1"]
 [ext_resource type="Script" uid="uid://b6nyk11ct2wbt" path="res://data/waves/wave_config.gd" id="18_gy0qm"]
-[ext_resource type="Resource" path="res://data/waves/wave_2.tres" id="18_w2"]
-[ext_resource type="Resource" path="res://data/waves/wave_3.tres" id="19_w3"]
-[ext_resource type="Resource" path="res://data/waves/wave_5_boss.tres" id="20_w5"]
-[ext_resource type="PackedScene" path="res://scenes/wave_display/wave_display.tscn" id="21_wave_display"]
+[ext_resource type="Resource" uid="uid://b87gh3lmj7d5" path="res://data/waves/wave_2.tres" id="18_w2"]
+[ext_resource type="Resource" uid="uid://c47dkf3mjh8u" path="res://data/waves/wave_3.tres" id="19_w3"]
+[ext_resource type="Resource" uid="uid://d2h5p5jx8n8s" path="res://data/waves/wave_5_boss.tres" id="20_w5"]
+[ext_resource type="PackedScene" uid="uid://cpdfmqflphrc" path="res://scenes/wave_display/wave_display.tscn" id="21_wave_display"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_aj7ud"]
 particle_flag_disable_z = true
@@ -44,14 +45,14 @@ vertices = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)])
 
-[node name="Arena" type="Node2D" groups=["arena"]]
+[node name="Arena" type="Node2D" unique_id=2101697894 groups=["arena"]]
 script = ExtResource("1_5tue2")
 enemy_wave = [ExtResource("14_bjorn_enemy"), ExtResource("15_mage_enemy"), ExtResource("14_bjorn_enemy"), ExtResource("14_bjorn_enemy"), ExtResource("14_bjorn_enemy"), ExtResource("14_bjorn_enemy")]
 metadata/_edit_lock_ = true
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1959617770]
 
-[node name="UnitStatsContainer" type="VBoxContainer" parent="UI"]
+[node name="UnitStatsContainer" type="VBoxContainer" parent="UI" unique_id=1270896939]
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
@@ -61,7 +62,7 @@ offset_right = 130.0
 offset_bottom = 150.0
 grow_vertical = 2
 
-[node name="RightPanel" type="VBoxContainer" parent="UI"]
+[node name="RightPanel" type="VBoxContainer" parent="UI" unique_id=702302058]
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
@@ -73,37 +74,38 @@ offset_bottom = -16.0
 grow_vertical = 2
 alignment = 2
 
-[node name="StartBattleButton" type="Button" parent="UI/RightPanel"]
+[node name="StartBattleButton" type="Button" parent="UI/RightPanel" unique_id=707750421]
 layout_mode = 2
 focus_mode = 0
 text = "Start Battle"
 
-[node name="WaveDisplay" parent="UI" instance=ExtResource("21_wave_display")]
+[node name="WaveDisplay" parent="UI" unique_id=1467180582 instance=ExtResource("21_wave_display")]
 layout_mode = 3
-offset_left = 248.0
+offset_left = 511.0
 offset_right = 448.0
+offset_bottom = 74.0
 
-[node name="Visuals" type="Node2D" parent="."]
+[node name="Visuals" type="Node2D" parent="." unique_id=742230370]
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="Background" type="TileMapLayer" parent="Visuals"]
+[node name="Background" type="TileMapLayer" parent="Visuals" unique_id=1159885074]
 position = Vector2(-1, 0)
 tile_map_data = PackedByteArray("AAAAAAAAAQAAAAYAAAAAAAEAAQAAAAYAAAAAAAIAAQAAAAYAAAAAAAMAAQAAAAYAAAAAAAQAAQAAAAYAAAAAAAUAAQAAAAYAAAAAAAYAAQAAAAYAAAAAAAcAAQAAAAYAAAAAAAgAAQAAAAYAAAAAAAkAAQAAAAYAAAAAAAoAAQAAAAYAAAAAAAsAAQAAAAYAAAABAAAAAQAAAAYAAAABAAEAAQAAAAYAAAABAAIAAQAAAAYAAAABAAMAAQAAAAYAAAABAAQAAQAAAAYAAAABAAUAAQAAAAYAAAABAAYAAQAAAAYAAAABAAcAAQAAAAYAAAABAAgAAQAAAAYAAAABAAkAAQAAAAYAAAABAAoAAQAAAAYAAAABAAsAAQAAAAYAAAACAAAAAQAAAAYAAAACAAEAAQAAAAYAAAACAAIAAQAAAAYAAAACAAMAAQAAAAYAAAACAAQAAQAAAAYAAAACAAUAAQAAAAYAAAACAAYAAQAAAAYAAAACAAcAAQAAAAYAAAACAAgAAQAAAAYAAAACAAkAAQAAAAYAAAACAAoAAQAAAAYAAAACAAsAAQAAAAYAAAADAAAAAQAAAAYAAAADAAEAAQAAAAYAAAADAAIAAQAAAAYAAAADAAMAAQAAAAYAAAADAAQAAQAAAAYAAAADAAUAAQAAAAYAAAADAAYAAQAAAAYAAAADAAcAAQAAAAYAAAADAAgAAQAAAAYAAAADAAkAAQAAAAYAAAADAAoAAQAAAAYAAAADAAsAAQAAAAYAAAAEAAAAAQAAAAYAAAAEAAEAAQAAAAYAAAAEAAIAAQAAAAYAAAAEAAMAAQAAAAYAAAAEAAQAAQAAAAYAAAAEAAUAAQAAAAYAAAAEAAYAAQAAAAYAAAAEAAcAAQAAAAYAAAAEAAgAAQAAAAYAAAAEAAkAAQAAAAYAAAAEAAoAAQAAAAYAAAAEAAsAAQAAAAYAAAAFAAAAAQAAAAYAAAAFAAIAAQAAAAYAAAAFAAMAAQAAAAYAAAAFAAQAAQAAAAYAAAAFAAUAAQAAAAYAAAAFAAYAAQAAAAYAAAAFAAcAAQAAAAYAAAAFAAgAAQAAAAYAAAAFAAkAAQAAAAYAAAAFAAoAAQAAAAYAAAAFAAsAAQAAAAYAAAAGAAAAAQAAAAYAAAAGAAIAAQAAAAYAAAAGAAMAAQAAAAYAAAAGAAQAAQAAAAYAAAAGAAUAAQAAAAYAAAAGAAYAAQAAAAYAAAAGAAcAAQAAAAYAAAAGAAgAAQAAAAYAAAAGAAkAAQAAAAYAAAAGAAoAAQAAAAYAAAAGAAsAAQAAAAYAAAAHAAAAAQAAAAYAAAAHAAEAAQAAAAYAAAAHAAIAAQAAAAYAAAAHAAMAAQAAAAYAAAAHAAQAAQAAAAYAAAAHAAUAAQAAAAYAAAAHAAYAAQAAAAYAAAAHAAcAAQAAAAYAAAAHAAgAAQAAAAYAAAAHAAkAAQAAAAYAAAAHAAoAAQAAAAYAAAAHAAsAAQAAAAYAAAAIAAAAAQAAAAYAAAAIAAEAAQAAAAYAAAAIAAIAAQAAAAYAAAAIAAMAAQAAAAYAAAAIAAQAAQAAAAYAAAAIAAUAAQAAAAYAAAAIAAYAAQAAAAYAAAAIAAcAAQAAAAYAAAAIAAgAAQAAAAYAAAAIAAkAAQAAAAYAAAAIAAoAAQAAAAYAAAAIAAsAAQAAAAYAAAAJAAAAAQAAAAYAAAAJAAEAAQAAAAYAAAAJAAIAAQAAAAYAAAAJAAMAAQAAAAYAAAAJAAQAAQAAAAYAAAAJAAUAAQAAAAYAAAAJAAYAAQAAAAYAAAAJAAcAAQAAAAYAAAAJAAgAAQAAAAYAAAAJAAkAAQAAAAYAAAAJAAoAAQAAAAYAAAAJAAsAAQAAAAYAAAAKAAAAAQAAAAYAAAAKAAEAAQAAAAYAAAAKAAIAAQAAAAYAAAAKAAMAAQAAAAYAAAAKAAQAAQAAAAYAAAAKAAUAAQAAAAYAAAAKAAYAAQAAAAYAAAAKAAcAAQAAAAYAAAAKAAgAAQAAAAYAAAAKAAkAAQAAAAYAAAAKAAoAAQAAAAYAAAAKAAsAAQAAAAYAAAALAAAAAQAAAAYAAAALAAEAAQAAAAYAAAALAAIAAQAAAAYAAAALAAMAAQAAAAYAAAALAAQAAQAAAAYAAAALAAUAAQAAAAYAAAALAAYAAQAAAAYAAAALAAcAAQAAAAYAAAALAAgAAQAAAAYAAAALAAkAAQAAAAYAAAALAAoAAQAAAAYAAAALAAsAAQAAAAYAAAAMAAAAAQAAAAYAAAAMAAEAAQAAAAYAAAAMAAIAAQAAAAYAAAAMAAMAAQAAAAYAAAAMAAQAAQAAAAYAAAAMAAUAAQAAAAYAAAAMAAYAAQAAAAYAAAAMAAcAAQAAAAYAAAAMAAgAAQAAAAYAAAAMAAkAAQAAAAYAAAAMAAoAAQAAAAYAAAAMAAsAAQAAAAYAAAANAAAAAQAAAAYAAAANAAEAAQAAAAYAAAANAAIAAQAAAAYAAAANAAMAAQAAAAYAAAANAAQAAQAAAAYAAAANAAUAAQAAAAYAAAANAAYAAQAAAAYAAAANAAcAAQAAAAYAAAANAAgAAQAAAAYAAAANAAkAAQAAAAYAAAANAAoAAQAAAAYAAAANAAsAAQAAAAYAAAAOAAAAAQAAAAYAAAAOAAEAAQAAAAYAAAAOAAIAAQAAAAYAAAAOAAMAAQAAAAYAAAAOAAQAAQAAAAYAAAAOAAUAAQAAAAYAAAAOAAYAAQAAAAYAAAAOAAcAAQAAAAYAAAAOAAgAAQAAAAYAAAAOAAkAAQAAAAYAAAAOAAoAAQAAAAYAAAAOAAsAAQAAAAYAAAAPAAAAAQAAAAYAAAAPAAEAAQAAAAYAAAAPAAIAAQAAAAYAAAAPAAMAAQAAAAYAAAAPAAQAAQAAAAYAAAAPAAUAAQAAAAYAAAAPAAYAAQAAAAYAAAAPAAcAAQAAAAYAAAAPAAgAAQAAAAYAAAAPAAkAAQAAAAYAAAAPAAoAAQAAAAYAAAAPAAsAAQAAAAYAAAAQAAAAAQAAAAYAAAAQAAEAAQAAAAYAAAAQAAIAAQAAAAYAAAAQAAMAAQAAAAYAAAAQAAQAAQAAAAYAAAAQAAUAAQAAAAYAAAAQAAYAAQAAAAYAAAAQAAcAAQAAAAYAAAAQAAgAAQAAAAYAAAAQAAkAAQAAAAYAAAAQAAoAAQAAAAYAAAAQAAsAAQAAAAYAAAARAAAAAQAAAAYAAAARAAEAAQAAAAYAAAARAAIAAQAAAAYAAAARAAMAAQAAAAYAAAARAAQAAQAAAAYAAAARAAUAAQAAAAYAAAARAAYAAQAAAAYAAAARAAcAAQAAAAYAAAARAAgAAQAAAAYAAAARAAkAAQAAAAYAAAARAAoAAQAAAAYAAAARAAsAAQAAAAYAAAASAAAAAQAAAAYAAAASAAEAAQAAAAYAAAASAAIAAQAAAAYAAAASAAMAAQAAAAYAAAASAAQAAQAAAAYAAAASAAUAAQAAAAYAAAASAAYAAQAAAAYAAAASAAcAAQAAAAYAAAASAAgAAQAAAAYAAAASAAkAAQAAAAYAAAASAAoAAQAAAAYAAAASAAsAAQAAAAYAAAATAAAAAQAAAAYAAAATAAEAAQAAAAYAAAATAAIAAQAAAAYAAAATAAMAAQAAAAYAAAATAAQAAQAAAAYAAAATAAUAAQAAAAYAAAATAAYAAQAAAAYAAAATAAcAAQAAAAYAAAATAAgAAQAAAAYAAAATAAkAAQAAAAYAAAATAAoAAQAAAAYAAAATAAsAAQAAAAYAAAAGAAEAAAAAAAYAAAAFAAEAAAAAAAYAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="Props" type="TileMapLayer" parent="Visuals"]
+[node name="Props" type="TileMapLayer" parent="Visuals" unique_id=1392730829]
 modulate = Color(1, 1, 1, 0.39215687)
 position = Vector2(-1, 0)
 tile_map_data = PackedByteArray("AAAAAAYAAQAAABMAAAABAAYAAQABABMAAAACAAAAAQADABMAAAACAAYAAQAOABMAAAACAAkAAQAEABMAAAADAAAAAQAAABQAAAADAAUAAQACABMAAAAQAAAAAQAGABMAAAAQAAgAAQAOABMAAAARAAIAAQAMABMAAAARAAQAAQAMABMAAAARAAcAAQACABMAAAATAAgAAQAKABMAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="Walls" type="TileMapLayer" parent="Visuals"]
+[node name="Walls" type="TileMapLayer" parent="Visuals" unique_id=2038567769]
 position = Vector2(-1, 0)
 tile_map_data = PackedByteArray("AAAPAAEAAQAAAAUAAAAPAAIAAQAAAAUAAAAPAAMAAQAAAAUAAAAPAAQAAQAAAAUAAAAPAAUAAQAAAAUAAAAPAAYAAQAAAAUAAAAPAAcAAQAAAAUAAAAEAAEAAQAAAAUAAAAEAAIAAQAAAAUAAAAEAAMAAQAAAAUAAAAEAAQAAQAAAAUAAAAEAAUAAQAAAAUAAAAEAAYAAQAAAAUAAAAEAAcAAQAAAAUAAAAEAAoAAAAAAAUAAAAPAAoAAAAAAAUAAAAEAAAAAAAAAAUAAAAPAAAAAAAAAAUAAAAPAAgAAAAAAAUAAAAPAAkAAAAAAAUAAAAEAAgAAAAAAAUAAAAEAAkAAAAAAAUAAAAEAAsAAAAAAAUAAAAPAAsAAAAAAAUAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="DustParticles" type="GPUParticles2D" parent="Visuals"]
+[node name="DustParticles" type="GPUParticles2D" parent="Visuals" unique_id=221462845]
 z_index = 99
 position = Vector2(320, 180)
 amount = 20
@@ -111,42 +113,46 @@ texture = ExtResource("2_8trdl")
 lifetime = 6.0
 process_material = SubResource("ParticleProcessMaterial_aj7ud")
 
-[node name="GameArea" type="TileMapLayer" parent="." node_paths=PackedStringArray("unit_grid", "tile_highlighter")]
+[node name="GameArea" type="TileMapLayer" parent="." unique_id=1145892573 node_paths=PackedStringArray("unit_grid", "tile_highlighter")]
 position = Vector2(160, 96)
 tile_set = ExtResource("1_1qjuf")
 script = ExtResource("4_jx0ua")
 unit_grid = NodePath("ArenaUnitGrid")
 tile_highlighter = NodePath("TileHighlighter")
 
-[node name="Decor" type="TileMapLayer" parent="GameArea"]
+[node name="Decor" type="TileMapLayer" parent="GameArea" unique_id=1687133488]
 modulate = Color(1, 1, 1, 0.43137255)
 tile_map_data = PackedByteArray("AAAAAAAAAAAAAA0AAAAAAAEAAAACAA4AAAAAAAIAAAABAA4AAAAAAAQAAAAAAA0AAAAAAAcAAAACAA0AAAABAAMAAAACAA4AAAABAAQAAAABAA4AAAABAAUAAAADAA0AAAACAAIAAAAAAA0AAAACAAMAAAABAA0AAAACAAYAAAABAA0AAAACAAcAAAAAAA0AAAADAAIAAAAAAA0AAAADAAcAAAAAAA0AAAAEAAAAAAAAAA0AAAAEAAMAAAAAAA0AAAAEAAQAAAAAAA0AAAAEAAYAAAABAA4AAAAEAAcAAAABAA0AAAAFAAAAAAAAAA0AAAAFAAEAAAACAA4AAAAFAAIAAAABAA4AAAAFAAQAAAAAAA0AAAAFAAUAAAADAA0AAAAFAAcAAAACAA4AAAAGAAAAAAACAA4AAAAGAAMAAAADAA4AAAAGAAUAAAACAA0AAAAGAAYAAAADAA0AAAAGAAcAAAAAAA0AAAAHAAAAAAAAAA0AAAAHAAEAAAAAAA0AAAAHAAMAAAAAAA0AAAAHAAQAAAAAAA0AAAAHAAUAAAAAAA0AAAAHAAYAAAABAA0AAAAHAAcAAAAAAA0AAAAIAAEAAAAAAA0AAAAIAAUAAAACAA4AAAAIAAcAAAAAAA0AAAAJAAEAAAADAA4AAAAJAAMAAAAAAA0AAAAJAAUAAAACAA0AAAAJAAcAAAAAAA0AAAAAAAgAAAABAA4AAAACAAgAAAAAAA0AAAADAAgAAAABAA4AAAAFAAgAAAADAA0AAAAGAAgAAAADAA4AAAAHAAgAAAAAAA0AAAAIAAgAAAADAA0AAAAAAAUAAAAAAA0AAAAAAAYAAAADAA0AAAABAAAAAAABAA0AAAABAAcAAAAAAA0AAAABAAgAAAADAA4AAAACAAQAAAADAA0AAAADAAMAAAACAA0AAAADAAQAAAADAA0AAAADAAUAAAAAAA0AAAADAAYAAAAAAA0AAAAEAAIAAAAAAA0AAAAGAAEAAAAAAA0AAAAHAAIAAAAAAA0AAAAIAAIAAAAAAA0AAAAIAAYAAAAAAA0AAAAJAAAAAAAAAA0AAAAAAAMAAAADAA4AAAABAAEAAAAAAA0AAAABAAIAAAADAA4AAAABAAYAAAAAAA0AAAACAAAAAAABAA0AAAACAAEAAAACAA0AAAACAAUAAAACAA4AAAADAAAAAAAAAA0AAAADAAEAAAAAAA0AAAAEAAEAAAAAAA0AAAAEAAUAAAACAA0AAAAEAAgAAAAAAA0AAAAFAAMAAAAAAA0AAAAFAAYAAAABAA0AAAAGAAIAAAAAAA0AAAAGAAQAAAAAAA0AAAAIAAAAAAAAAA0AAAAIAAMAAAAAAA0AAAAIAAQAAAAAAA0AAAAJAAIAAAAAAA0AAAAJAAQAAAACAA4AAAAJAAYAAAAAAA0AAAAJAAgAAAABAA4AAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="Highlight" type="TileMapLayer" parent="GameArea"]
+[node name="Highlight" type="TileMapLayer" parent="GameArea" unique_id=837972676]
 tile_map_data = PackedByteArray("AAAHAAcAAQAJAAwAAAAIAAcAAQAJAAwAAAAIAAgAAQAJAAwAAAAIAAkAAQAJAAwAAAAJAAkAAQAJAAwAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="ArenaUnitGrid" type="Node2D" parent="GameArea"]
+[node name="ArenaUnitGrid" type="Node2D" parent="GameArea" unique_id=161831544]
 position = Vector2(0, -32)
 script = ExtResource("4_asdgj")
 size = Vector2i(10, 9)
 
-[node name="TileHighlighter" type="Node" parent="GameArea" node_paths=PackedStringArray("play_area", "highlight_layer")]
+[node name="TileHighlighter" type="Node" parent="GameArea" unique_id=1267761628 node_paths=PackedStringArray("play_area", "highlight_layer")]
 script = ExtResource("6_u52cf")
 enabled = false
 play_area = NodePath("..")
 highlight_layer = NodePath("../Highlight")
 tile = Vector2i(3, 0)
 
-[node name="UnitPlayer1" parent="GameArea" instance=ExtResource("4_aj7ud")]
+[node name="UnitPlayer1" parent="GameArea" unique_id=241073461 instance=ExtResource("4_aj7ud")]
 position = Vector2(231, 189)
 
-[node name="UnitPlayer2" parent="GameArea" instance=ExtResource("4_aj7ud")]
+[node name="UnitPlayer2" parent="GameArea" unique_id=934348889 instance=ExtResource("4_aj7ud")]
 position = Vector2(265, 216)
 stats = ExtResource("8_6w4xk")
 
-[node name="EnemyArea" type="TileMapLayer" parent="." node_paths=PackedStringArray("unit_grid", "tile_highlighter")]
+[node name="UnitPlayer3" parent="GameArea" unique_id=733377671 instance=ExtResource("4_aj7ud")]
+position = Vector2(299, 189)
+stats = ExtResource("8_sage")
+
+[node name="EnemyArea" type="TileMapLayer" parent="." unique_id=520166119 node_paths=PackedStringArray("unit_grid", "tile_highlighter")]
 position = Vector2(160, 0)
 tile_set = ExtResource("1_1qjuf")
 script = ExtResource("4_jx0ua")
@@ -154,62 +160,62 @@ unit_grid = NodePath("ArenaUnitGrid")
 tile_highlighter = NodePath("TileHighlighter")
 metadata/_edit_group_ = true
 
-[node name="Decor" type="TileMapLayer" parent="EnemyArea"]
+[node name="Decor" type="TileMapLayer" parent="EnemyArea" unique_id=1998590482]
 modulate = Color(1, 1, 1, 0.43137255)
 tile_map_data = PackedByteArray("AAAAAAAAAAADAA8AAAAAAAEAAAAAAA8AAAAAAAIAAAAAAA8AAAABAAAAAAABAA8AAAABAAEAAAAAAA8AAAABAAIAAAACAA8AAAACAAAAAAACAA8AAAACAAEAAAAAAA8AAAACAAIAAAADAA8AAAADAAAAAAADAA8AAAADAAEAAAACAA8AAAADAAIAAAAAAA8AAAAEAAAAAAAAAA8AAAAEAAEAAAADAA8AAAAEAAIAAAAAAA8AAAAFAAAAAAACAA8AAAAFAAEAAAACAA8AAAAFAAIAAAABAA8AAAAGAAAAAAAAAA8AAAAGAAEAAAACAA8AAAAGAAIAAAADAA8AAAAHAAAAAAADAA8AAAAHAAEAAAABAA8AAAAHAAIAAAADAA8AAAAIAAAAAAAAAA8AAAAIAAEAAAABAA8AAAAIAAIAAAABAA8AAAAJAAAAAAADAA8AAAAJAAEAAAAAAA8AAAAJAAIAAAAAAA8AAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="Highlight" type="TileMapLayer" parent="EnemyArea"]
+[node name="Highlight" type="TileMapLayer" parent="EnemyArea" unique_id=886386969]
 tile_map_data = PackedByteArray("AAAHAAcAAQAJAAwAAAAIAAcAAQAJAAwAAAAIAAgAAQAJAAwAAAAIAAkAAQAJAAwAAAAJAAkAAQAJAAwAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="ArenaUnitGrid" type="Node2D" parent="EnemyArea"]
+[node name="ArenaUnitGrid" type="Node2D" parent="EnemyArea" unique_id=1437138862]
 position = Vector2(0, -32)
 script = ExtResource("4_asdgj")
 size = Vector2i(10, 3)
 
-[node name="TileHighlighter" type="Node" parent="EnemyArea" node_paths=PackedStringArray("play_area", "highlight_layer")]
+[node name="TileHighlighter" type="Node" parent="EnemyArea" unique_id=2108021136 node_paths=PackedStringArray("play_area", "highlight_layer")]
 script = ExtResource("6_u52cf")
 enabled = false
 play_area = NodePath("..")
 highlight_layer = NodePath("../Highlight")
 tile = Vector2i(3, 0)
 
-[node name="Bench" type="TileMapLayer" parent="."]
+[node name="Bench" type="TileMapLayer" parent="." unique_id=1004734470]
 visible = false
 position = Vector2(160, 320)
 tile_set = ExtResource("1_1qjuf")
 metadata/_edit_group_ = true
 metadata/_edit_lock_ = true
 
-[node name="Highlight" type="TileMapLayer" parent="Bench"]
+[node name="Highlight" type="TileMapLayer" parent="Bench" unique_id=1992746578]
 position = Vector2(0, -288)
 tile_map_data = PackedByteArray("AAAHAAcAAQAJAAwAAAAIAAcAAQAJAAwAAAAIAAgAAQAJAAwAAAAIAAkAAQAJAAwAAAAJAAkAAQAJAAwAAAA=")
 tile_set = ExtResource("1_1qjuf")
 
-[node name="UnitMover" type="Node" parent="." node_paths=PackedStringArray("play_areas")]
+[node name="UnitMover" type="Node" parent="." unique_id=1099363539 node_paths=PackedStringArray("play_areas")]
 script = ExtResource("8_ii07k")
 play_areas = [NodePath("../EnemyArea"), NodePath("../GameArea")]
 
-[node name="UnitSpawner" type="Node" parent="." node_paths=PackedStringArray("enemy_area", "game_area")]
+[node name="UnitSpawner" type="Node" parent="." unique_id=1249714005 node_paths=PackedStringArray("enemy_area", "game_area")]
 script = ExtResource("10_2ml6w")
 enemy_area = NodePath("../EnemyArea")
 game_area = NodePath("../GameArea")
 
-[node name="SellPortal" parent="." instance=ExtResource("11_xgbxb")]
+[node name="SellPortal" parent="." unique_id=931695175 instance=ExtResource("11_xgbxb")]
 visible = false
 position = Vector2(64, 288)
 player_stats = ExtResource("12_vmsrg")
 
-[node name="BattleManager" type="Node" parent="." node_paths=PackedStringArray("enemy_area", "game_area") groups=["battle_manager"]]
+[node name="BattleManager" type="Node" parent="." unique_id=1350717955 node_paths=PackedStringArray("enemy_area", "game_area") groups=["battle_manager"]]
 script = ExtResource("13_battle")
 enemy_area = NodePath("../EnemyArea")
 game_area = NodePath("../GameArea")
 
-[node name="WaveManager" type="Node" parent="." groups=["wave_manager"]]
+[node name="WaveManager" type="Node" parent="." unique_id=2098087286 groups=["wave_manager"]]
 script = ExtResource("16_wave_mgr")
 waves = Array[ExtResource("18_gy0qm")]([ExtResource("17_w1"), ExtResource("18_w2"), ExtResource("19_w3"), ExtResource("20_w5")])
 
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1563741833]
 visible = false
 navigation_polygon = SubResource("NavigationPolygon_enemy_path")

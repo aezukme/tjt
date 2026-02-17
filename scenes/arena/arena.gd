@@ -29,6 +29,7 @@ func _ready() -> void:
 	
 	# Connect battle manager signals
 	battle_manager.battle_started.connect(_on_battle_started)
+	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.preparation_started.connect(_on_preparation_started)
 	battle_manager.state_changed.connect(_on_battle_state_changed)
 
@@ -47,6 +48,12 @@ func _ready() -> void:
 ## Called when battle starts - disable dragging.
 func _on_battle_started() -> void:
 	_set_drag_enabled(false)
+
+	# Only clear enemy area on first battle start, not between waves
+	# (wave manager handles its own cleanup between waves)
+	if wave_manager and wave_manager.current_wave_index >= 0:
+		# This is a subsequent wave start, wave manager handles spawning
+		return
 
 	# Clear any pre-existing enemy units in the enemy area (safety)
 	if enemy_area and enemy_area.unit_grid:
@@ -112,41 +119,80 @@ func _on_preparation_started() -> void:
 		start_battle_button.disabled = false
 
 
+## Called when battle ends with a winner.
+func _on_battle_ended(winner: UnitStats.Team) -> void:
+	if wave_manager and wave_manager.current_wave_index + 1 < wave_manager.waves.size():
+		# Between waves — not a final result yet
+		print("[Arena] ✅ Wave %d complete! Preparing for next wave..." % wave_manager.current_wave_number)
+	elif winner == UnitStats.Team.PLAYER:
+		print("[Arena] ✅ VICTORY! All waves cleared!")
+	else:
+		print("[Arena] ❌ DEFEAT! All player units eliminated.")
+	
+	# Re-enable dragging for surviving player units
+	_set_drag_enabled(true)
+
+
 func _on_start_battle_pressed() -> void:
-	# Safety: only allow when in PREPARATION
+	# If wave manager is waiting between waves, skip prep timer
+	if wave_manager and wave_manager.is_waiting_for_next_wave:
+		wave_manager.skip_preparation()
+		return
+	
+	# Otherwise, normal start battle during initial preparation
 	if battle_manager and battle_manager.current_state == BattleManager.State.PREPARATION:
 		battle_manager.force_start_battle()
 
 
 func _on_battle_state_changed(new_state: int) -> void:
-	# Disable the start button during battle or after ended
+	# Disable the start button during battle, enable during preparation/ended
 	if not start_battle_button:
 		return
 	if new_state == BattleManager.State.PREPARATION:
 		start_battle_button.disabled = false
+		start_battle_button.text = "Start Battle"
+	elif new_state == BattleManager.State.ENDED:
+		# After wave ends, button will be re-enabled by wave manager prep phase
+		start_battle_button.disabled = false
+		if wave_manager and wave_manager.is_waiting_for_next_wave:
+			start_battle_button.text = "Next Wave"
+		else:
+			start_battle_button.text = "Start Battle"
 	else:
 		start_battle_button.disabled = true
+		start_battle_button.text = "Battle..."
 
 
-## Updates the unit stats display.
-func _process(_delta: float) -> void:
-	update_stats_display()
+var _stats_update_timer: float = 0.0
+const STATS_UPDATE_INTERVAL: float = 0.25  ## Update stats display 4x per second instead of every frame
+
+## Updates the unit stats display on a throttled timer.
+func _process(delta: float) -> void:
+	_stats_update_timer -= delta
+	if _stats_update_timer <= 0:
+		_stats_update_timer = STATS_UPDATE_INTERVAL
+		update_stats_display()
 
 
 ## Updates the unit stats display with current ally units.
 func update_stats_display() -> void:
-	# Clear existing panels
-	for child in unit_stats_container.get_children():
-		child.queue_free()
-	
-	# Get ally units
 	var ally_units = get_tree().get_nodes_in_group("player_units")
+	var current_panels = unit_stats_container.get_children()
 	
-	# Create panels for each
-	for unit in ally_units:
-		var panel = preload("res://scenes/arena/unit_stats_panel.tscn").instantiate()
-		unit_stats_container.add_child(panel)
-		panel.set_unit(unit)
+	# Only rebuild panels if unit count changed
+	if current_panels.size() != ally_units.size():
+		for child in current_panels:
+			child.queue_free()
+		
+		for unit_node in ally_units:
+			var panel = preload("res://scenes/arena/unit_stats_panel.tscn").instantiate()
+			unit_stats_container.add_child(panel)
+			panel.set_unit(unit_node)
+	else:
+		# Just update existing panels
+		for i in current_panels.size():
+			if i < ally_units.size():
+				current_panels[i].update_stats()
 
 
 ## Enables or disables dragging for all units.

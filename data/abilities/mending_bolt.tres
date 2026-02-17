@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="HealOrHarmAbility" format=3 uid="uid://dh3al0rharm01"]
+
+[ext_resource type="Script" path="res://data/abilities/heal_or_harm_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+heal_amount = 60.0
+ability_name = "Mending Bolt"
+description = "Smart heal/harm: Heals the most wounded ally for 60 HP. If all allies are at full health, blasts the nearest enemy for 30 damage instead."
+target_type = 3
+mana_cost = 100.0
+cooldown = 2.0
+cast_range = 200.0

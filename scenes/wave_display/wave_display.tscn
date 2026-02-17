@@ -1,6 +1,12 @@
-[gd_scene load_steps=2 format=4 uid="uid://cpdfmqflphrc"]
+[gd_scene load_steps=4 format=4 uid="uid://cpdfmqflphrc"]
 
 [ext_resource type="Script" path="res://scenes/wave_display/wave_display.gd" id="1_k7duy"]
+
+[sub_resource type="SystemFont" id="system_font"]
+font_names = PackedStringArray("Arial", "Liberation Sans")
+
+[sub_resource type="SystemFont" id="system_font_wave"]
+font_names = PackedStringArray("Arial", "Liberation Sans")
 
 [node name="WaveDisplay" type="Control"]
 layout_mode = 1
@@ -29,11 +35,14 @@ grow_vertical = 2
 [node name="WaveLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "Wave 1 / 5"
-theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = SubResource("system_font_wave")
+theme_override_font_sizes/font_size = 13
 
 [node name="EnemyCountLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "Enemies: 3"
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 10
 
 [node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
 layout_mode = 2
@@ -42,15 +51,18 @@ value = 20.0
 [node name="DifficultyLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "Difficulty: 1.0x"
-theme_override_font_sizes/font_size = 12
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 9
 
 [node name="TimerLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "Next wave in: 15s"
-theme_override_font_sizes/font_size = 12
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 9
 
 [node name="RewardsLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = ""
-theme_override_font_sizes/font_size = 14
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)

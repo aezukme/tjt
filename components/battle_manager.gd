@@ -115,15 +115,18 @@ func _clear_all_unit_highlights() -> void:
 			highlighter.clear_highlight()
 
 
-## Checks win condition - called when a unit dies.
+## Checks win/lose condition - called when a unit dies.
 func check_win_condition() -> void:
 	if current_state != State.BATTLE:
 		return
 	
 	var enemy_units := enemy_area.unit_grid.get_all_units()
+	var player_units := game_area.unit_grid.get_all_units()
 	
 	if enemy_units.is_empty():
 		end_battle(UnitStats.Team.PLAYER)
+	elif player_units.is_empty():
+		end_battle(UnitStats.Team.ENEMY)
 
 
 ## Manual trigger to start battle (for testing or button).

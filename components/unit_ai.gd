@@ -6,6 +6,9 @@ signal movement_finished
 ## Emitted when unit attacks
 signal attack_performed(target)
 
+## Toggle AI debug logging (set to true to see pathfinding/targeting/movement logs)
+const DEBUG_AI: bool = true
+
 const CELL_SIZE := Vector2(32, 32)
 const HALF_CELL_SIZE := Vector2(16, 16)
 
@@ -51,6 +54,11 @@ func _process(delta: float) -> void:
 	if not enabled or not unit or not unit.stats:
 		return
 	
+	# Don't run AI when not in BATTLE state
+	var bm = get_tree().get_first_node_in_group("battle_manager")
+	if bm and bm.current_state != BattleManager.State.BATTLE:
+		return
+	
 	update_timer -= delta
 	if update_timer <= 0:
 		update_timer = update_interval
@@ -86,7 +94,9 @@ func _process(delta: float) -> void:
 				var direction: Vector2 = (current_target.global_position - unit.global_position).normalized()
 				var distance_to_move: float = movement_speed * delta
 				unit.global_position += direction * distance_to_move
-			#print("  %s: moving towards %s (%.1f/%.1f px)" % [unit.stats.name, current_target.stats.name, distance_to_target, attack_range_pixels])
+			if DEBUG_AI and update_timer <= 0:
+				var target_name = current_target.stats.name if ("stats" in current_target and current_target.stats) else "[dummy]"
+				print("[AI] %s: moving → %s (dist=%.0fpx, range=%.0fpx, speed=%.0f)" % [unit.stats.name, target_name, distance_to_target, attack_range_pixels, movement_speed])
 
 
 ## Main AI update logic.
@@ -100,6 +110,18 @@ func _update_ai() -> void:
 	
 	# If target changed, clean up old dummy target
 	if current_target != new_target:
+		if DEBUG_AI:
+			var old_name = "none"
+			var new_name = "none"
+			if current_target and is_instance_valid(current_target) and "stats" in current_target and current_target.stats:
+				old_name = current_target.stats.name
+			elif current_target and current_target.has_meta("is_dummy_target"):
+				old_name = "[dummy]"
+			if new_target and is_instance_valid(new_target) and "stats" in new_target and new_target.stats:
+				new_name = new_target.stats.name
+			elif new_target and new_target.has_meta("is_dummy_target"):
+				new_name = "[dummy]"
+			print("[AI] %s: target changed %s → %s" % [unit.stats.name, old_name, new_name])
 		if current_target and current_target.has_meta("is_dummy_target"):
 			current_target.queue_free()
 		current_target = new_target
@@ -114,10 +136,13 @@ func _find_nearest_enemy():
 	var enemies := get_tree().get_nodes_in_group(target_group)
 	
 	if enemies.is_empty():
+		if DEBUG_AI:
+			print("[AI] %s: no enemies in group '%s'" % [unit.stats.name, target_group])
 		return null
 	
 	var nearest = null
 	var nearest_distance := INF
+	var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
 	
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
@@ -130,21 +155,28 @@ func _find_nearest_enemy():
 		var distance: float = unit.global_position.distance_to(enemy.global_position)
 		
 		# Check if within aggro range
-		var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
 		if distance <= aggro_range_pixels:
 			if distance < nearest_distance:
 				nearest_distance = distance
 				nearest = enemy
 	
+	if DEBUG_AI:
+		if nearest and "stats" in nearest and nearest.stats:
+			print("[AI] %s: found target %s (dist=%.0fpx, aggro=%.0fpx, enemies=%d)" % [unit.stats.name, nearest.stats.name, nearest_distance, aggro_range_pixels, enemies.size()])
+		else:
+			print("[AI] %s: no enemy within aggro range %.0fpx (enemies=%d)" % [unit.stats.name, aggro_range_pixels, enemies.size()])
+	
 	return nearest
 
 
 ## Returns a dummy target representing the player base for enemy units.
+## NOTE: The returned dummy node is added to the scene tree so it can be freed
+## properly when the target changes (see _update_ai).
 func _get_player_base_target():
-	# Create a dummy node at the bottom of the screen
 	var dummy = Node2D.new()
 	dummy.global_position = Vector2(unit.global_position.x, 1000)  # Far below
 	dummy.set_meta("is_dummy_target", true)
+	unit.get_tree().current_scene.add_child(dummy)
 	return dummy
 
 
@@ -204,6 +236,10 @@ func _perform_attack(target) -> void:
 	# Calculate damage
 	var damage: int = unit.stats.get_attack_damage()
 
+	if DEBUG_AI:
+		var target_hp = target.current_health if "current_health" in target else target.stats.health
+		print("[AI] %s: ⚔ attacks %s for %d dmg (target HP: %d → %d)" % [unit.stats.name, target.stats.name, damage, int(target_hp), int(max(target_hp - damage, 0))])
+
 	# Apply damage using a common method if available, otherwise fallback to stats
 	if UnitUtils.is_unit_node(target):
 		target.apply_damage(damage)
@@ -220,42 +256,98 @@ func _perform_attack(target) -> void:
 	_flash_unit(target, Color.RED)
 
 
-## Simple A* pathfinding (placeholder - will improve later).
+## A* pathfinding on the unit grid.
+## Returns an ordered list of tiles from start to goal, avoiding occupied tiles.
+## Uses Manhattan distance as heuristic (no diagonal movement).
 func _find_path(start: Vector2i, goal: Vector2i) -> Array[Vector2i]:
-	# For now, simple direct path (will implement proper A* later)
 	var result: Array[Vector2i] = []
-	
-	if not play_area:
+
+	if not play_area or not play_area.unit_grid:
 		return result
-	
-	print("  [_find_path] start=%s, goal=%s" % [start, goal])
-	
-	# Just move towards goal tile by tile
-	var current := start
-	var max_steps = 0
-	while current != goal and max_steps < 200:
-		max_steps += 1
-		
-		if current.x < goal.x:
-			current.x += 1
-		elif current.x > goal.x:
-			current.x -= 1
-		elif current.y < goal.y:
-			current.y += 1
-		elif current.y > goal.y:
-			current.y -= 1
-		
-		# NOTE: We allow tiles outside bounds since targets can be in different areas
-		# Only skip if tile is explicitly occupied
-		if play_area.unit_grid.units.has(current) and play_area.unit_grid.is_tile_occupied(current):
-			print("    - tile %s occupied" % current)
-			continue
-		
-		print("    - adding tile %s" % current)
-		result.append(current)
-	
-	print("  [_find_path] result: %d waypoints (stopped after %d steps)" % [result.size(), max_steps])
+
+	var grid_size: Vector2i = play_area.unit_grid.size
+
+	# If goal is out of bounds, clamp it to nearest valid tile
+	var clamped_goal := Vector2i(
+		clampi(goal.x, 0, grid_size.x - 1),
+		clampi(goal.y, 0, grid_size.y - 1)
+	)
+
+	# If start equals goal, nothing to do
+	if start == clamped_goal:
+		return result
+
+	# A* data structures
+	# open_set: priority queue as Array of [f_score, tile]
+	var open_set: Array = [[_heuristic(start, clamped_goal), start]]
+	var came_from: Dictionary = {}  # tile -> parent tile
+	var g_score: Dictionary = {start: 0}  # tile -> cost from start
+	var closed_set: Dictionary = {}  # tile -> true
+
+	# Directions: up, down, left, right (no diagonals for grid movement)
+	var directions: Array[Vector2i] = [
+		Vector2i(1, 0), Vector2i(-1, 0),
+		Vector2i(0, 1), Vector2i(0, -1)
+	]
+
+	var max_iterations := grid_size.x * grid_size.y * 2  # Safety limit
+	var iterations := 0
+
+	while not open_set.is_empty() and iterations < max_iterations:
+		iterations += 1
+
+		# Find node with lowest f_score (simple linear scan — grid is small)
+		var best_idx := 0
+		for i in range(1, open_set.size()):
+			if open_set[i][0] < open_set[best_idx][0]:
+				best_idx = i
+
+		var current_entry = open_set[best_idx]
+		var current: Vector2i = current_entry[1]
+		open_set.remove_at(best_idx)
+
+		# Reached the goal — reconstruct path
+		if current == clamped_goal:
+			var path_tile := current
+			while path_tile != start:
+				result.insert(0, path_tile)
+				path_tile = came_from[path_tile]
+			return result
+
+		closed_set[current] = true
+
+		# Explore neighbors
+		for dir in directions:
+			var neighbor: Vector2i = current + dir
+
+			# Bounds check
+			if neighbor.x < 0 or neighbor.y < 0 or neighbor.x >= grid_size.x or neighbor.y >= grid_size.y:
+				continue
+
+			# Already evaluated
+			if closed_set.has(neighbor):
+				continue
+
+			# Occupied check (skip goal tile — we want to path TO it even if occupied by enemy)
+			if neighbor != clamped_goal:
+				if play_area.unit_grid.units.has(neighbor) and play_area.unit_grid.is_tile_occupied(neighbor):
+					continue
+
+			var tentative_g: int = g_score[current] + 1
+
+			if not g_score.has(neighbor) or tentative_g < g_score[neighbor]:
+				came_from[neighbor] = current
+				g_score[neighbor] = tentative_g
+				var f: int = tentative_g + _heuristic(neighbor, clamped_goal)
+				open_set.append([f, neighbor])
+
+	# No path found — return empty (unit will use direct movement fallback)
 	return result
+
+
+## Manhattan distance heuristic for A*.
+func _heuristic(a: Vector2i, b: Vector2i) -> int:
+	return absi(a.x - b.x) + absi(a.y - b.y)
 
 
 ## Finds the play areas from the scene tree.
@@ -274,8 +366,6 @@ func _find_play_areas() -> void:
 		else:
 			play_area = arena.get_node_or_null("EnemyArea")
 			enemy_area = arena.get_node_or_null("GameArea")
-		
-		print("UnitAI for %s initialized - play_area: %s, enemy_area: %s" % [unit.stats.name, play_area != null, enemy_area != null])
 
 
 ## Flashes a unit sprite with a color for visual feedback.
