@@ -68,6 +68,10 @@ func _ready() -> void:
 		unit_selection_panel.deployed_count = preplaced.size()
 		# Start with panel hidden
 		unit_selection_panel.visible = false
+		# Wire player stats for gold tracking
+		var _sell_portal = get_node_or_null("SellPortal")
+		if _sell_portal and "player_stats" in _sell_portal and _sell_portal.player_stats:
+			unit_selection_panel.set_player_stats(_sell_portal.player_stats)
 
 	# Toggle button for unit panel
 	if toggle_units_button:
@@ -308,7 +312,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if spawned:
 			print("[Arena] 🟢 Placed %s at tile %s" % [_placement_stats.name, str(tile)])
 			if unit_selection_panel:
-				unit_selection_panel.on_unit_placed()
+				unit_selection_panel.on_unit_placed(_placement_stats)
 			# Exit placement mode (show panel for next pick)
 			_exit_placement_mode()
 			if unit_selection_panel:

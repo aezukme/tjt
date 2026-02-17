@@ -44,23 +44,23 @@ func execute(caster: Unit, targets: Array) -> void:
 		_execute_damage(caster, targets)
 
 
-## Heal the most wounded ally.
+## Heal the most wounded ally (uses effective missing HP to avoid overheal stacking).
 func _execute_heal(caster: Unit, targets: Array) -> void:
-	# Find ally with lowest HP percentage
+	# Find ally with the most *effective* missing HP
 	var most_wounded = targets[0]
-	var lowest_hp_pct: float = 1.0
+	var biggest_need: float = 0.0
 
 	for target in targets:
-		var hp_pct: float
-		if "current_health" in target:
-			hp_pct = float(target.current_health) / float(target.stats.max_health)
-		elif "stats" in target and target.stats:
-			hp_pct = float(target.stats.health) / float(target.stats.max_health)
+		var need: float = 0.0
+		if target.has_method("get_effective_missing_health"):
+			need = target.get_effective_missing_health()
 		else:
-			continue
+			# Fallback: raw missing HP
+			var hp: float = target.current_health if "current_health" in target else target.stats.health
+			need = target.stats.max_health - hp
 
-		if hp_pct < lowest_hp_pct:
-			lowest_hp_pct = hp_pct
+		if need > biggest_need:
+			biggest_need = need
 			most_wounded = target
 
 	# Calculate actual heal (don't overheal)
@@ -75,11 +75,20 @@ func _execute_heal(caster: Unit, targets: Array) -> void:
 
 	var actual_heal: float = min(heal_amount, max_hp - current_hp)
 
+	# Register incoming heal so other healers pick a different target
+	if "incoming_healing" in most_wounded:
+		most_wounded.incoming_healing += actual_heal
+
 	# Apply heal
 	if "current_health" in most_wounded:
 		most_wounded.current_health += actual_heal
+		# Clear the incoming heal since it just landed
+		if "incoming_healing" in most_wounded:
+			most_wounded.incoming_healing = maxf(most_wounded.incoming_healing - actual_heal, 0.0)
 	elif "stats" in most_wounded and most_wounded.stats:
 		most_wounded.stats.health = int(min(most_wounded.stats.health + actual_heal, max_hp))
+		if "incoming_healing" in most_wounded:
+			most_wounded.incoming_healing = maxf(most_wounded.incoming_healing - actual_heal, 0.0)
 
 	print("[HealOrHarm] %s heals %s for %d HP! (was %d/%d)" % [
 		caster.stats.name, most_wounded.stats.name, int(actual_heal), int(current_hp), int(max_hp)
@@ -115,6 +124,10 @@ func _execute_damage(caster: Unit, targets: Array) -> void:
 	print("[HealOrHarm] %s blasts %s for %d dmg! (no allies wounded)" % [
 		caster.stats.name, target.stats.name, int(damage)
 	])
+
+	# Register incoming damage so other units don't overkill
+	if "incoming_damage" in target:
+		target.incoming_damage += damage
 
 	# Apply damage
 	if target.has_method("apply_damage"):
@@ -154,8 +167,11 @@ func _get_wounded_allies(caster: Unit) -> Array:
 		else:
 			continue
 
-		# Only include if actually wounded
-		if current_hp < max_hp:
+		# Only include if effectively wounded (accounting for incoming heals)
+		var effective_missing: float = max_hp - current_hp
+		if ally.has_method("get_effective_missing_health"):
+			effective_missing = ally.get_effective_missing_health()
+		if effective_missing > 0.0:
 			wounded.append(ally)
 
 	# Filter by range if specified

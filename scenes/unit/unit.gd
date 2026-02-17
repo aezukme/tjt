@@ -27,6 +27,20 @@ var current_mana: float : set = _set_current_mana
 var ability_on_cooldown: bool = false
 var _mana_retry_task_running: bool = false
 
+## Threat bookkeeping — lets AI avoid overkill / overheal
+var incoming_damage: float = 0.0   ## Total damage already "promised" by attackers this tick
+var incoming_healing: float = 0.0  ## Total healing already "promised" by healers this tick
+
+## Effective HP that AI should use for target selection.
+## Returns current_health minus damage already in-flight, clamped to 0.
+func get_effective_health() -> float:
+	return maxf(current_health - incoming_damage, 0.0)
+
+## Effective missing HP that healers should use.
+func get_effective_missing_health() -> float:
+	var effective_hp: float = minf(current_health + incoming_healing, stats.max_health)
+	return maxf(stats.max_health - effective_hp, 0.0)
+
 ## Called when the node enters the scene tree. Connects drag signals if not in editor.
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -305,6 +319,8 @@ func cast_ability() -> bool:
 ## Apply damage to this unit (uniform interface for AI/abilities).
 func apply_damage(damage: int) -> void:
 	current_health = max(current_health - damage, 0)
+	# Reduce incoming_damage since this damage has now landed
+	incoming_damage = maxf(incoming_damage - damage, 0.0)
 
 
 ## Called when ability cooldown finishes

@@ -524,6 +524,12 @@ func _reset_ally_stats() -> void:
 		if "ability_on_cooldown" in unit:
 			unit.ability_on_cooldown = false
 		
+		# Reset threat bookkeeping
+		if "incoming_damage" in unit:
+			unit.incoming_damage = 0.0
+		if "incoming_healing" in unit:
+			unit.incoming_healing = 0.0
+		
 		# Reset AI target
 		if unit.has_node("UnitAI"):
 			var ai = unit.get_node("UnitAI")

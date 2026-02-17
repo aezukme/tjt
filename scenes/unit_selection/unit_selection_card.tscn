@@ -6,7 +6,7 @@
 font_names = PackedStringArray("Arial", "Liberation Sans")
 
 [node name="UnitSelectionCard" type="PanelContainer"]
-custom_minimum_size = Vector2(64, 72)
+custom_minimum_size = Vector2(64, 82)
 script = ExtResource("1_card")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -37,3 +37,11 @@ theme_override_font_sizes/font_size = 7
 horizontal_alignment = 1
 text = "HP:100 ATK:10
 Melee"
+
+[node name="CostLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("card_font")
+theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+horizontal_alignment = 1
+text = "1 💰"

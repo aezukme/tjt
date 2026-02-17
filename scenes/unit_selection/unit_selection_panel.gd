@@ -26,6 +26,9 @@ var _selected_stats: UnitStats = null
 
 ## Current deployed count (managed externally by arena)
 var deployed_count: int = 0
+ 
+## Player stats resource for gold tracking
+var player_stats: PlayerStats = null
 
 ## Map from UnitStats resource path → card node
 var _cards: Dictionary = {}
@@ -57,6 +60,11 @@ func _on_card_clicked(unit_stats: UnitStats) -> void:
 		print("[Selection] ⚠ Max units (%d) reached!" % max_deployed_units)
 		return
 
+	# Check gold
+	if player_stats and player_stats.gold < unit_stats.gold_cost:
+		print("[Selection] ⚠ Not enough gold! Need %d, have %d" % [unit_stats.gold_cost, player_stats.gold])
+		return
+
 	# If clicking the same card again, deselect
 	var card = _cards.get(unit_stats.resource_path)
 	if _selected_card == card:
@@ -74,16 +82,24 @@ func _on_card_clicked(unit_stats: UnitStats) -> void:
 		card.set_selected(true)
 
 	unit_selected.emit(unit_stats)
-	print("[Selection] 🎯 Selected %s — click a tile to place" % unit_stats.name)
+	print("[Selection] 🎯 Selected %s (cost: %d 💰) — click a tile to place" % [unit_stats.name, unit_stats.gold_cost])
 
 
 ## Called by arena after a unit is successfully placed.
-func on_unit_placed() -> void:
+func on_unit_placed(unit_stats: UnitStats = null) -> void:
 	deployed_count += 1
+	# Deduct gold
+	if player_stats and unit_stats:
+		player_stats.gold -= unit_stats.gold_cost
+		print("[Selection] 💰 Spent %d gold (remaining: %d)" % [unit_stats.gold_cost, player_stats.gold])
+	_update_affordability()
 	_update_info()
 	# Keep selected for rapid multi-placement of same type
 	# (user can click multiple tiles to place more)
 	if deployed_count >= max_deployed_units:
+		cancel_selection()
+	# Auto-cancel if can no longer afford the selected unit
+	elif player_stats and _selected_stats and player_stats.gold < _selected_stats.gold_cost:
 		cancel_selection()
 
 
@@ -108,7 +124,26 @@ func get_selected_stats() -> UnitStats:
 
 func _update_info() -> void:
 	if info_label:
-		info_label.text = "%d / %d" % [deployed_count, max_deployed_units]
+		var gold_text := ""
+		if player_stats:
+			gold_text = "  💰 %d" % player_stats.gold
+		info_label.text = "%d / %d%s" % [deployed_count, max_deployed_units, gold_text]
+
+
+## Update which cards the player can afford.
+func _update_affordability() -> void:
+	if not player_stats:
+		return
+	for card in _cards.values():
+		if card and card.unit_stats:
+			card.set_can_afford(player_stats.gold >= card.unit_stats.gold_cost)
+
+
+## Sets the player stats resource (called by arena).
+func set_player_stats(stats: PlayerStats) -> void:
+	player_stats = stats
+	_update_affordability()
+	_update_info()
 
 
 ## Disables interaction during battle.
@@ -118,4 +153,8 @@ func set_interactable(enabled: bool) -> void:
 	for card in _cards.values():
 		if card is Control:
 			card.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
-			card.modulate = Color.WHITE if enabled else Color(0.5, 0.5, 0.5)
+			if enabled:
+				# Respect affordability when re-enabling
+				_update_affordability()
+			else:
+				card.modulate = Color(0.5, 0.5, 0.5)

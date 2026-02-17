@@ -6,8 +6,10 @@ signal movement_finished
 ## Emitted when unit attacks
 signal attack_performed(target)
 
-## Toggle AI debug logging (set to true to see pathfinding/targeting/movement logs)
+## Toggle AI debug logging (set to true to see target changes + attacks only)
 const DEBUG_AI: bool = true
+## Toggle verbose AI logging (every tick scan — very spammy, usually false)
+const DEBUG_AI_VERBOSE: bool = false
 
 const CELL_SIZE := Vector2(32, 32)
 const HALF_CELL_SIZE := Vector2(16, 16)
@@ -94,7 +96,7 @@ func _process(delta: float) -> void:
 				var direction: Vector2 = (current_target.global_position - unit.global_position).normalized()
 				var distance_to_move: float = movement_speed * delta
 				unit.global_position += direction * distance_to_move
-			if DEBUG_AI and update_timer <= 0:
+			if DEBUG_AI_VERBOSE and update_timer <= 0:
 				var target_name = current_target.stats.name if ("stats" in current_target and current_target.stats) else "[dummy]"
 				print("[AI] %s: moving → %s (dist=%.0fpx, range=%.0fpx, speed=%.0f)" % [unit.stats.name, target_name, distance_to_target, attack_range_pixels, movement_speed])
 
@@ -136,36 +138,57 @@ func _find_nearest_enemy():
 	var enemies := get_tree().get_nodes_in_group(target_group)
 	
 	if enemies.is_empty():
-		if DEBUG_AI:
+		if DEBUG_AI_VERBOSE:
 			print("[AI] %s: no enemies in group '%s'" % [unit.stats.name, target_group])
 		return null
 	
 	var nearest = null
 	var nearest_distance := INF
 	var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
-	
+
+	# Two-pass targeting:
+	# 1) Prefer enemies that still have effective HP > 0 (not yet overkilled on paper)
+	# 2) Among those, pick the nearest one
+	# 3) If ALL enemies are overkilled on paper, fall back to plain nearest
+	var fallback_nearest = null
+	var fallback_distance := INF
+
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		
+
 		# Skip self
 		if enemy == unit:
 			continue
-		
+
 		var distance: float = unit.global_position.distance_to(enemy.global_position)
-		
+
 		# Check if within aggro range
 		if distance <= aggro_range_pixels:
-			if distance < nearest_distance:
+			# Track plain nearest as fallback
+			if distance < fallback_distance:
+				fallback_distance = distance
+				fallback_nearest = enemy
+
+			# Prefer enemies that aren't already "dead on paper"
+			var eff_hp: float = 999999.0
+			if enemy.has_method("get_effective_health"):
+				eff_hp = enemy.get_effective_health()
+			if eff_hp > 0.0 and distance < nearest_distance:
 				nearest_distance = distance
 				nearest = enemy
-	
-	if DEBUG_AI:
+
+	# If every in-range enemy is overkilled on paper, still pick nearest
+	if not nearest and fallback_nearest:
+		nearest = fallback_nearest
+		nearest_distance = fallback_distance
+
+	if DEBUG_AI_VERBOSE:
 		if nearest and "stats" in nearest and nearest.stats:
 			print("[AI] %s: found target %s (dist=%.0fpx, aggro=%.0fpx, enemies=%d)" % [unit.stats.name, nearest.stats.name, nearest_distance, aggro_range_pixels, enemies.size()])
 		else:
 			print("[AI] %s: no enemy within aggro range %.0fpx (enemies=%d)" % [unit.stats.name, aggro_range_pixels, enemies.size()])
-	
+
 	return nearest
 
 
@@ -239,6 +262,10 @@ func _perform_attack(target) -> void:
 	if DEBUG_AI:
 		var target_hp = target.current_health if "current_health" in target else target.stats.health
 		print("[AI] %s: ⚔ attacks %s for %d dmg (target HP: %d → %d)" % [unit.stats.name, target.stats.name, damage, int(target_hp), int(max(target_hp - damage, 0))])
+
+	# Register incoming damage so other units don't overkill this target
+	if "incoming_damage" in target:
+		target.incoming_damage += damage
 
 	# Apply damage using a common method if available, otherwise fallback to stats
 	if UnitUtils.is_unit_node(target):
