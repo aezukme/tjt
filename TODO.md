@@ -8,7 +8,7 @@
 - [x] Create Passive Ability system (stat bonuses)
 - [x] Visual effects for ability activation (projectile system)
 - [x] Cooldown system for abilities
-- [x] Create sample abilities (fireball, heal, AOE damage)
+- [x] Create sample abilities (fireball, heal, AOE damage, mending bolt)
 - [x] Ability targeting system (self, enemy, area)
 - [x] Ability range system
 - [x] Mana consumption on ability use
@@ -16,19 +16,35 @@
   - Base `Ability` resource class with targeting, cooldown, range
   - `PassiveAbility` for permanent stat bonuses
   - Fireball (single target, 100 dmg, 200 range, projectile visual)
+  - Mending Bolt (heal ally 60 HP or damage enemy 50 — dual mode)
   - Heal (self heal, 30 HP)
   - AOE Damage (all enemies, 25 dmg)
   - Warrior's Endurance passive (+20% health regen for Bjorn)
   - Projectile scene with smooth movement and hit detection
 
-### Wave System
-- [ ] Enemy wave spawner component
-- [ ] Wave configuration (number of enemies, types, spawn positions)
-- [ ] Progressive difficulty scaling
-- [ ] Boss rounds (every 5th or 10th wave)
-- [ ] Wave countdown timer
-- [ ] Between-wave preparation phase
-- [ ] Victory/defeat conditions
+### Wave System ✅ COMPLETED
+- [x] Enemy wave spawner component (WaveManager)
+- [x] Wave configuration (WaveConfig resources with enemy groups)
+- [x] Progressive difficulty scaling (+5% per wave)
+- [x] Boss rounds (configurable interval)
+- [x] Wave countdown timer (30s between waves, skippable)
+- [x] Between-wave preparation phase with position restore & stat reset
+- [x] Victory/defeat conditions (all waves cleared / all allies dead)
+- **Implemented:**
+  - `WaveManager` with 4 configurable waves (wave_1 through wave_5_boss)
+  - Spiral-pattern enemy spawning from grid center
+  - Gold + XP rewards per wave
+  - 30-second prep timer between waves (skip via button)
+  - Ally positions saved before battle, restored after
+  - Full stat reset (HP, mana, cooldowns, AI state) between rounds
+
+### Unit Selection Panel 🔧 IN PROGRESS
+- [ ] Bottom panel with available ally unit cards
+- [ ] Click to add unit to arena (place at first available tile)
+- [ ] Click to remove unit from arena
+- [ ] Show unit stats on card (name, HP, ATK, ability)
+- [ ] Limit max units on field
+- [ ] Later: integrate with gold cost system
 
 ### Visual Polish
 - [x] Damage numbers (floating text above units)
@@ -50,7 +66,7 @@
 ## 🎯 Medium Priority
 
 ### Unit Traits/Synergies (TFT-style)
-- [ ] Define trait types (Warrior, Mage, Ranger, Beast, Undead, etc.)
+- [ ] Define trait types (Warrior, Mage, Healer, Ranger, Beast, Undead, etc.)
 - [ ] Add trait property to UnitStats
 - [ ] Trait counter UI panel
 - [ ] Synergy bonus system
@@ -152,9 +168,13 @@
 - [x] Fixed mana regeneration system (battle state check)
 - [x] Fixed BattleManager type casting issues
 - [x] Verify all .tres files have health_regen values set
+- [x] Fixed Lambda capture / emit_signalp errors (unit_visuals.gd)
+- [x] Fixed AI spam during PREPARATION phase (battle state guard)
+- [x] Fixed remaining_enemies going to -1 (double-decrement guard)
+- [ ] Fix emit_signalp warnings on timer callbacks (static lambda issue)
 - [ ] Remove duplicate mana_changed.emit() in _set_current_mana
-- [ ] Clean up unused _flash_health_bar() function
 - [ ] Consistent naming conventions (snake_case vs PascalCase)
+- [ ] Fix sage_ally.tres UID warning (uid://dh3al0rharm01)
 
 ## 🎨 Asset Needs
 - [ ] More unit sprites (currently using 32rogues)
@@ -168,54 +188,31 @@
 
 ## Quick Wins (Easy to implement, high impact)
 1. ✅ **Damage numbers** - immediate visual feedback - DONE!
-2. ⚡ Victory/defeat screen - game flow completion
-3. ⚡ Wave counter UI - player knows progress
-4. ⚡ Unit tooltip on hover - better info display
-5. ⚡ Lock shop button - quality of life
-6. ⚡ Attack sound effects - more satisfying combat
+2. ✅ **Wave system** - progressive enemy spawning - DONE!
+3. ✅ **Wave counter UI** - player knows progress - DONE!
+4. ⚡ **Unit selection panel** - add/remove units before battle - IN PROGRESS
+5. ⚡ Victory/defeat screen - game flow completion
+6. ⚡ Unit tooltip on hover - better info display
+7. ⚡ Attack sound effects - more satisfying combat
 
-## Session Summary - November 30, 2025
+## Session Log
 
-### ✅ Completed Today:
-1. **Damage Number System**
-   - Floating damage text above units
-   - Smooth float up + fade out animation
-   - Scale based on damage (50+ = 1.3x, 100+ = 1.5x)
-   - Random horizontal spread for visual variety
+### February 2026 — Battle System & Wave Overhaul
+- ✅ Wave system: 4 waves with WaveConfig resources, spiral spawning, difficulty scaling
+- ✅ Between-wave flow: 30s prep timer, position save/restore, stat reset
+- ✅ Sage healer unit with Mending Bolt (heal allies / damage enemies)
+- ✅ HealOrHarmAbility class for dual-mode abilities
+- ✅ Fixed emit_signalp callback type errors (lambda Callable pattern)
+- ✅ Fixed AI spam during non-BATTLE states
+- ✅ Fixed remaining_enemies going negative
+- ✅ UI: Arial system font, compact stats panels, wave display
 
-2. **Complete Ability System**
-   - Base `Ability` resource class with targeting, cooldown, range
-   - Auto-cast when mana reaches max
-   - Range-based targeting (units out of range can't be targeted)
-   - Mana consumption and cooldown management
-   
-3. **Active Abilities Implemented**
-   - **Fireball**: Single target, 100 damage, 200 range, 3s cooldown, projectile visual
-   - **Heal**: Self-heal, 30 HP, 5s cooldown
-   - **Arcane Explosion**: AOE all enemies, 25 damage, 4s cooldown
-
-4. **Passive Ability System**
-   - Base `PassiveAbility` class for stat modifications
-   - Support for: HP regen, mana regen, damage, armor, max HP bonuses
-   - **Warrior's Endurance**: +20% health regen for Bjorn
-
-5. **Projectile System**
-   - Smooth movement toward target
-   - Hit detection and damage application
-   - Visual feedback on impact
-   - Color customization per ability
-
-6. **Bug Fixes**
-   - Fixed mana regeneration (only during BATTLE state)
-   - Fixed BattleManager type casting errors
-   - Added proper null checks for battle state
-   - Verified .tres files have correct stat values
-
-### 🎯 Next Session Priorities:
-1. **Wave System** - Automatic enemy spawning in progressive waves
-2. **Particle Effects** - Melee hits, critical strikes, explosions
-3. **Victory/Defeat Screen** - End game UI
-4. **More Abilities** - Stun, slow, damage over time effects
+### November 2025 — Ability System & Combat
+- ✅ Damage Number System (float up + fade out)
+- ✅ Complete Ability System (Fireball, Heal, AOE, Passive)
+- ✅ Projectile System (smooth flight, hit detection)
+- ✅ Float-based health/mana regeneration
+- ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: November 30, 2025 - Major progress on ability system!*
+*Last Updated: February 2026*

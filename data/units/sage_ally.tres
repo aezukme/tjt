@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="UnitStats" format=3 uid="uid://diup6kc6ts5aa"]
+[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3 uid="uid://diup6kc6ts5aa"]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_sage"]
-[ext_resource type="Resource" uid="uid://dh3al0rharm01" path="res://data/abilities/mending_bolt.tres" id="2_mending"]
+[ext_resource type="Resource" path="res://data/abilities/mending_bolt.tres" id="2_mending"]
 
 [resource]
 script = ExtResource("1_sage")

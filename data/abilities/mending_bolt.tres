@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="HealOrHarmAbility" format=3 uid="uid://dh3al0rharm01"]
+[gd_resource type="Resource" script_class="HealOrHarmAbility" format=3]
 
 [ext_resource type="Script" path="res://data/abilities/heal_or_harm_ability.gd" id="1"]
 

@@ -40,9 +40,11 @@ func _ready() -> void:
 		if stats:
 			_connect_stats_signals()
 		
-		# Add to unit grid
-		var play_area = get_parent()
-		if play_area and play_area.unit_grid:
+		# Add to unit grid (only for pre-placed scene units, NOT spawner-created ones)
+		# Spawner already handles grid placement before _ready fires.
+		var parent_node = get_parent()
+		if parent_node and parent_node is PlayArea and parent_node.unit_grid:
+			var play_area: PlayArea = parent_node as PlayArea
 			var tile = play_area.get_tile_from_global(global_position)
 			if play_area.is_tile_within_bounds(tile) and not play_area.unit_grid.is_tile_occupied(tile):
 				play_area.unit_grid.add_unit(tile, self)
