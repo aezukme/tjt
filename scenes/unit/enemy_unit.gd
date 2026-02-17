@@ -14,6 +14,21 @@ const CELL_SIZE := Vector2(32, 32)
 var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
 
+## Threat bookkeeping — lets AI avoid overkill / overheal
+var incoming_damage: float = 0.0
+var incoming_healing: float = 0.0
+
+func get_effective_health() -> float:
+	if stats:
+		return maxf(stats.health - incoming_damage, 0.0)
+	return 0.0
+
+func get_effective_missing_health() -> float:
+	if stats:
+		var effective_hp: float = minf(stats.health + incoming_healing, stats.max_health)
+		return maxf(stats.max_health - effective_hp, 0.0)
+	return 0.0
+
 ## Called when the node enters the scene tree.
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -102,6 +117,8 @@ func _on_health_reached_zero() -> void:
 func apply_damage(damage: int) -> void:
 	if stats:
 		stats.health = max(stats.health - damage, 0)
+	# Reduce incoming_damage since this damage has now landed
+	incoming_damage = maxf(incoming_damage - damage, 0.0)
 
 
 ## Sets the unit's stats and updates the skin position accordingly.

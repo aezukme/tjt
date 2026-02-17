@@ -65,14 +65,16 @@ static func flash_health_bar(health_bar: ProgressBar, tree: SceneTree, flash_id:
 	var white_style := create_bar_stylebox(Color.WHITE)
 	health_bar.add_theme_stylebox_override("fill", white_style)
 
-	# Use a plain Callable with bind — avoid static func callbacks which
-	# receive an implicit first argument (the GDScript) causing type errors.
-	var _restore := func _restore_health_bar(bar: ProgressBar, eid: int, cid: int) -> void:
-		if eid == cid and is_instance_valid(bar):
-			bar.remove_theme_stylebox_override("fill")
-
+	# Use WeakRef to avoid 'Lambda capture was freed' errors when
+	# the unit dies before the flash timer fires.
+	var bar_weak: WeakRef = weakref(health_bar)
+	var eid := current_id
+	var cid := flash_id
 	tree.create_timer(HEALTH_FLASH_DURATION).timeout.connect(
-		_restore.bind(health_bar, current_id, flash_id)
+		func() -> void:
+			var bar = bar_weak.get_ref()
+			if eid == cid and bar:
+				bar.remove_theme_stylebox_override("fill")
 	)
 
 	return flash_id
@@ -88,12 +90,14 @@ static func flash_skin(skin: Sprite2D, tree: SceneTree, flash_id: int, flash_col
 
 	skin.modulate = flash_color
 
-	var _restore := func _restore_skin(s: Sprite2D, eid: int, cid: int) -> void:
-		if eid == cid and is_instance_valid(s):
-			s.modulate = Color(1, 1, 1, 1)
-
+	var skin_weak: WeakRef = weakref(skin)
+	var eid := current_id
+	var cid := flash_id
 	tree.create_timer(SKIN_FLASH_DURATION).timeout.connect(
-		_restore.bind(skin, current_id, flash_id)
+		func() -> void:
+			var s = skin_weak.get_ref()
+			if eid == cid and s:
+				s.modulate = Color(1, 1, 1, 1)
 	)
 
 	return flash_id
@@ -118,8 +122,12 @@ static func spawn_damage_number(tree: SceneTree, position: Vector2, damage: floa
 
 ## Removes a unit from its parent grid and notifies the battle manager.
 static func handle_unit_death(unit: Node) -> void:
-	var play_area = unit.get_parent()
-	if play_area and play_area.has_method("get_tile_from_global") and play_area.unit_grid:
+	# Walk up parents to find the PlayArea (unit might be child of UnitGrid)
+	var node = unit.get_parent()
+	while node and not (node is PlayArea):
+		node = node.get_parent()
+	if node and node is PlayArea:
+		var play_area: PlayArea = node as PlayArea
 		var tile = play_area.get_tile_from_global(unit.global_position)
 		play_area.unit_grid.remove_unit(tile)
 

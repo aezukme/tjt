@@ -5,13 +5,20 @@ const CELL_SIZE := Vector2(32, 32)
 const HALF_CELL_SIZE := Vector2(16, 16)
 const QUARTER_CELL_SIZE := Vector2(8, 8)
 
+const VICTORY_SCENE := "res://scenes/menu/victory_screen.tscn"
+const GAME_OVER_SCENE := "res://scenes/menu/game_over_screen.tscn"
+const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
+
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
 @onready var sell_portal: SellPortal = $SellPortal
 @onready var battle_manager: BattleManager = $BattleManager
 @onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
 @onready var start_battle_button: Button = $UI/RightPanel/StartBattleButton
+@onready var toggle_units_button: Button = $UI/RightPanel/ToggleUnitsButton
 @onready var enemy_area: PlayArea = $EnemyArea
+@onready var game_area: PlayArea = $GameArea
+@onready var unit_selection_panel = $UI/UnitSelectionPanel
 
 # LEGACY: Old enemy wave spawn system - kept for compatibility
 # Now using WaveManager system instead
@@ -21,6 +28,10 @@ const QUARTER_CELL_SIZE := Vector2(8, 8)
 
 # Wave system
 var wave_manager: Node
+
+# Placement mode state
+var _placement_stats: UnitStats = null  ## The unit type being placed (null = not in placement mode)
+var _placement_ghost: Sprite2D = null  ## Ghost sprite following the cursor
 
 ## Called when the node enters the scene tree. Connects unit spawner to unit mover.
 func _ready() -> void:
@@ -43,6 +54,28 @@ func _ready() -> void:
 	wave_manager = get_node_or_null("WaveManager")
 	if not wave_manager:
 		wave_manager = get_tree().get_first_node_in_group("wave_manager")
+
+	# Connect wave manager signals for end-game transitions
+	if wave_manager:
+		wave_manager.all_waves_completed.connect(_on_all_waves_completed)
+
+	# ── Unit Selection Panel ──
+	if unit_selection_panel:
+		unit_selection_panel.unit_selected.connect(_on_panel_unit_selected)
+		unit_selection_panel.placement_cancelled.connect(_on_placement_cancelled)
+		# Count pre-placed player units
+		var preplaced := get_tree().get_nodes_in_group("player_units")
+		unit_selection_panel.deployed_count = preplaced.size()
+		# Start with panel hidden
+		unit_selection_panel.visible = false
+		# Wire player stats for gold tracking
+		var _sell_portal = get_node_or_null("SellPortal")
+		if _sell_portal and "player_stats" in _sell_portal and _sell_portal.player_stats:
+			unit_selection_panel.set_player_stats(_sell_portal.player_stats)
+
+	# Toggle button for unit panel
+	if toggle_units_button:
+		toggle_units_button.pressed.connect(_on_toggle_units_pressed)
 
 
 ## Called when battle starts - disable dragging.
@@ -126,11 +159,50 @@ func _on_battle_ended(winner: UnitStats.Team) -> void:
 		print("[Arena] ✅ Wave %d complete! Preparing for next wave..." % wave_manager.current_wave_number)
 	elif winner == UnitStats.Team.PLAYER:
 		print("[Arena] ✅ VICTORY! All waves cleared!")
+		# Victory transition is handled by _on_all_waves_completed
 	else:
 		print("[Arena] ❌ DEFEAT! All player units eliminated.")
+		_transition_to_game_over()
 	
 	# Re-enable dragging for surviving player units
 	_set_drag_enabled(true)
+
+
+## Called when wave_manager reports all waves cleared.
+func _on_all_waves_completed() -> void:
+	print("[Arena] 🏆 All waves completed — showing victory screen...")
+	_transition_to_victory()
+
+
+## Transitions to the Victory screen after a short delay.
+func _transition_to_victory() -> void:
+	await get_tree().create_timer(END_SCREEN_DELAY).timeout
+	var victory_scene: PackedScene = load(VICTORY_SCENE)
+	var screen: Control = victory_scene.instantiate()
+	var total_waves: int = wave_manager.current_wave_number if wave_manager else 0
+	# Gather gold/xp from player stats if available
+	var gold := 0
+	var xp := 0
+	if wave_manager and wave_manager.player_stats:
+		gold = wave_manager.player_stats.gold
+		xp = wave_manager.player_stats.xp
+	screen.set("waves_cleared", total_waves)
+	screen.set("gold_earned", gold)
+	screen.set("xp_earned", xp)
+	get_tree().root.add_child(screen)
+	get_tree().current_scene = screen
+	queue_free()
+
+
+## Transitions to the Game Over screen after a short delay.
+func _transition_to_game_over() -> void:
+	await get_tree().create_timer(END_SCREEN_DELAY).timeout
+	var go_scene: PackedScene = load(GAME_OVER_SCENE)
+	var screen: Control = go_scene.instantiate()
+	screen.set("wave_reached", wave_manager.current_wave_number if wave_manager else 0)
+	get_tree().root.add_child(screen)
+	get_tree().current_scene = screen
+	queue_free()
 
 
 func _on_start_battle_pressed() -> void:
@@ -162,6 +234,122 @@ func _on_battle_state_changed(new_state: int) -> void:
 		start_battle_button.disabled = true
 		start_battle_button.text = "Battle..."
 
+	# Toggle unit selection panel interactability
+	if unit_selection_panel:
+		var can_interact: bool = (new_state == BattleManager.State.PREPARATION or new_state == BattleManager.State.ENDED)
+		unit_selection_panel.set_interactable(can_interact)
+		if not can_interact:
+			unit_selection_panel.visible = false
+	if toggle_units_button:
+		toggle_units_button.visible = (new_state != BattleManager.State.BATTLE)
+		_update_toggle_button_text()
+
+
+# ── Placement Mode ──
+
+## Toggles the unit selection panel visibility.
+func _on_toggle_units_pressed() -> void:
+	if not unit_selection_panel:
+		return
+	unit_selection_panel.visible = not unit_selection_panel.visible
+	_update_toggle_button_text()
+
+
+func _update_toggle_button_text() -> void:
+	if toggle_units_button and unit_selection_panel:
+		toggle_units_button.text = "Units ▲" if unit_selection_panel.visible else "Units ▼"
+
+
+## Called when a card is clicked in the panel.
+func _on_panel_unit_selected(unit_stats: UnitStats) -> void:
+	_placement_stats = unit_stats
+	# Hide panel while placing
+	if unit_selection_panel:
+		unit_selection_panel.visible = false
+		_update_toggle_button_text()
+	# Create ghost sprite that follows the cursor
+	_create_placement_ghost(unit_stats)
+
+
+## Called when placement is cancelled from the panel (clicking same card again).
+func _on_placement_cancelled() -> void:
+	_exit_placement_mode()
+
+
+## Handles unhandled input for placement clicks and cancel.
+func _unhandled_input(event: InputEvent) -> void:
+	if not _placement_stats:
+		return
+
+	# Right-click or ESC → cancel placement
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		_exit_placement_mode()
+		if unit_selection_panel:
+			unit_selection_panel.cancel_selection()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		_exit_placement_mode()
+		if unit_selection_panel:
+			unit_selection_panel.cancel_selection()
+		get_viewport().set_input_as_handled()
+		return
+
+	# Left-click → try to place unit on the hovered tile
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if not game_area:
+			return
+		var tile := game_area.get_hovered_tile()
+		if not game_area.is_tile_within_bounds(tile):
+			return
+		if game_area.unit_grid.is_tile_occupied(tile):
+			print("[Arena] ⚠ Tile %s is occupied!" % str(tile))
+			return
+
+		# Spawn the unit at the chosen tile
+		var spawned := unit_spawner.spawn_unit(_placement_stats, tile)
+		if spawned:
+			print("[Arena] 🟢 Placed %s at tile %s" % [_placement_stats.name, str(tile)])
+			if unit_selection_panel:
+				unit_selection_panel.on_unit_placed(_placement_stats)
+			# Exit placement mode (show panel for next pick)
+			_exit_placement_mode()
+			if unit_selection_panel:
+				unit_selection_panel.cancel_selection()
+
+		get_viewport().set_input_as_handled()
+
+
+func _exit_placement_mode() -> void:
+	_placement_stats = null
+	# Remove ghost sprite
+	if _placement_ghost and is_instance_valid(_placement_ghost):
+		_placement_ghost.queue_free()
+		_placement_ghost = null
+	# Show panel again
+	if unit_selection_panel:
+		unit_selection_panel.visible = true
+		_update_toggle_button_text()
+
+
+## Creates a semi-transparent ghost sprite that follows the cursor for placement preview.
+func _create_placement_ghost(unit_stats: UnitStats) -> void:
+	# Remove old ghost if any
+	if _placement_ghost and is_instance_valid(_placement_ghost):
+		_placement_ghost.queue_free()
+
+	_placement_ghost = Sprite2D.new()
+	_placement_ghost.texture = UnitStats.TEAM_SPRITESHEET.get(unit_stats.team)
+	_placement_ghost.region_enabled = true
+	_placement_ghost.region_rect = Rect2(
+		Vector2(unit_stats.skin_coordinates) * CELL_SIZE,
+		CELL_SIZE
+	)
+	_placement_ghost.modulate = Color(1, 1, 1, 0.6)
+	_placement_ghost.z_index = 100
+	add_child(_placement_ghost)
+
 
 var _stats_update_timer: float = 0.0
 const STATS_UPDATE_INTERVAL: float = 0.25  ## Update stats display 4x per second instead of every frame
@@ -172,6 +360,20 @@ func _process(delta: float) -> void:
 	if _stats_update_timer <= 0:
 		_stats_update_timer = STATS_UPDATE_INTERVAL
 		update_stats_display()
+
+	# Move placement ghost to snap to hovered tile
+	if _placement_ghost and is_instance_valid(_placement_ghost) and game_area:
+		var tile := game_area.get_hovered_tile()
+		if game_area.is_tile_within_bounds(tile):
+			_placement_ghost.visible = true
+			_placement_ghost.global_position = game_area.get_global_from_tile(tile) - HALF_CELL_SIZE
+			# Tint green if free, red if occupied
+			if game_area.unit_grid.is_tile_occupied(tile):
+				_placement_ghost.modulate = Color(1.0, 0.3, 0.3, 0.5)
+			else:
+				_placement_ghost.modulate = Color(0.3, 1.0, 0.5, 0.6)
+		else:
+			_placement_ghost.visible = false
 
 
 ## Updates the unit stats display with current ally units.

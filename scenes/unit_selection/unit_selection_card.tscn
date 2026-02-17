@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=4]
+
+[ext_resource type="Script" path="res://scenes/unit_selection/unit_selection_card.gd" id="1_card"]
+
+[sub_resource type="SystemFont" id="card_font"]
+font_names = PackedStringArray("Arial", "Liberation Sans")
+
+[node name="UnitSelectionCard" type="PanelContainer"]
+custom_minimum_size = Vector2(64, 82)
+script = ExtResource("1_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("card_font")
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+text = "Unit"
+
+[node name="SpriteContainer" type="CenterContainer" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 34)
+
+[node name="SpritePreview" type="TextureRect" parent="VBox/SpriteContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(32, 32)
+stretch_mode = 4
+
+[node name="StatsLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("card_font")
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+text = "HP:100 ATK:10
+Melee"
+
+[node name="CostLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("card_font")
+theme_override_font_sizes/font_size = 8
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+horizontal_alignment = 1
+text = "1 💰"

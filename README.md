@@ -1,96 +1,93 @@
-# TJT Game Project
+# TJT - Auto-Battler (TFT-style)
 
-This is a Godot-based tower defense / auto-battler game project. It features units placed on a grid-based arena with strategic combat mechanics, resource management, and shop systems.
+A Godot 4.6-based auto-battler game inspired by Teamfight Tactics. Players place ally units on a grid arena and watch them battle waves of enemies in automated combat.
 
 ## Description
 
-The game is built using Godot Engine 4.5 and utilizes a tile-based system for gameplay. Key features include:
+Wave-based auto-battler with strategic unit placement, ability systems, and progressive difficulty. Key features:
 
-- **Arena System**: The main gameplay area is an arena with a tilemap, divided into play areas where units can be placed.
-- **Unit Management**: Units are represented as draggable entities with stats, health/mana bars, and visual skins. Units can be moved between grids using drag-and-drop functionality.
-- **Combat System**: Auto-battler with AI pathfinding, automatic targeting, melee/ranged attacks, and abilities.
-- **Resource Management**: 
-  - **Health & Mana**: Float-based system for precise regeneration during battle
-  - **Gold Economy**: Unit purchasing, selling, and combining system
-- **Battle Phases**: Preparation phase for unit placement, battle phase with combat, and end phase
-- **Shop System**: Unit cards that can be purchased, refreshed, and combined to upgrade tiers
-- **Grid-Based Movement**: Units are placed on a grid system, with components handling tile occupation, movement validation, and pathfinding.
-- **Interactive Elements**: Includes highlighting, rotation based on velocity during dragging, and outline effects for user feedback.
-- **Input Handling**: Supports mouse-based selection and dragging, with cancel options via right-click or escape.
+- **Wave System**: 4+ progressive waves with difficulty scaling (5% per wave), preparation phases between rounds, and boss waves
+- **Auto-Combat**: AI-driven pathfinding (A*), targeting, and combat — units fight automatically once battle starts
+- **Ability System**: Mana-based abilities with auto-cast (Fireball, Mending Bolt, AOE), passive abilities (Warrior's Endurance), and projectile visuals
+- **Unit Management**: Drag-and-drop placement, stat tracking (HP, mana, attack, armor, magic resist, attack speed), between-wave position restore and stat reset
+- **Battle Flow**: Preparation → Battle → Wave Complete → 30s prep (skippable) → next wave → repeat
+- **Economy**: Gold rewards per wave, experience system (planned)
 
-The project includes custom components for various functionalities like drag-and-drop, unit grids, play areas, highlighters, AI pathfinding, and combat systems.
+## Current Units
+
+### Allies
+| Unit | Role | HP | ATK | Range | Ability |
+|------|------|-----|-----|-------|---------|
+| **Bjorn** | Warrior/Tank | 500 | 50 | Melee | Warrior's Endurance (+20% HP regen) |
+| **Mage** | Ranged DPS | 400 | 40 | 3 tiles | Fireball (100 dmg, projectile) |
+| **Sage** | Healer/Support | 350 | 25 | 3 tiles | Mending Bolt (heal 60 or damage 50) |
+
+### Enemies
+| Unit | Role | HP | ATK | Range |
+|------|------|-----|-----|-------|
+| **Orc** | Melee bruiser | 100 | 10 | Melee |
+| **Necro** | Ranged caster | 60 | 10 | 3 tiles |
 
 ## Project Structure
 
-- **scenes/**: Contains scene files.
-  - **arena/**: Main arena scene with tilemap and gameplay logic.
-  - **unit/**: Unit scene template with stats, visuals, combat behaviors, and regeneration.
-  - **unit_card/**: Shop unit cards for purchasing units.
-  - **shop/**: Shop interface for buying and refreshing units.
-  - **gold_display/**: UI for displaying player gold.
-  - **sell_portal/**: Area where units can be sold for gold.
-- **components/**: Reusable GDScript components.
-  - `drag_and_drop.gd`: Handles dragging units around the screen.
-  - `unit_grid.gd`: Manages a grid of units, tracks occupation.
-  - `unit_mover.gd`: Facilitates moving units between play areas.
-  - `unit_spawner.gd`: Spawns units into the game world.
-  - `play_area.gd`: Represents playable areas on the tilemap.
-  - `outline_highlighter.gd`: Adds highlight effects to units.
-  - `tile_highlighter.gd`: Highlights tiles.
-  - `velocity_based_rotation.gd`: Rotates units based on movement velocity.
-  - `unit_ai.gd`: AI system for pathfinding, targeting, and combat behavior.
-- **data/**: Game data resources.
-  - **units/**: Unit statistics and definitions (.tres files) with stats like health, mana, attack, armor, abilities.
-  - **player/**: Player data and state.
-- **asset/**: Game assets including sprites, tilesets, fonts, music, sound effects, and shaders.
-  - Pixel art assets from 32rogues pack.
-  - Tilemaps and autotiles.
-  - Audio files for music and SFX.
-- **addons/**: Godot plugins for development.
-  - **codebot/**: AI-assisted coding plugin for the editor.
-  - **sprite_frames_generator/**: Tool for generating sprite frames.
-- **reference/**: Additional reference files and possibly older versions.
+```
+scenes/
+  arena/        # Main arena scene, UI panels, battle orchestration
+  unit/         # Unit and EnemyUnit scenes (Area2D + visuals + combat)
+  projectile/   # Ability projectile scene
+  damage_number/ # Floating damage text
+  wave_display/ # Wave progress UI (wave #, enemies, timer, difficulty)
+  sell_portal/  # Unit selling area
+  shop/         # Shop interface (planned)
 
-## Requirements
+components/
+  battle_manager.gd   # State machine: PREPARATION → BATTLE → ENDED
+  wave_manager.gd     # Wave progression, enemy spawning, between-wave flow
+  unit_ai.gd          # A* pathfinding, targeting, attack logic
+  unit_grid.gd        # Grid-based tile occupation tracking
+  unit_mover.gd       # Drag-and-drop between play areas
+  unit_spawner.gd     # Runtime unit instantiation
+  unit_visuals.gd     # Shared visual helpers (health bar, flashes, damage numbers)
+  play_area.gd        # TileMap-based play zone
+  drag_and_drop.gd    # Mouse drag input handling
+  tile_highlighter.gd # Tile highlight feedback
+  outline_highlighter.gd # Unit outline shader control
+  velocity_based_rotation.gd # Rotation during drag movement
 
-- Godot Engine (version 4.5.0 or later)
-- GL Compatibility rendering mode (configured in project settings)
+data/
+  units/        # UnitStats resources (.tres) — HP, mana, attack, abilities
+  abilities/    # Ability resources — Fireball, Mending Bolt, Heal, AOE
+  waves/        # WaveConfig resources — enemy groups, rewards, difficulty
+  player/       # Player stats (gold, XP)
 
-## How to Run
-
-1. Clone or download the repository.
-2. Open Godot Engine.
-3. Import the project by selecting the `project.godot` file in the root directory.
-4. Run the project from within Godot. The main scene is set to the arena.
-
-## Configuration
-
-- **Window Size**: Viewport 640x360, window override 1300x750.
-- **Stretch Mode**: Viewport with integer scaling.
-- **Rendering**: GL Compatibility, with pixel-perfect 2D snapping.
-- **Inputs**:
-  - "select": Left mouse button.
-  - "cancel_drag": Right mouse button or Escape key.
+asset/          # Sprites (32rogues), tilesets, fonts, music, SFX, shaders
+addons/         # Editor plugins (CodeBot, SpriteFrames Generator)
+```
 
 ## Core Systems
 
-### Battle System
-- **BattleManager**: Controls game phases (Preparation → Battle → End)
-- **Unit AI**: A* pathfinding with obstacle avoidance
-- **Combat**: Automatic targeting, attack cooldowns, damage calculation with armor/magic resist
-- **Abilities**: Mana-based special abilities
+### Battle Flow
+1. **Preparation Phase** — Place/reposition units on the grid via drag-and-drop
+2. **Battle Phase** — AI takes over: pathfinding, targeting, attacks, abilities
+3. **Wave Complete** — Enemies cleared, gold/XP rewards distributed
+4. **Between-Wave Prep** — 30s timer (skippable), units return to saved positions, stats fully reset
+5. **Repeat** until all waves cleared or all allies die
 
-### Regeneration System
-- **Health Regen**: Float-based HP regeneration during battle (configurable per unit)
-- **Mana Regen**: Float-based mana regeneration during battle (configurable per unit)
-- Both systems use delta-time for smooth, frame-independent regeneration
-- Only active during BATTLE phase
+### AI System
+- A* pathfinding on grid with obstacle avoidance
+- Aggro range-based targeting (closest enemy within range)
+- Automatic attack cooldowns based on attack_speed stat
+- Ability auto-cast when mana reaches max
+- Debug logging with `DEBUG_AI = true` flag
 
-### Economy System
-- **Gold**: Currency for purchasing units
-- **Shop**: Refreshable unit pool with tier-based pricing
-- **Combining**: 3 identical units → 1 higher tier unit
-- **Selling**: Sell portal returns gold based on unit tier
+### Damage Calculation
+- Physical: `damage * (100 / (100 + armor))`
+- Magical: `damage * (100 / (100 + magic_resist))`
+- Healing: Direct HP restoration (Sage's Mending Bolt)
+
+### Regeneration
+- Float-based HP/mana regen during BATTLE phase only
+- Delta-time independent for smooth frame-rate-safe regeneration
 
 ### Unit Stats
 Each unit has the following stats (configured in .tres files):
@@ -101,37 +98,28 @@ Each unit has the following stats (configured in .tres files):
 - `armor`, `magic_resist`: Damage reduction
 - `attack_range`, `aggro_range`: Combat ranges
 
-## Recent Updates
+## Requirements
 
-### Latest Session (November 30, 2025)
-- ✅ Fixed console spam from pathfinding debug prints
-- ✅ Fixed console spam from mana regeneration system
-- ✅ Implemented float-based mana regeneration (fixed int truncation issue)
-- ✅ Added health regeneration system during battle
-- ✅ Removed health bar white flash effect on HP changes
-- ✅ All regeneration systems now use float precision for smooth progression
+- Godot Engine 4.6+ (GL Compatibility renderer)
+- Viewport: 640×360, window: 1300×750
+- Integer scaling, pixel-perfect 2D snapping
 
-### Known Issues
-- None currently
+## How to Run
 
-## Assets
+1. Clone the repository
+2. Open in Godot Engine 4.6+
+3. Import via `project.godot`
+4. Run — main scene is the Arena
 
-Assets are located in the `asset/` folder and include:
+## Controls
 
-- **Sprites**: Character sprites, items, monsters, tiles from 32rogues asset pack.
-- **Tilesets**: Autotiles, animated tiles, and tilemaps (e.g., water tiles).
-- **Fonts**: m5x7.ttf for UI.
-- **Audio**: Music and sound effects in respective folders.
-- **Shaders**: Custom shaders for visual effects.
-- **Themes**: UI themes.
-
-## Plugins
-
-The project uses two editor plugins:
-
-- **CodeBot**: Provides AI assistance directly in the Godot editor for coding suggestions and help.
-- **SpriteFrames Generator**: A tool to generate sprite frames from images.
+- **Left click** — Select / drag units
+- **Right click / Escape** — Cancel drag
+- **Start Battle button** — Begin wave / skip preparation timer
 
 ## License
 
 See LICENSE file for details.
+
+---
+*Built with Godot Engine 4.6.1 — Last updated: February 2026*
