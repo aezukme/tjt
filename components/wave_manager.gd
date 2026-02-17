@@ -7,13 +7,14 @@ signal wave_completed(wave_number: int)
 signal wave_rewards_earned(gold: int, xp: int)
 signal all_waves_completed
 signal wave_difficulty_changed(difficulty_multiplier: float)
+signal preparation_phase_started(time_remaining: float)
 
 @warning_ignore("unused_signal")
 signal wave_timer_updated(time_remaining: float)
 
 ## Wave progression configuration
 @export var waves: Array[WaveConfig] = []
-@export var preparation_between_waves: float = 15.0  # Time between waves
+@export var preparation_between_waves: float = 30.0  # Time between waves
 @export var difficulty_scaling_per_wave: float = 0.05  # 5% harder each wave
 @export var boss_wave_interval: int = 5  # Every 5th wave is a boss wave
 
@@ -21,12 +22,14 @@ signal wave_timer_updated(time_remaining: float)
 var battle_manager: Node
 var unit_spawner: Node
 var enemy_area: Node
+var game_area: Node
 var player_stats: Variant  # Can be Node or Resource
 
 # Set via @onready after inheriting from Arena parent
 @onready var _battle_manager: Node = get_tree().get_first_node_in_group("battle_manager")
 @onready var _unit_spawner: Node = get_parent().get_node("UnitSpawner") if get_parent() else null
 @onready var _enemy_area: Node = get_parent().get_node("EnemyArea") if get_parent() else null
+@onready var _game_area: Node = get_parent().get_node("GameArea") if get_parent() else null
 @onready var _player_stats: Variant = _get_player_stats_node()
 
 ## State
@@ -36,9 +39,14 @@ var is_wave_active: bool = false
 var remaining_enemies: int = 0
 var wave_timer: float = 0.0
 var difficulty_multiplier: float = 1.0
+var is_waiting_for_next_wave: bool = false
+var prep_timer: float = 0.0
 
 ## Tracked enemies
 var spawned_enemies: Array[Node] = []
+
+## Saved ally unit positions (unit_node -> {tile, global_pos})
+var saved_ally_positions: Dictionary = {}
 
 
 func _ready() -> void:
@@ -49,6 +57,7 @@ func _ready() -> void:
 	battle_manager = _battle_manager
 	unit_spawner = _unit_spawner
 	enemy_area = _enemy_area
+	game_area = _game_area
 	player_stats = _player_stats
 	
 	# Fallback - try to get from parent or scene
@@ -58,13 +67,15 @@ func _ready() -> void:
 		unit_spawner = get_parent().get_node_or_null("UnitSpawner")
 	if not enemy_area:
 		enemy_area = get_parent().get_node_or_null("EnemyArea")
+	if not game_area:
+		game_area = get_parent().get_node_or_null("GameArea")
 	if not player_stats:
 		# Try to find PlayerStats via hierarchy
 		var sell_portal = get_parent().get_node_or_null("SellPortal")
 		if sell_portal and "player_stats" in sell_portal:
 			player_stats = sell_portal.player_stats
 	
-	print("[WAVE] References - BattleManager: %s, UnitSpawner: %s, EnemyArea: %s, PlayerStats: %s" % [battle_manager != null, unit_spawner != null, enemy_area != null, player_stats != null])
+	print("[WAVE] References - BattleManager: %s, UnitSpawner: %s, EnemyArea: %s, GameArea: %s, PlayerStats: %s" % [battle_manager != null, unit_spawner != null, enemy_area != null, game_area != null, player_stats != null])
 	print("[WAVE] Loaded %d waves" % waves.size())
 	
 	# Connect battle manager signals
@@ -117,23 +128,41 @@ func _get_player_stats_node() -> Variant:
 	return null
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# During prep phase between waves, count down timer
+	if is_waiting_for_next_wave:
+		if prep_timer > 0:
+			prep_timer -= delta
+			wave_timer_updated.emit(prep_timer)
+			if prep_timer <= 0:
+				_start_next_wave_battle()
+		return
+	
 	if not is_wave_active or not battle_manager:
 		return
 	
-	# During battle, units fight. Between waves, show prep timer.
+	# During battle, check if all enemies are dead
 	if battle_manager.current_state == BattleManager.State.BATTLE:
-		# Check if all enemies are dead
 		if remaining_enemies <= 0:
 			_complete_wave()
 
 
 func _on_battle_started() -> void:
+	# Only handle the very first battle start (wave_index == -1).
+	# Subsequent waves are started via _start_next_wave_battle which calls
+	# start_battle() again, but we don't want to reset state.
+	if current_wave_index >= 0:
+		return
+	
 	print("\n[WAVE] >>> BATTLE STARTED <<<")
 	current_wave_index = -1
 	current_wave_number = 0
 	difficulty_multiplier = 1.0
 	spawned_enemies.clear()
+	is_waiting_for_next_wave = false
+	
+	# Save initial ally positions before first fight
+	_save_ally_positions()
 	
 	# Start first wave
 	await get_tree().process_frame
@@ -291,9 +320,12 @@ func _create_scaled_stats(base_stats: UnitStats) -> UnitStats:
 
 
 func _on_enemy_died(unit: Node) -> void:
-	remaining_enemies -= 1
 	if unit in spawned_enemies:
 		spawned_enemies.erase(unit)
+	else:
+		# Already counted — avoid double-decrement
+		return
+	remaining_enemies = max(remaining_enemies - 1, 0)
 	print("[WAVE] Enemy died! Remaining: %d" % remaining_enemies)
 
 
@@ -314,19 +346,47 @@ func _complete_wave() -> void:
 		print("[WAVE] 💰 REWARDS: +%d Gold, +%d XP" % [gold_reward, xp_reward])
 		wave_rewards_earned.emit(gold_reward, xp_reward)
 	
-	# Clean up any dead units
+	# Clean up any remaining dead/alive enemy units
 	for unit in spawned_enemies:
 		if is_instance_valid(unit):
 			unit.queue_free()
 	spawned_enemies.clear()
 	
-	# Wait before starting next wave
-	if preparation_between_waves > 0:
-		print("[WAVE] Waiting %.1f seconds before next wave..." % preparation_between_waves)
-		await get_tree().create_timer(preparation_between_waves).timeout
+	# Clear enemy grid
+	if enemy_area and enemy_area.unit_grid:
+		for tile in enemy_area.unit_grid.units.keys():
+			var u = enemy_area.unit_grid.units[tile]
+			if u and is_instance_valid(u):
+				enemy_area.unit_grid.remove_unit(tile)
+				u.queue_free()
 	
-	print("[WAVE] Starting next wave...\n")
-	start_next_wave()
+	# Check if all waves done
+	if current_wave_index + 1 >= waves.size():
+		print("[WAVE] !!! ALL WAVES COMPLETED !!!")
+		all_waves_completed.emit()
+		# End the battle as victory
+		if battle_manager:
+			battle_manager.end_battle(UnitStats.Team.PLAYER)
+		return
+	
+	# End battle phase so AI stops
+	if battle_manager:
+		battle_manager.end_battle(UnitStats.Team.PLAYER)
+	
+	# Restore ally positions and reset their stats
+	await get_tree().process_frame
+	_restore_ally_positions()
+	_reset_ally_stats()
+	
+	# Start preparation phase between waves
+	is_waiting_for_next_wave = true
+	prep_timer = preparation_between_waves
+	preparation_phase_started.emit(prep_timer)
+	print("[WAVE] ⏳ Preparation phase: %.0f seconds (press Start Battle to skip)" % prep_timer)
+	
+	# Enable dragging for unit repositioning
+	if battle_manager:
+		battle_manager.start_preparation()
 
 
 ## Get current wave info
@@ -348,3 +408,131 @@ func get_progress() -> float:
 
 func is_boss_wave() -> bool:
 	return current_wave_number > 0 and current_wave_number % boss_wave_interval == 0
+
+
+## Called when player presses Start Battle during between-wave preparation.
+## Skips the remaining prep timer and immediately starts the next wave.
+func skip_preparation() -> void:
+	if not is_waiting_for_next_wave:
+		return
+	print("[WAVE] Preparation skipped by player!")
+	prep_timer = 0.0
+	_start_next_wave_battle()
+
+
+## Internal: starts the next wave's battle phase.
+func _start_next_wave_battle() -> void:
+	is_waiting_for_next_wave = false
+	
+	# Save ally positions before the fight
+	_save_ally_positions()
+	
+	# Start battle phase
+	if battle_manager:
+		battle_manager.start_battle()
+	
+	print("[WAVE] Starting next wave...\n")
+	start_next_wave()
+
+
+## Saves the current position and tile of all ally units.
+func _save_ally_positions() -> void:
+	saved_ally_positions.clear()
+	
+	if not game_area or not game_area.unit_grid:
+		return
+	
+	var ally_units = get_tree().get_nodes_in_group("player_units")
+	for unit in ally_units:
+		if not is_instance_valid(unit):
+			continue
+		
+		# Find which tile this unit is on
+		var tile: Vector2i = Vector2i(-1, -1)
+		for t in game_area.unit_grid.units.keys():
+			if game_area.unit_grid.units[t] == unit:
+				tile = t
+				break
+		
+		saved_ally_positions[unit] = {
+			"tile": tile,
+			"global_pos": unit.global_position
+		}
+	
+	print("[WAVE] 📍 Saved positions for %d ally units" % saved_ally_positions.size())
+
+
+## Restores all ally units to their saved positions.
+func _restore_ally_positions() -> void:
+	if saved_ally_positions.is_empty() or not game_area or not game_area.unit_grid:
+		return
+	
+	# First clear the grid
+	for tile in game_area.unit_grid.units.keys():
+		game_area.unit_grid.units[tile] = null
+	
+	var restored_count: int = 0
+	for unit in saved_ally_positions.keys():
+		if not is_instance_valid(unit):
+			continue
+		
+		var data: Dictionary = saved_ally_positions[unit]
+		var tile: Vector2i = data["tile"]
+		var saved_pos: Vector2 = data["global_pos"]
+		
+		# Re-register in grid
+		if tile != Vector2i(-1, -1) and game_area.unit_grid.units.has(tile):
+			game_area.unit_grid.add_unit(tile, unit)
+		
+		# Restore position
+		unit.global_position = saved_pos
+		
+		# Reset rotation/scale from battle movement
+		unit.rotation = 0
+		unit.scale = Vector2.ONE
+		
+		restored_count += 1
+	
+	print("[WAVE] 📍 Restored positions for %d ally units" % restored_count)
+
+
+## Resets HP, mana, and cooldowns for all surviving ally units.
+func _reset_ally_stats() -> void:
+	var ally_units = get_tree().get_nodes_in_group("player_units")
+	var reset_count: int = 0
+	
+	for unit in ally_units:
+		if not is_instance_valid(unit):
+			continue
+		
+		if not unit.stats:
+			continue
+		
+		# Reset health to max
+		if "current_health" in unit:
+			unit.current_health = unit.stats.max_health
+		elif unit.stats:
+			unit.stats.reset_health()
+		
+		# Reset mana to starting_mana
+		if "current_mana" in unit:
+			unit.current_mana = unit.stats.starting_mana
+		elif unit.stats:
+			unit.stats.reset_mana()
+		
+		# Reset ability cooldown
+		if "ability_on_cooldown" in unit:
+			unit.ability_on_cooldown = false
+		
+		# Reset AI target
+		if unit.has_node("UnitAI"):
+			var ai = unit.get_node("UnitAI")
+			if ai.current_target and ai.current_target.has_meta("is_dummy_target"):
+				ai.current_target.queue_free()
+			ai.current_target = null
+			ai.path.clear()
+			ai.attack_timer = 0.0
+		
+		reset_count += 1
+	
+	print("[WAVE] ♻ Reset stats for %d ally units" % reset_count)

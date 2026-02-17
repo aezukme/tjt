@@ -11,6 +11,6 @@ static func is_unit_node(node) -> bool:
 	if node.has_method("apply_damage"):
 		return true
 	# Fallback: some nodes may expose `stats` resource directly and be unit-like
-	if node.has_property("stats"):
+	if "stats" in node:
 		return true
 	return false

@@ -9,7 +9,6 @@ signal mana_bar_filled
 signal mana_changed(new_mana: int)  # Receives int for UI display
 
 const CELL_SIZE := Vector2(32, 32)
-const DamageNumberScene = preload("res://scenes/damage_number/damage_number.tscn")
 
 @export var stats: UnitStats : set = set_stats
 
@@ -27,9 +26,6 @@ var current_health: float : set = _set_current_health
 var current_mana: float : set = _set_current_mana
 var ability_on_cooldown: bool = false
 var _mana_retry_task_running: bool = false
-
-const _health_flash_duration: float = 0.05
-const _skin_flash_duration: float = 0.1
 
 ## Called when the node enters the scene tree. Connects drag signals if not in editor.
 func _ready() -> void:
@@ -95,22 +91,13 @@ func _connect_stats_signals() -> void:
 	if health_reached_zero.is_connected(_on_health_reached_zero):
 		return
 	
-	# Check if already connected to avoid duplicate connections
-	if not health_reached_zero.is_connected(_on_health_reached_zero):
-		health_reached_zero.connect(_on_health_reached_zero)
+	health_reached_zero.connect(_on_health_reached_zero)
 	
-	# Connect health_changed signal (use lambda to ignore the health value argument)
-	if not health_changed.is_connected(func(_new_health): _update_health_bar()):
-		health_changed.connect(func(_new_health): _update_health_bar())
+	# Connect health_changed signal
+	health_changed.connect(func(_new_health): _update_health_bar())
 	
-	# Add to team groups (only if not already in group)
-	add_to_group("units")  # Add to global units group
-	if stats.team == UnitStats.Team.PLAYER:
-		if not is_in_group("player_units"):
-			add_to_group("player_units")
-	else:
-		if not is_in_group("enemy_units"):
-			add_to_group("enemy_units")
+	# Add to team groups via shared helper
+	UnitVisuals.setup_team_groups(self, stats)
 	
 	# Apply passive ability if present
 	if stats.passive_ability:
@@ -139,100 +126,18 @@ func _update_health_bar() -> void:
 func _update_health_bar_color() -> void:
 	if not stats or not health_bar:
 		return
-	
 	var health_percent: float = float(current_health) / float(stats.get_max_health())
-	var bar_color: Color
-	
-	# Color gradient with precise breakpoints:
-	# 100% - Dark Green
-	# 75% - Slightly lighter green
-	# 50% - Light Green
-	# 30% - Light Green -> Yellow -> Ochre transition
-	# 20% - Ochre -> Orange transition
-	# 15% - Orange
-	# 10% - Orange -> Red transition
-	# 0% - Red
-	
-	if health_percent >= 0.75:
-		# Dark Green (100%) to slightly lighter green (75%)
-		bar_color = Color(0.0, 0.4, 0.0).lerp(Color(0.0, 0.6, 0.0), (1.0 - health_percent) / 0.25)
-	elif health_percent >= 0.50:
-		# Slightly lighter green (75%) to Light Green (50%)
-		bar_color = Color(0.0, 0.6, 0.0).lerp(Color(0.2, 0.9, 0.2), (0.75 - health_percent) / 0.25)
-	elif health_percent >= 0.30:
-		# Light Green (50%) to Yellow (30%)
-		bar_color = Color(0.2, 0.9, 0.2).lerp(Color(1.0, 1.0, 0.0), (0.50 - health_percent) / 0.20)
-	elif health_percent >= 0.20:
-		# Yellow (30%) to Orange (20%)
-		bar_color = Color(1.0, 1.0, 0.0).lerp(Color(1.0, 0.5, 0.0), (0.30 - health_percent) / 0.10)
-	elif health_percent >= 0.10:
-		# Orange (20%) to Orange/Red (10%)
-		bar_color = Color(1.0, 0.5, 0.0).lerp(Color(1.0, 0.2, 0.0), (0.20 - health_percent) / 0.10)
-	else:
-		# Red (below 10%)
-		bar_color = Color(1.0, 0.0, 0.0)
-	
-	# Create and set StyleBoxFlat directly
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = bar_color
-	style_box.border_width_left = 1
-	style_box.border_width_top = 1
-	style_box.border_width_right = 1
-	style_box.border_width_bottom = 1
-	style_box.border_color = Color(0.13, 0.13, 0.13, 1)
-	
-	# Get or create theme
-	var theme = health_bar.theme
-	if not theme:
-		theme = Theme.new()
-		health_bar.theme = theme
-	
-	# Override the fill style
-	theme.set_stylebox("fill", "ProgressBar", style_box)
+	UnitVisuals.apply_health_bar_color(health_bar, health_percent)
 
 
-## Flash health bar red when taking damage.
+## Flash health bar white when taking damage.
 func _flash_health_bar() -> void:
-	if not health_bar:
-		return
-	
-	# Increment flash ID to cancel previous flashes
-	_health_flash_id += 1
-	var current_id = _health_flash_id
-	
-	# Create white stylebox
-	var white_style = StyleBoxFlat.new()
-	white_style.bg_color = Color.WHITE
-	white_style.border_width_left = 1
-	white_style.border_width_top = 1
-	white_style.border_width_right = 1
-	white_style.border_width_bottom = 1
-	white_style.border_color = Color(0.13, 0.13, 0.13, 1)
-	
-	# Override the fill style
-	health_bar.add_theme_stylebox_override("fill", white_style)
-	
-	# Schedule removal
-	await get_tree().create_timer(_health_flash_duration).timeout
-	if current_id == _health_flash_id:
-		health_bar.remove_theme_stylebox_override("fill")
+	_health_flash_id = UnitVisuals.flash_health_bar(health_bar, get_tree(), _health_flash_id)
 
 
 ## Flash the unit's skin for visual feedback.
 func flash_skin(flash_color: Color = Color.RED) -> void:
-	if not skin:
-		return
-	
-	# Increment flash ID to cancel previous flashes
-	_skin_flash_id += 1
-	var current_id = _skin_flash_id
-	
-	skin.modulate = flash_color
-	
-	# Schedule reset
-	await get_tree().create_timer(_skin_flash_duration).timeout
-	if current_id == _skin_flash_id:
-		skin.modulate = Color(1, 1, 1, 1)
+	_skin_flash_id = UnitVisuals.flash_skin(skin, get_tree(), _skin_flash_id, flash_color)
 
 
 ## Updates mana bar display.
@@ -255,14 +160,12 @@ func _set_current_health(value: float) -> void:
 	health_changed.emit(int(current_health))
 	if current_health <= 0:
 		health_reached_zero.emit()
-		health_reached_zero.emit()
 
 
 ## Sets current mana and emits signal if full.
 func _set_current_mana(value: float) -> void:
 	current_mana = value
 	mana_changed.emit(int(current_mana))
-	mana_changed.emit(current_mana)
 	if current_mana >= stats.max_mana:
 		mana_bar_filled.emit()
 
@@ -270,46 +173,12 @@ func _set_current_mana(value: float) -> void:
 ## Called when unit's health reaches zero.
 func _on_health_reached_zero() -> void:
 	print("%s died!" % stats.name)
-	
-	# Remove from grid
-	var play_area = get_parent()
-	if play_area and play_area.has_method("get_tile_from_global") and play_area.unit_grid:
-		var tile = play_area.get_tile_from_global(global_position)
-		play_area.unit_grid.remove_unit(tile)
-	
-	# Notify battle manager
-	var battle_manager := get_tree().get_first_node_in_group("battle_manager")
-	if battle_manager:
-		battle_manager.check_win_condition()
-	
-	# Play death animation/effect (TODO)
-	
-	# Remove from game
-	queue_free()
+	UnitVisuals.handle_unit_death(self)
 
 
 ## Spawns a floating damage number above the unit.
 func _spawn_damage_number(damage: float) -> void:
-	if not DamageNumberScene:
-		return
-	
-	var damage_number = DamageNumberScene.instantiate()
-	
-	# Add to the current scene (not root) so it appears in the right layer
-	var current_scene = get_tree().current_scene
-	if current_scene:
-		current_scene.add_child(damage_number)
-	else:
-		get_tree().root.add_child(damage_number)
-	
-	# Position above the unit (Control node uses position, not global_position initially)
-	damage_number.position = global_position + Vector2(0, -20)
-	
-	# Determine color based on damage source (can be expanded later)
-	var color = Color.WHITE
-	
-	# Setup the damage number
-	damage_number.setup(damage, color)
+	UnitVisuals.spawn_damage_number(get_tree(), global_position, damage)
 
 
 ## Handles input events to detect quick sell action when unit is hovered.

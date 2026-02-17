@@ -1,0 +1,165 @@
+extends Ability
+class_name HealOrHarmAbility
+
+## Smart mage ability: heals wounded allies, or damages enemies if everyone is full HP.
+## If an ally has HP < max HP → heals the most wounded ally.
+## If no ally needs healing → deals 50% of heal_amount as damage to nearest enemy.
+
+@export var heal_amount: float = 60.0
+
+
+## Override get_valid_targets to implement custom dual-targeting logic.
+## Returns allies that need healing, OR enemies if no allies are hurt.
+func get_valid_targets(caster: Unit) -> Array:
+	# First: check for wounded allies
+	var wounded_allies := _get_wounded_allies(caster)
+	if not wounded_allies.is_empty():
+		print("[HealOrHarm] %s: found %d wounded allies" % [caster.stats.name, wounded_allies.size()])
+		return wounded_allies
+
+	# No wounded allies — target enemies instead
+	var enemies := _get_enemy_units(caster)
+	if cast_range > 0:
+		enemies = _filter_by_range(caster, enemies, cast_range)
+	if not enemies.is_empty():
+		print("[HealOrHarm] %s: no wounded allies, switching to damage mode (%d enemies)" % [caster.stats.name, enemies.size()])
+	return enemies
+
+
+func execute(caster: Unit, targets: Array) -> void:
+	if targets.is_empty():
+		print("[HealOrHarm] No valid targets!")
+		return
+
+	var first_target = targets[0]
+
+	# Determine if we're healing or damaging based on team
+	var is_ally := false
+	if "stats" in first_target and first_target.stats:
+		is_ally = first_target.stats.team == caster.stats.team
+
+	if is_ally:
+		_execute_heal(caster, targets)
+	else:
+		_execute_damage(caster, targets)
+
+
+## Heal the most wounded ally.
+func _execute_heal(caster: Unit, targets: Array) -> void:
+	# Find ally with lowest HP percentage
+	var most_wounded = targets[0]
+	var lowest_hp_pct: float = 1.0
+
+	for target in targets:
+		var hp_pct: float
+		if "current_health" in target:
+			hp_pct = float(target.current_health) / float(target.stats.max_health)
+		elif "stats" in target and target.stats:
+			hp_pct = float(target.stats.health) / float(target.stats.max_health)
+		else:
+			continue
+
+		if hp_pct < lowest_hp_pct:
+			lowest_hp_pct = hp_pct
+			most_wounded = target
+
+	# Calculate actual heal (don't overheal)
+	var current_hp: float
+	var max_hp: float
+	if "current_health" in most_wounded:
+		current_hp = most_wounded.current_health
+		max_hp = most_wounded.stats.max_health
+	else:
+		current_hp = most_wounded.stats.health
+		max_hp = most_wounded.stats.max_health
+
+	var actual_heal: float = min(heal_amount, max_hp - current_hp)
+
+	# Apply heal
+	if "current_health" in most_wounded:
+		most_wounded.current_health += actual_heal
+	elif "stats" in most_wounded and most_wounded.stats:
+		most_wounded.stats.health = int(min(most_wounded.stats.health + actual_heal, max_hp))
+
+	print("[HealOrHarm] %s heals %s for %d HP! (was %d/%d)" % [
+		caster.stats.name, most_wounded.stats.name, int(actual_heal), int(current_hp), int(max_hp)
+	])
+
+	# Green flash on healed target
+	if most_wounded.has_method("flash_skin"):
+		most_wounded.flash_skin(Color.GREEN)
+
+	# Spawn green heal number
+	UnitVisuals.spawn_damage_number(
+		caster.get_tree(), most_wounded.global_position, actual_heal, Color.GREEN
+	)
+
+	# Blue flash on caster
+	caster.flash_skin(Color.CYAN)
+
+
+## Damage the nearest enemy (50% of heal value).
+func _execute_damage(caster: Unit, targets: Array) -> void:
+	var damage: float = heal_amount * 0.5
+
+	# Pick closest enemy
+	var target = targets[0]
+	if targets.size() > 1:
+		var closest_dist := INF
+		for t in targets:
+			var dist = caster.global_position.distance_to(t.global_position)
+			if dist < closest_dist:
+				closest_dist = dist
+				target = t
+
+	print("[HealOrHarm] %s blasts %s for %d dmg! (no allies wounded)" % [
+		caster.stats.name, target.stats.name, int(damage)
+	])
+
+	# Apply damage
+	if target.has_method("apply_damage"):
+		target.apply_damage(int(damage))
+	elif "current_health" in target:
+		target.current_health = max(target.current_health - damage, 0)
+	elif "stats" in target and target.stats:
+		target.stats.health = int(max(target.stats.health - damage, 0))
+
+	# Purple flash for arcane damage
+	if target.has_method("flash_skin"):
+		target.flash_skin(Color.MEDIUM_PURPLE)
+
+	# Caster flash
+	caster.flash_skin(Color.MEDIUM_PURPLE)
+
+
+## Helper: Get all allies that have HP < max HP (excluding fully healed ones).
+func _get_wounded_allies(caster: Unit) -> Array:
+	var wounded := []
+	var group_name = "player_units" if caster.stats.team == UnitStats.Team.PLAYER else "enemy_units"
+	var nodes := caster.get_tree().get_nodes_in_group(group_name)
+
+	for ally in nodes:
+		if not is_instance_valid(ally) or not UnitUtils.is_unit_node(ally):
+			continue
+
+		var current_hp: float
+		var max_hp: float
+
+		if "current_health" in ally:
+			current_hp = ally.current_health
+			max_hp = ally.stats.max_health
+		elif "stats" in ally and ally.stats:
+			current_hp = ally.stats.health
+			max_hp = ally.stats.max_health
+		else:
+			continue
+
+		# Only include if actually wounded
+		if current_hp < max_hp:
+			wounded.append(ally)
+
+	# Filter by range if specified
+	if cast_range > 0 and not wounded.is_empty():
+		wounded = _filter_by_range(caster, wounded, cast_range)
+
+	return wounded

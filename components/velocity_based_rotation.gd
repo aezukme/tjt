@@ -43,39 +43,23 @@ func _process(delta: float) -> void:
 	velocity = (target.global_position - last_position) / delta
 	last_position = target.global_position
 	
-	# Determine if we should rotate
 	var is_dragging = drag_and_drop != null and drag_and_drop.dragging
 	var is_moving = abs(velocity.x) > x_velocity_threshold
 	
-	# If no drag_and_drop component, always use smooth rotation
-	if drag_and_drop == null:
-		if is_moving:
-			var direction = sign(velocity.x)
-			target_angle = deg_to_rad(direction * rotation_multiplier)
-		else:
-			target_angle = 0.0
-		
-		var lerp_weight = 1.0 - exp(-delta / max(lerp_seconds, 0.001))
-		target.rotation = lerp_angle(target.rotation, target_angle, lerp_weight)
-		return
-	
-	# With drag_and_drop component - check if dropped first
-	if not is_dragging:
+	# With drag_and_drop: only rotate while dragging; without: always rotate
+	if drag_and_drop != null and not is_dragging:
 		target.rotation = 0.0
 		return
 	
-	# Now we know we're dragging
+	# Calculate target angle based on movement
 	if is_moving:
-		# Smooth rotation while dragging and moving
-		var direction = sign(velocity.x)
-		target_angle = deg_to_rad(direction * rotation_multiplier)
-		var lerp_weight = 1.0 - exp(-delta / max(lerp_seconds, 0.001))
-		target.rotation = lerp_angle(target.rotation, target_angle, lerp_weight)
+		target_angle = deg_to_rad(sign(velocity.x) * rotation_multiplier)
 	else:
-		# Smooth rotation back to 0 while dragging but not moving
 		target_angle = 0.0
-		var lerp_weight = 1.0 - exp(-delta / max(lerp_seconds, 0.001))
-		target.rotation = lerp_angle(target.rotation, target_angle, lerp_weight)
+	
+	# Apply smooth interpolation
+	var lerp_weight = 1.0 - exp(-delta / max(lerp_seconds, 0.001))
+	target.rotation = lerp_angle(target.rotation, target_angle, lerp_weight)
 
 
 ## Enables or disables the rotation effect, resetting rotation if disabled.
