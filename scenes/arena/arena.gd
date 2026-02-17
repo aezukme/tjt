@@ -5,6 +5,10 @@ const CELL_SIZE := Vector2(32, 32)
 const HALF_CELL_SIZE := Vector2(16, 16)
 const QUARTER_CELL_SIZE := Vector2(8, 8)
 
+const VICTORY_SCENE := "res://scenes/menu/victory_screen.tscn"
+const GAME_OVER_SCENE := "res://scenes/menu/game_over_screen.tscn"
+const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
+
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
 @onready var sell_portal: SellPortal = $SellPortal
@@ -50,6 +54,10 @@ func _ready() -> void:
 	wave_manager = get_node_or_null("WaveManager")
 	if not wave_manager:
 		wave_manager = get_tree().get_first_node_in_group("wave_manager")
+
+	# Connect wave manager signals for end-game transitions
+	if wave_manager:
+		wave_manager.all_waves_completed.connect(_on_all_waves_completed)
 
 	# ── Unit Selection Panel ──
 	if unit_selection_panel:
@@ -147,11 +155,50 @@ func _on_battle_ended(winner: UnitStats.Team) -> void:
 		print("[Arena] ✅ Wave %d complete! Preparing for next wave..." % wave_manager.current_wave_number)
 	elif winner == UnitStats.Team.PLAYER:
 		print("[Arena] ✅ VICTORY! All waves cleared!")
+		# Victory transition is handled by _on_all_waves_completed
 	else:
 		print("[Arena] ❌ DEFEAT! All player units eliminated.")
+		_transition_to_game_over()
 	
 	# Re-enable dragging for surviving player units
 	_set_drag_enabled(true)
+
+
+## Called when wave_manager reports all waves cleared.
+func _on_all_waves_completed() -> void:
+	print("[Arena] 🏆 All waves completed — showing victory screen...")
+	_transition_to_victory()
+
+
+## Transitions to the Victory screen after a short delay.
+func _transition_to_victory() -> void:
+	await get_tree().create_timer(END_SCREEN_DELAY).timeout
+	var victory_scene: PackedScene = load(VICTORY_SCENE)
+	var screen: Control = victory_scene.instantiate()
+	var total_waves: int = wave_manager.current_wave_number if wave_manager else 0
+	# Gather gold/xp from player stats if available
+	var gold := 0
+	var xp := 0
+	if wave_manager and wave_manager.player_stats:
+		gold = wave_manager.player_stats.gold
+		xp = wave_manager.player_stats.xp
+	screen.set("waves_cleared", total_waves)
+	screen.set("gold_earned", gold)
+	screen.set("xp_earned", xp)
+	get_tree().root.add_child(screen)
+	get_tree().current_scene = screen
+	queue_free()
+
+
+## Transitions to the Game Over screen after a short delay.
+func _transition_to_game_over() -> void:
+	await get_tree().create_timer(END_SCREEN_DELAY).timeout
+	var go_scene: PackedScene = load(GAME_OVER_SCENE)
+	var screen: Control = go_scene.instantiate()
+	screen.set("wave_reached", wave_manager.current_wave_number if wave_manager else 0)
+	get_tree().root.add_child(screen)
+	get_tree().current_scene = screen
+	queue_free()
 
 
 func _on_start_battle_pressed() -> void:
