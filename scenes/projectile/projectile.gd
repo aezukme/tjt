@@ -19,17 +19,30 @@ func _ready() -> void:
 	pass
 
 
+## Reset state for reuse from pool.
+func reset() -> void:
+	target = null
+	caster = null
+	is_setup = false
+	damage = 50.0
+	hit_color = Color.ORANGE_RED
+	rotation = 0.0
+	global_position = Vector2.ZERO
+	if sprite:
+		sprite.modulate = Color.ORANGE_RED
+
+
 func _process(delta: float) -> void:
 	if not is_setup:
 		return
 	
 	if not target or not is_instance_valid(target):
-		queue_free()
+		_return_to_pool()
 		return
 	
 	# Move toward target - ensure it's a Node2D so it has global_position
 	if not (target is Node2D):
-		queue_free()
+		_return_to_pool()
 		return
 	var direction = global_position.direction_to(target.global_position)
 	global_position += direction * speed * delta
@@ -42,7 +55,7 @@ func _process(delta: float) -> void:
 func _hit_target() -> void:
 	if not target or not is_instance_valid(target):
 		print("[Projectile] Hit but target invalid!")
-		queue_free()
+		_return_to_pool()
 		return
 	# Deal damage via interface if available
 	if target.has_method("apply_damage"):
@@ -59,8 +72,18 @@ func _hit_target() -> void:
 	if target.has_method("flash_skin"):
 		target.flash_skin(hit_color)
 	
-	# Cleanup
-	queue_free()
+	# Return to pool instead of freeing
+	_return_to_pool()
+
+
+## Return this projectile to the pool, or queue_free if no pool exists.
+func _return_to_pool() -> void:
+	var pool_nodes = get_tree().get_nodes_in_group("projectile_pool")
+	if not pool_nodes.is_empty() and is_instance_valid(pool_nodes[0]):
+		reset()
+		pool_nodes[0].release(self, preload("res://scenes/projectile/projectile.tscn"))
+	else:
+		queue_free()
 
 
 

@@ -17,6 +17,10 @@ const HALF_CELL_SIZE := Vector2(16, 16)
 @export var enabled: bool = false
 @export var update_interval: float = 0.5  ## How often AI updates (performance)
 
+## Minimum time (seconds) a unit must keep its current target before switching.
+## Makes combat look more natural — units commit to fights briefly.
+const TARGET_SWITCH_DELAY := 0.8
+
 var unit
 var current_target
 var path: Array[Vector2i] = []
@@ -24,11 +28,13 @@ var current_path_index: int = 0
 var movement_speed: float = 100.0  ## Pixels per second
 var attack_timer: float = 0.0
 var update_timer: float = 0.0
+var _target_lock_timer: float = 0.0  ## Countdown before target switch is allowed
 
 ## Reference to play areas for pathfinding
 var play_area: PlayArea
 var enemy_area: PlayArea
 var navigation_agent: NavigationAgent2D
+var _battle_manager: Node  ## Cached BattleManager reference
 
 
 ## Called when the node enters the scene tree.
@@ -56,9 +62,10 @@ func _process(delta: float) -> void:
 	if not enabled or not unit or not unit.stats:
 		return
 	
-	# Don't run AI when not in BATTLE state
-	var bm = get_tree().get_first_node_in_group("battle_manager")
-	if bm and bm.current_state != BattleManager.State.BATTLE:
+	# Don't run AI when not in BATTLE state (cached lookup)
+	if not is_instance_valid(_battle_manager):
+		_battle_manager = get_tree().get_first_node_in_group("battle_manager")
+	if _battle_manager and _battle_manager.current_state != BattleManager.State.BATTLE:
 		return
 	
 	update_timer -= delta
@@ -70,8 +77,15 @@ func _process(delta: float) -> void:
 	if attack_timer > 0:
 		attack_timer -= delta
 	
+	# Update target lock timer
+	if _target_lock_timer > 0:
+		_target_lock_timer -= delta
+	
 	# Separation logic - push units away from each other to prevent overlap
 	_apply_separation(delta)
+	
+	# Y-sort: units lower on screen render on top for depth illusion
+	unit.z_index = int(unit.global_position.y)
 	
 	# Attempt attack if in range and cooldown ready
 	if current_target and is_instance_valid(current_target):
@@ -103,33 +117,100 @@ func _process(delta: float) -> void:
 
 ## Main AI update logic.
 func _update_ai() -> void:
+	# Target stickiness: if current target is still valid and in aggro range, keep it.
+	# Only search for a new target when current one is dead, invalid, or out of range.
+	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
+		var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
+		if _is_in_aggro_range(current_target.global_position, aggro_range_pixels):
+			# Still valid — check if target has died (stats.health <= 0)
+			if "stats" in current_target and current_target.stats and current_target.stats.health > 0:
+				return  # Keep current target
+
+	# Respect target switch delay — don't switch too fast (looks unnatural)
+	if _target_lock_timer > 0 and current_target and is_instance_valid(current_target):
+		if not current_target.has_meta("is_dummy_target"):
+			return  # Still locked to previous target
+
 	# Find or update target
 	var new_target = _find_nearest_enemy()
 	
 	# For enemy units, if no target, they should move towards player base
 	if not new_target and unit.stats.team == UnitStats.Team.ENEMY:
+		# Reuse existing dummy if we already have one (avoids recreating every cycle)
+		if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
+			# Update dummy position to stay ahead of unit
+			current_target.global_position = Vector2(unit.global_position.x, 1000)
+			return
 		new_target = _get_player_base_target()
 	
 	# If target changed, clean up old dummy target
 	if current_target != new_target:
-		if DEBUG_AI:
+		# Determine names for logging
+		var old_is_dummy: bool = current_target != null and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target")
+		var new_is_dummy: bool = new_target != null and new_target.has_meta("is_dummy_target")
+		
+		# Only log meaningful target changes (skip [dummy] → [dummy])
+		if DEBUG_AI and not (old_is_dummy and new_is_dummy):
 			var old_name = "none"
 			var new_name = "none"
 			if current_target and is_instance_valid(current_target) and "stats" in current_target and current_target.stats:
 				old_name = current_target.stats.name
-			elif current_target and current_target.has_meta("is_dummy_target"):
+			elif old_is_dummy:
 				old_name = "[dummy]"
 			if new_target and is_instance_valid(new_target) and "stats" in new_target and new_target.stats:
 				new_name = new_target.stats.name
-			elif new_target and new_target.has_meta("is_dummy_target"):
+			elif new_is_dummy:
 				new_name = "[dummy]"
 			print("[AI] %s: target changed %s → %s" % [unit.stats.name, old_name, new_name])
-		if current_target and current_target.has_meta("is_dummy_target"):
+		if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
 			current_target.queue_free()
 		current_target = new_target
+		# Start lock timer so unit commits to this target briefly
+		if new_target and not new_is_dummy:
+			_target_lock_timer = TARGET_SWITCH_DELAY
 
 
-## Finds the nearest enemy unit within aggro range.
+## Called when this unit is attacked. If we have no real target, retaliate.
+func notify_attacked_by(attacker: Node) -> void:
+	if not is_instance_valid(attacker) or not enabled:
+		return
+	# Already have a real target — don't switch
+	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
+		# Check if current target is still alive
+		if "stats" in current_target and current_target.stats and current_target.stats.health > 0:
+			return
+	# Retaliate: clean up dummy and target the attacker
+	if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
+		current_target.queue_free()
+	if DEBUG_AI:
+		var attacker_name = attacker.stats.name if ("stats" in attacker and attacker.stats) else "?"
+		print("[AI] %s: retaliating against %s" % [unit.stats.name, attacker_name])
+	current_target = attacker
+	_target_lock_timer = TARGET_SWITCH_DELAY
+
+
+## Aggro shape multipliers — makes aggro range wider horizontally than vertically.
+## Only applied to ALLY units to prevent cross-lane targeting.
+## Enemy units keep circular aggro so they detect defenders while approaching.
+const AGGRO_X_MULTIPLIER := 1.5  ## Horizontal aggro = aggro_range × 1.5
+const AGGRO_Y_MULTIPLIER := 1.0  ## Vertical aggro = aggro_range × 1.0
+
+
+## Checks if an enemy is within aggro range.
+## Allies use rectangular (wide X, narrow Y). Enemies use circular.
+func _is_in_aggro_range(enemy_pos: Vector2, aggro_range_px: float) -> bool:
+	if unit.stats.team == UnitStats.Team.PLAYER:
+		# Rectangular — wider horizontally, prevents targeting far-off lanes
+		var dx: float = absf(unit.global_position.x - enemy_pos.x)
+		var dy: float = absf(unit.global_position.y - enemy_pos.y)
+		return dx <= aggro_range_px * AGGRO_X_MULTIPLIER and dy <= aggro_range_px * AGGRO_Y_MULTIPLIER
+	else:
+		# Circular — enemies approaching base need full vertical detection
+		var distance: float = unit.global_position.distance_to(enemy_pos)
+		return distance <= aggro_range_px
+
+
+## Finds the nearest enemy unit within rectangular aggro range.
 func _find_nearest_enemy():
 	if not unit.stats:
 		return null
@@ -163,8 +244,8 @@ func _find_nearest_enemy():
 
 		var distance: float = unit.global_position.distance_to(enemy.global_position)
 
-		# Check if within aggro range
-		if distance <= aggro_range_pixels:
+		# Check if within rectangular aggro range (wider X, narrower Y)
+		if _is_in_aggro_range(enemy.global_position, aggro_range_pixels):
 			# Track plain nearest as fallback
 			if distance < fallback_distance:
 				fallback_distance = distance
@@ -276,6 +357,11 @@ func _perform_attack(target) -> void:
 			target.stats.health = max(target.stats.health - damage, 0)
 
 	attack_performed.emit(target)
+
+	# Retaliation — notify the target's AI that it was attacked
+	var target_ai = target.get_node_or_null("UnitAI")
+	if target_ai and target_ai.has_method("notify_attacked_by"):
+		target_ai.notify_attacked_by(unit)
 
 	# Flash attacker
 	_flash_unit(unit)

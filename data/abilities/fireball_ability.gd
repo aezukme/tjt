@@ -66,8 +66,14 @@ func _spawn_projectile(caster, target) -> void:
 			target.flash_skin(Color.ORANGE_RED)
 		return
 
-	var projectile = ProjectileScene.instantiate()
-	caster.get_tree().current_scene.add_child(projectile)
+	# Use object pool if available, otherwise instantiate directly
+	var pool_nodes = caster.get_tree().get_nodes_in_group("projectile_pool")
+	var projectile: Node
+	if not pool_nodes.is_empty() and is_instance_valid(pool_nodes[0]):
+		projectile = pool_nodes[0].acquire(ProjectileScene)
+	else:
+		projectile = ProjectileScene.instantiate()
+		caster.get_tree().current_scene.add_child(projectile)
 
 	projectile.global_position = caster.global_position
 	projectile.setup(caster, target, damage, Color.ORANGE_RED)

@@ -42,16 +42,18 @@ func spawn_unit(unit: UnitStats, tile: Vector2i = Vector2i(-1, -1)) -> Node:
 	if spawn_tile == Vector2i(-1, -1) or not area.is_tile_within_bounds(spawn_tile) or area.unit_grid.is_tile_occupied(spawn_tile):
 		spawn_tile = area.unit_grid.get_first_available_tile()
 
+	# Duplicate the UnitStats resource so each spawned unit has its own independent stats instance.
+	# MUST happen BEFORE add_child() so _ready() sees the correct stats (not the .tscn default).
+	if typeof(unit) == TYPE_OBJECT and unit is Resource:
+		new_unit.stats = unit.duplicate(true)
+	else:
+		new_unit.stats = unit
+
 	# Place unit in grid and scene
 	area.unit_grid.add_unit(spawn_tile, new_unit)
 	# Parent to the unit_grid so movement logic/reparenting stays consistent
 	area.unit_grid.add_child(new_unit)
 	new_unit.global_position = area.get_global_from_tile(spawn_tile) - Arena.HALF_CELL_SIZE
-	# Duplicate the UnitStats resource so each spawned unit has its own independent stats instance
-	if typeof(unit) == TYPE_OBJECT and unit is Resource:
-		new_unit.stats = unit.duplicate(true)
-	else:
-		new_unit.stats = unit
 
 	# Normalize transform to avoid skew/rotation inherited from templates or scripts
 	new_unit.rotation = 0

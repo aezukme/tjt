@@ -35,8 +35,10 @@ func _update_stats() -> void:
 
 
 func _on_retry() -> void:
-	get_tree().change_scene_to_file(ARENA_SCENE)
+	var loading_script = load("res://scenes/menu/loading_screen.gd")
+	loading_script.transition_to(get_tree(), ARENA_SCENE)
 
 
 func _on_menu() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	var loading_script = load("res://scenes/menu/loading_screen.gd")
+	loading_script.transition_to(get_tree(), MENU_SCENE)

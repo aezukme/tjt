@@ -22,12 +22,18 @@ func add_unit(tile: Vector2i, unit: Node) -> void:
 func remove_unit(tile: Vector2i) -> void:
 	if not units.has(tile):
 		return
-	
-	var unit := units[tile] as Node
 
-	if not unit:
+	var unit = units[tile]
+
+	if unit == null:
 		return
-	
+
+	# Guard against freed objects (double-kill on same frame)
+	if not is_instance_valid(unit):
+		units[tile] = null
+		unit_grid_changed.emit()
+		return
+
 	units[tile] = null
 	unit_grid_changed.emit()
 
