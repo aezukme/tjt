@@ -122,6 +122,8 @@ static func spawn_damage_number(tree: SceneTree, position: Vector2, damage: floa
 
 ## Removes a unit from its parent grid and notifies the battle manager.
 static func handle_unit_death(unit: Node) -> void:
+	if not is_instance_valid(unit):
+		return
 	# Walk up parents to find the PlayArea (unit might be child of UnitGrid)
 	var node = unit.get_parent()
 	while node and not (node is PlayArea):

@@ -10,6 +10,9 @@ signal mana_changed(new_mana: int)  # Receives int for UI display
 
 const CELL_SIZE := Vector2(32, 32)
 
+## Verbose ability logging (mirrors UnitAI.DEBUG_AI_VERBOSE)
+const DEBUG_AI_VERBOSE: bool = false
+
 @export var stats: UnitStats : set = set_stats
 
 @onready var skin: Sprite2D = $Visuals/Skin
@@ -26,6 +29,7 @@ var current_health: float : set = _set_current_health
 var current_mana: float : set = _set_current_mana
 var ability_on_cooldown: bool = false
 var _mana_retry_task_running: bool = false
+var _passive_applied: bool = false  ## Prevents passive from stacking on re-init
 
 ## Threat bookkeeping — lets AI avoid overkill / overheal
 var incoming_damage: float = 0.0   ## Total damage already "promised" by attackers this tick
@@ -64,23 +68,22 @@ func _ready() -> void:
 				play_area.unit_grid.add_unit(tile, self)
 
 
+var _battle_manager_cache: Node = null  ## Cached BattleManager reference
+
 ## Processes health and mana regeneration.
 func _process(delta: float) -> void:
 	# Regeneration - only during BATTLE
 	if not stats:
 		return
 	
-	# Check if we're in a battle scene (BattleManager only exists during battle)
-	var battle_manager_node = get_tree().get_first_node_in_group("battle_manager")
-	if not battle_manager_node:
+	# Cached BattleManager lookup
+	if not is_instance_valid(_battle_manager_cache):
+		_battle_manager_cache = get_tree().get_first_node_in_group("battle_manager")
+	if not _battle_manager_cache:
 		return
 	
-	# Check if it's actually a BattleManager and if we're in BATTLE state
-	if not battle_manager_node.has_method("get") or not "current_state" in battle_manager_node:
-		return
-	
-	# Only regenerate during battle (access via get to avoid type issues)
-	if battle_manager_node.get("current_state") != 1:  # 1 = BATTLE state
+	# Only regenerate during battle
+	if _battle_manager_cache.current_state != BattleManager.State.BATTLE:
 		return
 	
 	# Health regeneration
@@ -115,9 +118,10 @@ func _connect_stats_signals() -> void:
 	# Add to team groups via shared helper
 	UnitVisuals.setup_team_groups(self, stats)
 	
-	# Apply passive ability if present
-	if stats.passive_ability:
+	# Apply passive ability if present (only once per unit instance)
+	if stats.passive_ability and not _passive_applied:
 		stats.passive_ability.apply(self)
+		_passive_applied = true
 	
 	# Initialize health and mana
 	current_health = stats.max_health
@@ -248,7 +252,7 @@ func _on_mouse_entered() -> void:
 	
 	is_hovered = true
 	outline_highlighter.highlight()
-	z_index = 1
+	z_index = 4096  # Above any Y-sort value
 
 ## Clears highlight when the mouse exits, unless dragging.
 func _on_mouse_exited() -> void:
@@ -257,7 +261,7 @@ func _on_mouse_exited() -> void:
 	
 	is_hovered = false
 	outline_highlighter.clear_highlight()
-	z_index = 0
+	z_index = int(global_position.y)  # Restore Y-sort value
 
 
 ## Called when mana bar is filled - cast ability if available
@@ -294,10 +298,11 @@ func cast_ability() -> bool:
 	var targets = ability.get_valid_targets(self)
 	
 	if targets.is_empty():
-		var range_msg = ""
-		if ability.cast_range > 0:
-			range_msg = " (range: %.0f)" % ability.cast_range
-		print("[Ability] No valid targets for %s's %s%s!" % [stats.name, ability.ability_name, range_msg])
+		if DEBUG_AI_VERBOSE:
+			var range_msg = ""
+			if ability.cast_range > 0:
+				range_msg = " (range: %.0f)" % ability.cast_range
+			print("[Ability] No valid targets for %s's %s%s!" % [stats.name, ability.ability_name, range_msg])
 		# Don't consume mana if no targets
 		return false
 	

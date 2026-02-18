@@ -35,6 +35,13 @@ var _placement_ghost: Sprite2D = null  ## Ghost sprite following the cursor
 
 ## Called when the node enters the scene tree. Connects unit spawner to unit mover.
 func _ready() -> void:
+	# Add ProjectilePool if one doesn't already exist
+	if not get_tree().get_first_node_in_group("projectile_pool"):
+		var pool = Node.new()
+		pool.name = "ProjectilePool"
+		pool.set_script(load("res://components/projectile_pool.gd"))
+		add_child(pool)
+
 	unit_spawner.unit_spawned.connect(unit_mover.setup_unit)
 	unit_spawner.unit_spawned.connect(sell_portal.setup_unit)
 	
@@ -276,8 +283,17 @@ func _on_placement_cancelled() -> void:
 	_exit_placement_mode()
 
 
-## Handles unhandled input for placement clicks and cancel.
+## Handles unhandled input for placement clicks, cancel, and right-click delete.
 func _unhandled_input(event: InputEvent) -> void:
+	# ── Right-click to delete a placed unit (during prep phase, not in placement mode) ──
+	if not _placement_stats and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		if battle_manager and battle_manager.current_state != BattleManager.State.BATTLE and game_area:
+			var tile := game_area.get_hovered_tile()
+			if game_area.is_tile_within_bounds(tile) and game_area.unit_grid.is_tile_occupied(tile):
+				_remove_placed_unit(tile)
+				get_viewport().set_input_as_handled()
+				return
+
 	if not _placement_stats:
 		return
 
@@ -331,6 +347,32 @@ func _exit_placement_mode() -> void:
 	if unit_selection_panel:
 		unit_selection_panel.visible = true
 		_update_toggle_button_text()
+
+
+## Removes a placed ally unit from the grid, refunds gold, and frees the node.
+func _remove_placed_unit(tile: Vector2i) -> void:
+	var unit = game_area.unit_grid.units.get(tile)
+	if not unit or not is_instance_valid(unit):
+		return
+	if not unit.stats:
+		return
+
+	# Refund gold
+	var refund: int = unit.stats.gold_cost
+	var _sell_portal = get_node_or_null("SellPortal")
+	if _sell_portal and _sell_portal.player_stats:
+		_sell_portal.player_stats.gold += refund
+		print("[Arena] 🗑 Removed %s from tile %s (refunded %d 💰)" % [unit.stats.name, str(tile), refund])
+
+	# Remove from grid
+	game_area.unit_grid.remove_unit(tile)
+
+	# Update panel deployed count
+	if unit_selection_panel:
+		unit_selection_panel.on_unit_removed()
+
+	# Free the unit
+	unit.queue_free()
 
 
 ## Creates a semi-transparent ghost sprite that follows the cursor for placement preview.
