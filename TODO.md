@@ -30,8 +30,8 @@
 - [x] Ghost tints green (free) / red (occupied)
 - [x] Gold cost displayed on cards, affordability check + dimming
 - [x] Gold deducted on placement, auto-cancel if can't afford more
-- [x] Max deployed units limit (5)
-- [x] Sell portal (drag or quick-sell, refunds gold_cost × tier)
+- [x] Max deployed units limit (8)
+- [x] ~~Sell portal~~ (removed — gold refund via right-click instead)
 
 ### Ability System ✅
 - [x] Base Ability resource with targeting, cooldown, range
@@ -43,14 +43,26 @@
 - [x] Warrior's Endurance — passive +20% health regen
 - [x] Mana system (gain per attack, cast when full)
 
+### King System ✅
+- [x] King unit auto-spawns at bottom-center of GameArea on arena load
+- [x] King death = instant Game Over ("The King has fallen!")
+- [x] Enemies walk toward King position (dummy target tracks King)
+- [x] King unsellable (sell portal guard) & unremovable (right-click guard)
+- [x] King does NOT count against max deployed units limit
+- [x] Larger visual scale (1.5×) via visual_scale property on UnitStats
+- [x] is_king flag on UnitStats for identification
+- [x] King stats: 2500 HP, 40 ATK, 0.5 AS, 8 Armor, 25 MR, Legendary rarity, 0 cost
+
 ### Combat AI ✅
 - [x] Aggro-range based target finding
 - [x] A* pathfinding on unit grid
 - [x] Threat tracking (incoming_damage / incoming_healing)
 - [x] Anti-overkill: prefer targets with effective HP > 0
 - [x] Anti-overheal: prefer allies with effective missing HP > 0
-- [x] Separation force to prevent unit stacking
-- [x] Enemy dummy target (walk toward player base when no target)
+- [x] Separation force to prevent unit stacking (disabled during combat)
+- [x] Enemy dummy target (walk toward King when no target)
+- [x] Pre-move intercept (switch to enemy in attack range before walking)
+- [x] Diagnostic logging with emoji markers ([AI] prefix)
 
 ### Visual Feedback ✅
 - [x] Damage numbers (float up + fade, scaled by damage)
@@ -73,6 +85,8 @@
 
 ## 🔥 High Priority — Next Up
 
+- [ ] IMPORTANT: Fix aggro, AI movement, pathfinding, and targeting (prevent pushing/stacking and erratic target switching)
+
 ### More Defender Units ✅
 - [x] Need 8–12 ally unit types for build variety (currently 8)
 - [x] **Tank line:** Bjorn (done), Knight (high armor, Iron Bastion passive)
@@ -88,7 +102,6 @@
 - [ ] **Ranged DPS:** Skeleton Archer — ranged, medium HP
 - [ ] **Healer:** Shaman — heals other enemies
 - [ ] **Boss:** Dragon / Demon Lord — very high HP, special ability, appears on boss waves
-- [ ] Flying enemies? (bypass melee, only ranged can hit)
 
 ### More Waves & Difficulty Curve
 - [ ] Expand from 4 to 15–20 waves for a full game
@@ -99,10 +112,10 @@
 - [ ] Income system between waves (base gold + interest on saved gold?)
 
 ### Lane / Positioning System (Legion TD Core)
+- [x] Enemies walk toward King (replaces traditional lives system)
+- [x] King death = Game Over (no lives counter needed)
 - [ ] Enemies walk a fixed path (top to bottom through player's lane)
 - [ ] Player units are static defenders (no movement during battle)
-- [ ] Enemies that reach the end of the lane deal damage to player lives
-- [ ] Player lives system (start with N lives, lose 1 per leaked enemy)
 - [ ] Multiple lanes? (future — multiplayer prep)
 
 ---
@@ -193,7 +206,7 @@
 
 ## 📊 Current Content
 
-### Ally Units (8)
+### Ally Units (8 + King)
 | Unit | HP | ATK | AS | Range | Cost | Ability |
 |------|----|-----|------|-------|------|------|
 | Bjorn (Warrior) | 500 | 50 | 0.7 | 1 (melee) | 1💰 | Warrior's Endurance (+20% regen) |
@@ -204,6 +217,7 @@
 | Rogue (DPS) | 250 | 70 | 1.0 | 1 (melee) | 3💰 | Deadly Focus (+25% ATK) |
 | Priest (Support) | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (AoE heal 40) |
 | Druid (Specialist) | 380 | 30 | 0.7 | 3 (ranged) | 3💰 | Nature's Wrath (AoE 40 dmg) |
+| **King** 👑 | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* |
 
 ### Enemy Units (2)
 | Unit | HP | ATK | Range |
@@ -222,6 +236,18 @@
 ---
 
 ## Session Log
+
+### February 2026 (Session 5) — King Unit, Arena Expansion
+- ✅ **King unit** — core game mechanic: death = Game Over
+- ✅ King auto-spawns at bottom-center of GameArea on arena load
+- ✅ Enemies walk toward King position (dummy target tracks King)
+- ✅ King unsellable & unremovable (sell portal + right-click guards)
+- ✅ King visual_scale 1.5× (applied to $Visuals node, survives wave resets)
+- ✅ is_king flag + visual_scale property added to UnitStats
+- ✅ Arena expansion: Background 30×17, GameArea 18×12, EnemyArea 18×4
+- ✅ max_deployed_units 5→8
+- ✅ AOEDamageAbility fix on EnemyUnit (use apply_damage instead of current_health)
+- ✅ AoEHealAbility narrowing conversion fix (explicit int() casts)
 
 ### February 2026 (Session 4) — New Units, Resolution, Animation Prep
 - ✅ Resolution increase: 640×360 → 960×540 viewport, 1920×1080 window
@@ -259,4 +285,4 @@
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: February 2026 (Session 4)*
+*Last Updated: February 2026 (Session 5)*

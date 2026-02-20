@@ -31,7 +31,9 @@ func _on_unit_dropped(_starting_position: Vector2, unit) -> void:
 func _sell_unit(unit) -> void:
 	if not unit or not unit.stats:
 		return
-	
+	# King cannot be sold
+	if unit.stats.is_king:
+		return
 	player_stats.gold += unit.stats.get_gold_value()
 	# TODO give items back to item pool
 	# TODO put units back to the pool

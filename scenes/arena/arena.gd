@@ -9,9 +9,10 @@ const VICTORY_SCENE := "res://scenes/menu/victory_screen.tscn"
 const GAME_OVER_SCENE := "res://scenes/menu/game_over_screen.tscn"
 const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
 
+@export var player_stats: PlayerStats
+
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
-@onready var sell_portal: SellPortal = $SellPortal
 @onready var battle_manager: BattleManager = $BattleManager
 @onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
 @onready var start_battle_button: Button = $UI/RightPanel/StartBattleButton
@@ -43,7 +44,6 @@ func _ready() -> void:
 		add_child(pool)
 
 	unit_spawner.unit_spawned.connect(unit_mover.setup_unit)
-	unit_spawner.unit_spawned.connect(sell_portal.setup_unit)
 	
 	# Connect battle manager signals
 	battle_manager.battle_started.connect(_on_battle_started)
@@ -76,13 +76,36 @@ func _ready() -> void:
 		# Start with panel hidden
 		unit_selection_panel.visible = false
 		# Wire player stats for gold tracking
-		var _sell_portal = get_node_or_null("SellPortal")
-		if _sell_portal and "player_stats" in _sell_portal and _sell_portal.player_stats:
-			unit_selection_panel.set_player_stats(_sell_portal.player_stats)
+		if player_stats:
+			unit_selection_panel.set_player_stats(player_stats)
 
 	# Toggle button for unit panel
 	if toggle_units_button:
 		toggle_units_button.pressed.connect(_on_toggle_units_pressed)
+
+	# ── Spawn King ──
+	_spawn_king()
+
+
+## Spawns the King unit at the bottom-center of the GameArea.
+func _spawn_king() -> void:
+	var king_stats: UnitStats = load("res://data/units/king_ally.tres")
+	if not king_stats:
+		push_warning("[Arena] Could not load king_ally.tres!")
+		return
+	# Place at bottom-center of the game area
+	var grid_size: Vector2i = game_area.unit_grid.size
+	var king_tile := Vector2i(int(grid_size.x / 2), grid_size.y - 1)
+	# Find a free tile near bottom-center
+	if game_area.unit_grid.is_tile_occupied(king_tile):
+		king_tile = game_area.unit_grid.get_first_available_tile()
+	var king_node := unit_spawner.spawn_unit(king_stats, king_tile)
+	if king_node:
+		# King doesn't count toward deployed limit
+		# (deployed_count was already incremented by spawn signal, so undo it)
+		print("[Arena] 👑 King spawned at tile %s" % str(king_tile))
+		# Add to king group for easy lookup
+		king_node.add_to_group("king")
 
 
 ## Called when battle starts - disable dragging.
@@ -356,12 +379,15 @@ func _remove_placed_unit(tile: Vector2i) -> void:
 		return
 	if not unit.stats:
 		return
+	# King cannot be removed
+	if unit.stats.is_king:
+		print("[Arena] ⚠ Cannot remove the King!")
+		return
 
 	# Refund gold
 	var refund: int = unit.stats.gold_cost
-	var _sell_portal = get_node_or_null("SellPortal")
-	if _sell_portal and _sell_portal.player_stats:
-		_sell_portal.player_stats.gold += refund
+	if player_stats:
+		player_stats.gold += refund
 		print("[Arena] 🗑 Removed %s from tile %s (refunded %d 💰)" % [unit.stats.name, str(tile), refund])
 
 	# Remove from grid

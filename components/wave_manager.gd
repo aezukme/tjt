@@ -70,10 +70,9 @@ func _ready() -> void:
 	if not game_area:
 		game_area = get_parent().get_node_or_null("GameArea")
 	if not player_stats:
-		# Try to find PlayerStats via hierarchy
-		var sell_portal = get_parent().get_node_or_null("SellPortal")
-		if sell_portal and "player_stats" in sell_portal:
-			player_stats = sell_portal.player_stats
+		# Try to get from parent Arena's @export
+		if "player_stats" in get_parent() and get_parent().player_stats:
+			player_stats = get_parent().player_stats
 	
 	print("[WAVE] References - BattleManager: %s, UnitSpawner: %s, EnemyArea: %s, GameArea: %s, PlayerStats: %s" % [battle_manager != null, unit_spawner != null, enemy_area != null, game_area != null, player_stats != null])
 	print("[WAVE] Loaded %d waves" % waves.size())
@@ -101,11 +100,10 @@ func _get_player_stats_node() -> Variant:
 		print("[WAVE] Warning: No parent node for WaveManager")
 		return null
 	
-	# Try direct path first
-	var gold_display = parent.get_node_or_null("SellPortal/CanvasLayer/PlayerGoldDisplay")
-	if gold_display and "player_stats" in gold_display:
-		print("[WAVE] Found PlayerStats via SellPortal/CanvasLayer/PlayerGoldDisplay")
-		return gold_display.player_stats
+	# Try parent's player_stats export first
+	if "player_stats" in parent and parent.player_stats:
+		print("[WAVE] Found PlayerStats via parent.player_stats")
+		return parent.player_stats
 	
 	# Try alternate path
 	var alt_stats = parent.get_node_or_null("UI/PlayerStats")

@@ -123,7 +123,18 @@ func check_win_condition() -> void:
 	var enemy_units := enemy_area.unit_grid.get_all_units()
 	var player_units := game_area.unit_grid.get_all_units()
 	
-	if enemy_units.is_empty():
+	# King death = immediate defeat
+	var king_alive := false
+	for u in player_units:
+		if is_instance_valid(u) and u.stats and u.stats.is_king:
+			king_alive = true
+			break
+	
+	if not king_alive and not player_units.is_empty():
+		# King died but other units survive — still a defeat
+		print("[Battle] 👑 The King has fallen!")
+		end_battle(UnitStats.Team.ENEMY)
+	elif enemy_units.is_empty():
 		end_battle(UnitStats.Team.PLAYER)
 	elif player_units.is_empty():
 		end_battle(UnitStats.Team.ENEMY)

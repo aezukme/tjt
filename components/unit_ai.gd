@@ -81,7 +81,7 @@ func _process(delta: float) -> void:
 	if _target_lock_timer > 0:
 		_target_lock_timer -= delta
 	
-	# Separation logic - push units away from each other to prevent overlap
+	# Separation logic — gentle push between same-team units only
 	_apply_separation(delta)
 	
 	# Y-sort: units lower on screen render on top for depth illusion
@@ -96,103 +96,159 @@ func _process(delta: float) -> void:
 			# In range and ready to attack
 			_try_attack()
 		elif distance_to_target > attack_range_pixels and (not current_target.has_meta("is_dummy_target") or unit.stats.team == UnitStats.Team.ENEMY):
-			# Out of range - move closer
+			# ── Before moving: check if a DIFFERENT enemy is right next to us ──
+			# This prevents walking through enemies to reach a farther target.
+			# Only check if we're NOT locked to our current target.
+			if _target_lock_timer <= 0:
+				var nearby: Node = _find_enemy_in_attack_range()
+				if nearby and nearby != current_target:
+					if DEBUG_AI:
+						var old_name = _get_target_name(current_target)
+						var new_name = _get_target_name(nearby)
+						print("[AI] %s: 🛑 enemy in range! switching %s → %s (won't walk through)" % [unit.stats.name, old_name, new_name])
+					_switch_target(nearby)
+					return  # Don't move this frame — attack next frame
+			
+			# Move toward target with avoidance steering
+			var desired_dir: Vector2
 			if navigation_agent:
-				# Use navigation pathfinding
 				navigation_agent.target_position = current_target.global_position
 				var next_position = navigation_agent.get_next_path_position()
-				var direction = (next_position - unit.global_position).normalized()
-				var distance_to_move = movement_speed * delta
-				if unit.global_position.distance_to(next_position) > distance_to_move:
-					unit.global_position += direction * distance_to_move
+				desired_dir = (next_position - unit.global_position).normalized()
 			else:
-				# Direct movement
-				var direction: Vector2 = (current_target.global_position - unit.global_position).normalized()
-				var distance_to_move: float = movement_speed * delta
-				unit.global_position += direction * distance_to_move
+				desired_dir = (current_target.global_position - unit.global_position).normalized()
+			# Steer around same-team units blocking the path
+			var steered_dir: Vector2 = _apply_avoidance_steering(desired_dir)
+			var distance_to_move: float = movement_speed * delta
+			unit.global_position += steered_dir * distance_to_move
 			if DEBUG_AI_VERBOSE and update_timer <= 0:
-				var target_name = current_target.stats.name if ("stats" in current_target and current_target.stats) else "[dummy]"
-				print("[AI] %s: moving → %s (dist=%.0fpx, range=%.0fpx, speed=%.0f)" % [unit.stats.name, target_name, distance_to_target, attack_range_pixels, movement_speed])
+				var target_name = _get_target_name(current_target)
+				print("[AI] %s: moving → %s (dist=%.0fpx, range=%.0fpx)" % [unit.stats.name, target_name, distance_to_target, attack_range_pixels])
 
 
-## Main AI update logic.
+## Main AI update logic — runs every update_interval seconds.
 func _update_ai() -> void:
-	# Target stickiness: if current target is still valid and in aggro range, keep it.
-	# Only search for a new target when current one is dead, invalid, or out of range.
+	# ── Step 1: Target stickiness ──
+	# If current target is alive, valid, and in aggro range, keep it.
 	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
-		var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
-		if _is_in_aggro_range(current_target.global_position, aggro_range_pixels):
-			# Still valid — check if target has died (stats.health <= 0)
-			if "stats" in current_target and current_target.stats and current_target.stats.health > 0:
+		if "stats" in current_target and current_target.stats and current_target.stats.health > 0:
+			var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
+			if _is_in_aggro_range(current_target.global_position, aggro_range_pixels):
+				# ── Step 1b: Even if sticky, if an enemy is in ATTACK range, prefer it ──
+				# This prevents a melee unit from ignoring a touching enemy
+				var attack_range_pixels: float = unit.stats.attack_range * CELL_SIZE.x
+				var dist_to_current: float = unit.global_position.distance_to(current_target.global_position)
+				if dist_to_current <= attack_range_pixels:
+					return  # Current target is in attack range — definitely keep
+				# Current target alive but far — check if something closer is in attack range
+				var nearby: Node = _find_enemy_in_attack_range()
+				if nearby and nearby != current_target:
+					if DEBUG_AI:
+						print("[AI] %s: 🔄 closer enemy in attack range: %s → %s" % [unit.stats.name, _get_target_name(current_target), _get_target_name(nearby)])
+					_switch_target(nearby)
+					return
 				return  # Keep current target
 
-	# Respect target switch delay — don't switch too fast (looks unnatural)
+	# ── Step 2: Respect target lock delay ──
 	if _target_lock_timer > 0 and current_target and is_instance_valid(current_target):
 		if not current_target.has_meta("is_dummy_target"):
-			return  # Still locked to previous target
+			return  # Still locked
 
-	# Find or update target
+	# ── Step 3: Find new target ──
 	var new_target = _find_nearest_enemy()
 	
-	# For enemy units, if no target, they should move towards player base
+	# For enemy units with no target, walk toward King / player base
 	if not new_target and unit.stats.team == UnitStats.Team.ENEMY:
-		# Reuse existing dummy if we already have one (avoids recreating every cycle)
+		# Reuse existing dummy (avoids recreating every cycle)
 		if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
-			# Update dummy position to stay ahead of unit
-			current_target.global_position = Vector2(unit.global_position.x, 1000)
+			var king = _find_king_unit()
+			if king:
+				current_target.global_position = king.global_position
+			else:
+				current_target.global_position = Vector2(unit.global_position.x, 1000)
 			return
 		new_target = _get_player_base_target()
 	
-	# If target changed, clean up old dummy target
+	# ── Step 4: Apply target change ──
 	if current_target != new_target:
-		# Determine names for logging
 		var old_is_dummy: bool = current_target != null and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target")
 		var new_is_dummy: bool = new_target != null and new_target.has_meta("is_dummy_target")
 		
-		# Only log meaningful target changes (skip [dummy] → [dummy])
 		if DEBUG_AI and not (old_is_dummy and new_is_dummy):
-			var old_name = "none"
-			var new_name = "none"
-			if current_target and is_instance_valid(current_target) and "stats" in current_target and current_target.stats:
-				old_name = current_target.stats.name
+			var old_name = _get_target_name(current_target)
+			var new_name = _get_target_name(new_target)
+			var reason = ""
+			if not current_target or not is_instance_valid(current_target):
+				reason = " (old target gone)"
 			elif old_is_dummy:
-				old_name = "[dummy]"
-			if new_target and is_instance_valid(new_target) and "stats" in new_target and new_target.stats:
-				new_name = new_target.stats.name
-			elif new_is_dummy:
-				new_name = "[dummy]"
-			print("[AI] %s: target changed %s → %s" % [unit.stats.name, old_name, new_name])
-		if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
-			current_target.queue_free()
-		current_target = new_target
-		# Start lock timer so unit commits to this target briefly
-		if new_target and not new_is_dummy:
-			_target_lock_timer = TARGET_SWITCH_DELAY
+				reason = " (found real enemy)"
+			elif "stats" in current_target and current_target.stats and current_target.stats.health <= 0:
+				reason = " (old target dead)"
+			else:
+				reason = " (new target closer/in-range)"
+			print("[AI] %s: target changed %s → %s%s" % [unit.stats.name, old_name, new_name, reason])
+		
+		_switch_target(new_target)
 
 
 ## Called when this unit is attacked. If we have no real target, retaliate.
 func notify_attacked_by(attacker: Node) -> void:
 	if not is_instance_valid(attacker) or not enabled:
 		return
-	# Already have a real target — don't switch
+	# Already have a real, alive target — don't switch
 	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
-		# Check if current target is still alive
 		if "stats" in current_target and current_target.stats and current_target.stats.health > 0:
 			return
-	# Retaliate: clean up dummy and target the attacker
+	# Retaliate: target the attacker
+	if DEBUG_AI:
+		print("[AI] %s: retaliating against %s" % [unit.stats.name, _get_target_name(attacker)])
+	_switch_target(attacker)
+
+
+## ── Helper: switch current target and clean up ──
+func _switch_target(new_target) -> void:
 	if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
 		current_target.queue_free()
-	if DEBUG_AI:
-		var attacker_name = attacker.stats.name if ("stats" in attacker and attacker.stats) else "?"
-		print("[AI] %s: retaliating against %s" % [unit.stats.name, attacker_name])
-	current_target = attacker
-	_target_lock_timer = TARGET_SWITCH_DELAY
+	current_target = new_target
+	var is_dummy: bool = new_target != null and new_target.has_meta("is_dummy_target") if new_target else false
+	if new_target and not is_dummy:
+		_target_lock_timer = TARGET_SWITCH_DELAY
 
 
-## Aggro shape multipliers — makes aggro range wider horizontally than vertically.
-## Only applied to ALLY units to prevent cross-lane targeting.
-## Enemy units keep circular aggro so they detect defenders while approaching.
-const AGGRO_X_MULTIPLIER := 1.5  ## Horizontal aggro = aggro_range × 1.5
+## ── Helper: find any enemy within attack range (for pre-move intercept) ──
+func _find_enemy_in_attack_range():
+	if not unit.stats:
+		return null
+	var attack_range_pixels: float = unit.stats.attack_range * CELL_SIZE.x
+	var target_group: String = UnitStats.TARGET[unit.stats.team]
+	var enemies := get_tree().get_nodes_in_group(target_group)
+	var closest = null
+	var closest_dist := INF
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy == unit:
+			continue
+		if "stats" in enemy and enemy.stats and enemy.stats.health <= 0:
+			continue
+		var dist: float = unit.global_position.distance_to(enemy.global_position)
+		if dist <= attack_range_pixels and dist < closest_dist:
+			closest_dist = dist
+			closest = enemy
+	return closest
+
+
+## ── Helper: get a displayable name for a target (for logging) ──
+func _get_target_name(target) -> String:
+	if not target or not is_instance_valid(target):
+		return "none"
+	if target.has_meta("is_dummy_target"):
+		return "[dummy]"
+	if "stats" in target and target.stats:
+		return target.stats.name
+	return "?"
+
+
+## Aggro shape multipliers — wider X for the expanded 18-tile-wide arena.
+const AGGRO_X_MULTIPLIER := 2.5  ## Horizontal aggro = aggro_range × 2.5
 const AGGRO_Y_MULTIPLIER := 1.0  ## Vertical aggro = aggro_range × 1.0
 
 
@@ -200,12 +256,10 @@ const AGGRO_Y_MULTIPLIER := 1.0  ## Vertical aggro = aggro_range × 1.0
 ## Allies use rectangular (wide X, narrow Y). Enemies use circular.
 func _is_in_aggro_range(enemy_pos: Vector2, aggro_range_px: float) -> bool:
 	if unit.stats.team == UnitStats.Team.PLAYER:
-		# Rectangular — wider horizontally, prevents targeting far-off lanes
 		var dx: float = absf(unit.global_position.x - enemy_pos.x)
 		var dy: float = absf(unit.global_position.y - enemy_pos.y)
 		return dx <= aggro_range_px * AGGRO_X_MULTIPLIER and dy <= aggro_range_px * AGGRO_Y_MULTIPLIER
 	else:
-		# Circular — enemies approaching base need full vertical detection
 		var distance: float = unit.global_position.distance_to(enemy_pos)
 		return distance <= aggro_range_px
 
@@ -277,11 +331,29 @@ func _find_nearest_enemy():
 ## NOTE: The returned dummy node is added to the scene tree so it can be freed
 ## properly when the target changes (see _update_ai).
 func _get_player_base_target():
+	# Try to find the King and walk toward it
+	var king = _find_king_unit()
+	if king:
+		var dummy = Node2D.new()
+		dummy.global_position = king.global_position
+		dummy.set_meta("is_dummy_target", true)
+		unit.get_tree().current_scene.add_child(dummy)
+		return dummy
+	# Fallback: walk straight down
 	var dummy = Node2D.new()
-	dummy.global_position = Vector2(unit.global_position.x, 1000)  # Far below
+	dummy.global_position = Vector2(unit.global_position.x, 1000)
 	dummy.set_meta("is_dummy_target", true)
 	unit.get_tree().current_scene.add_child(dummy)
 	return dummy
+
+
+## Find the King unit among player units.
+func _find_king_unit() -> Node:
+	var player_units = unit.get_tree().get_nodes_in_group("player_units")
+	for u in player_units:
+		if is_instance_valid(u) and u.stats and u.stats.is_king:
+			return u
+	return null
 
 
 ## Moves towards the current target.
@@ -500,35 +572,75 @@ func _flash_unit(target_unit, color: Color = Color.WHITE) -> void:
 			skin.modulate = original_color
 
 
-## Apply separation force to avoid unit overlap.
-func _apply_separation(delta: float) -> void:
-	if not unit or not unit.stats:
-		return
-	
-	var min_distance: float = 40.0  # Minimum distance between units (slightly more than 1 tile)
-	var separation_force: float = 200.0  # Force to push apart
-	
-	var all_units = get_tree().get_nodes_in_group("units")
-	var separation_vector: Vector2 = Vector2.ZERO
-	var neighbor_count: int = 0
-	
+## Adjusts movement direction to steer around same-team units blocking the path.
+## Prevents single-file stacking when multiple units share the same target.
+func _apply_avoidance_steering(desired_dir: Vector2) -> Vector2:
+	var look_ahead: float = CELL_SIZE.x * 1.5  # Check 1.5 tiles ahead
+	var all_units := get_tree().get_nodes_in_group("units")
+
 	for other_unit in all_units:
 		if other_unit == unit or not is_instance_valid(other_unit) or not other_unit.stats:
 			continue
-		
+		# Only avoid same-team units (don't steer around enemies)
+		if other_unit.stats.team != unit.stats.team:
+			continue
+
+		var to_other: Vector2 = other_unit.global_position - unit.global_position
+		var dist: float = to_other.length()
+		if dist > look_ahead or dist < 1.0:
+			continue
+
+		# Is this unit roughly in the direction we're moving? (dot > 0.5 ≈ within 60°)
+		var dot: float = desired_dir.dot(to_other.normalized())
+		if dot > 0.5:
+			# Teammate is in our path — steer perpendicular to go around
+			var perpendicular: Vector2 = Vector2(-desired_dir.y, desired_dir.x)
+			# Pick the side that moves AWAY from the blocking unit
+			if perpendicular.dot(to_other) > 0:
+				perpendicular = -perpendicular
+			# Stronger avoidance when closer
+			var avoidance_strength: float = 1.0 - (dist / look_ahead)
+			desired_dir = (desired_dir + perpendicular * avoidance_strength * 0.8).normalized()
+
+	return desired_dir
+
+
+## Apply separation force to avoid unit overlap.
+## Weaker during active combat, stronger while moving.
+func _apply_separation(delta: float) -> void:
+	if not unit or not unit.stats:
+		return
+
+	# ── Determine separation strength based on combat state ──
+	var in_combat := false
+	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
+		var dist_to_target: float = unit.global_position.distance_to(current_target.global_position)
+		var attack_range_px: float = unit.stats.attack_range * CELL_SIZE.x
+		in_combat = dist_to_target <= attack_range_px * 1.2
+
+	# In combat: very gentle (prevent displacement). Moving: stronger (prevent stacking).
+	var min_distance: float = 24.0 if in_combat else 30.0
+	var separation_force: float = 30.0 if in_combat else 90.0
+
+	var all_units = get_tree().get_nodes_in_group("units")
+	var separation_vector: Vector2 = Vector2.ZERO
+	var neighbor_count: int = 0
+
+	for other_unit in all_units:
+		if other_unit == unit or not is_instance_valid(other_unit) or not other_unit.stats:
+			continue
+
 		# Only separate from allies, not enemies
 		if other_unit.stats.team != unit.stats.team:
 			continue
-		
+
 		var distance: float = unit.global_position.distance_to(other_unit.global_position)
 		if distance < min_distance and distance > 0.1:
-			# Calculate separation direction (away from other unit)
 			var direction: Vector2 = (unit.global_position - other_unit.global_position).normalized()
-			var strength: float = 1.0 - (distance / min_distance)  # Stronger when closer
+			var strength: float = 1.0 - (distance / min_distance)
 			separation_vector += direction * strength
 			neighbor_count += 1
-	
-	# Apply separation if there are neighbors
+
 	if neighbor_count > 0:
 		separation_vector = separation_vector.normalized()
 		var push_distance: float = separation_force * delta

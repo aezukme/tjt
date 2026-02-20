@@ -36,9 +36,12 @@ const MOVE_ONE_TILE_SPEED := 1.0
 @export var gold_cost := 1
 @export_range(1, 3) var tier := 1 : set = _set_tier
 @export var pool_count := 5
+@export var is_king: bool = false  ## When true, this is the King unit — death = Game Over
 
 @export_category("Visuals")
 @export var skin_coordinates: Vector2i
+## Visual scale multiplier (e.g. 1.5 for King). Applied to the Visuals node.
+@export var visual_scale: float = 1.0
 ## Optional SpriteFrames for animated units (idle, move, attack).
 ## When set, the unit will use AnimatedSprite2D instead of the static spritesheet.
 @export var sprite_frames: SpriteFrames

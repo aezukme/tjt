@@ -222,6 +222,10 @@ func set_stats(value: UnitStats) -> void:
 	# Set the correct spritesheet based on team
 	skin.texture = value.TEAM_SPRITESHEET[value.team]
 	skin.region_rect.position = Vector2(stats.skin_coordinates) * CELL_SIZE
+
+	# Apply visual scale (e.g. King is larger)
+	if value.visual_scale != 1.0:
+		$Visuals.scale = Vector2(value.visual_scale, value.visual_scale)
 	
 	# Connect stats signals if not in editor
 	if not Engine.is_editor_hint():
