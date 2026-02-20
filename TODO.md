@@ -73,14 +73,13 @@
 
 ## 🔥 High Priority — Next Up
 
-### More Defender Units
-- [ ] Need 8–12 ally unit types for build variety (currently 3)
-- [ ] **Tank line:** Bjorn (done), add Knight or Paladin (high armor, taunt?)
-- [ ] **DPS line:** Mage (done), add Archer (fast attack, low HP), Assassin (high single-target)
-- [ ] **Support line:** Sage (done), add Bard (AoE buff?), Druid (summons?)
-- [ ] **Specialist:** Trapper (slows enemies?), Necromancer (raises dead?)
-- [ ] Each unit needs: .tres stats, unique ability, balanced gold cost
-- [ ] Unit tier/upgrade system (combine 3 of same → tier 2, stronger stats)
+### More Defender Units ✅
+- [x] Need 8–12 ally unit types for build variety (currently 8)
+- [x] **Tank line:** Bjorn (done), Knight (high armor, Iron Bastion passive)
+- [x] **DPS line:** Mage (done), Ranger (fast ranged, Power Shot), Rogue (high melee burst, Deadly Focus)
+- [x] **Support line:** Sage (done), Priest (AoE Holy Light heal)
+- [x] **Specialist:** Druid (Nature's Wrath AoE damage)
+- [x] Each unit has: .tres stats, unique ability/passive, balanced gold cost
 
 ### More Enemy Types
 - [ ] Need 5–8 enemy types for wave variety (currently 2: Orc, Necro)
@@ -188,18 +187,23 @@
 - [ ] `[Ability] Sage ability ready!` × 5 spam when multiple units ready simultaneously
 - [ ] Fix sage_ally.tres UID warning (uid://dh3al0rharm01)
 - [ ] Consistent naming conventions (snake_case vs PascalCase)
-- [ ] Warrior's Endurance passive stacking on each unit placement (regen compounds)
+- [x] Warrior's Endurance passive stacking on each unit placement — FIXED (guard flag + stats order)
 
 ---
 
 ## 📊 Current Content
 
-### Ally Units (3)
-| Unit | HP | ATK | Range | Cost | Ability |
-|------|----|-----|-------|------|---------|
-| Bjorn (Warrior) | 500 | 50 | 1 (melee) | 1💰 | Warrior's Endurance (+20% regen) |
-| Mage | 400 | 40 | 3 (ranged) | 2💰 | Fireball (100 dmg projectile) |
-| Sage (Healer) | 350 | 25 | 3 (ranged) | 3💰 | Mending Bolt (heal 60 / dmg 50) |
+### Ally Units (8)
+| Unit | HP | ATK | AS | Range | Cost | Ability |
+|------|----|-----|------|-------|------|------|
+| Bjorn (Warrior) | 500 | 50 | 0.7 | 1 (melee) | 1💰 | Warrior's Endurance (+20% regen) |
+| Mage | 400 | 40 | 0.8 | 3 (ranged) | 2💰 | Fireball (100 dmg projectile) |
+| Sage (Healer) | 350 | 25 | 0.6 | 3 (ranged) | 3💰 | Mending Bolt (heal 60 / dmg 50) |
+| Knight (Tank) | 600 | 35 | 0.6 | 1 (melee) | 2💰 | Iron Bastion (+5 armor) |
+| Ranger (DPS) | 300 | 30 | 1.2 | 4 (ranged) | 3💰 | Power Shot (120 dmg projectile) |
+| Rogue (DPS) | 250 | 70 | 1.0 | 1 (melee) | 3💰 | Deadly Focus (+25% ATK) |
+| Priest (Support) | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (AoE heal 40) |
+| Druid (Specialist) | 380 | 30 | 0.7 | 3 (ranged) | 3💰 | Nature's Wrath (AoE 40 dmg) |
 
 ### Enemy Units (2)
 | Unit | HP | ATK | Range |
@@ -218,6 +222,16 @@
 ---
 
 ## Session Log
+
+### February 2026 (Session 4) — New Units, Resolution, Animation Prep
+- ✅ Resolution increase: 640×360 → 960×540 viewport, 1920×1080 window
+- ✅ 5 new ally units: Knight, Ranger, Rogue, Priest, Druid
+- ✅ 5 new abilities: Iron Bastion, Power Shot, Deadly Focus, Holy Light, Nature's Wrath
+- ✅ AoEHealAbility class (area heal with green flash)
+- ✅ AnimatedSprite2D preparation (sprite_frames property in UnitStats)
+- ✅ Warrior's Endurance passive stacking fix (guard flag + stats order)
+- ✅ Retaliation targeting (units fight back when attacked)
+- ✅ Aggro range fixes (Bjorn 3→5, Y multiplier 0.75→1.0)
 
 ### February 2026 (Session 3) — Gold, Overkill Fix, Polish
 - ✅ Gold cost system: card display, affordability check, auto-deduct on placement
@@ -245,4 +259,4 @@
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: February 2026*
+*Last Updated: February 2026 (Session 4)*

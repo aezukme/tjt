@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
+[ext_resource type="Resource" path="res://data/abilities/deadly_focus.tres" id="2_passive"]
+
+[resource]
+script = ExtResource("1_stats")
+name = "Rogue"
+rarity = 1
+gold_cost = 3
+skin_coordinates = Vector2i(3, 0)
+max_health = 250
+health_regen = 1.5
+max_mana = 100
+starting_mana = 0
+mana_regen = 4.0
+attack_damage = 70
+attack_speed = 1.0
+armor = 3
+magic_resist = 15
+attack_range = 1
+aggro_range = 4
+passive_ability = ExtResource("2_passive")
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
+[ext_resource type="Resource" path="res://data/abilities/iron_bastion.tres" id="2_passive"]
+
+[resource]
+script = ExtResource("1_stats")
+name = "Knight"
+rarity = 0
+gold_cost = 2
+skin_coordinates = Vector2i(0, 1)
+max_health = 600
+health_regen = 2.0
+max_mana = 100
+starting_mana = 0
+mana_regen = 2.0
+attack_damage = 35
+attack_speed = 0.6
+armor = 10
+magic_resist = 15
+attack_range = 1
+aggro_range = 4
+passive_ability = ExtResource("2_passive")
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

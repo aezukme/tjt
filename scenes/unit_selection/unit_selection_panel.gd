@@ -15,7 +15,7 @@ signal placement_cancelled
 @export var available_units: Array[UnitStats] = []
 
 ## Max units allowed on the field at once.
-@export var max_deployed_units: int = 5
+@export var max_deployed_units: int = 8
 
 @onready var card_container: HBoxContainer = $MarginContainer/HBox/CardContainer
 @onready var info_label: Label = $MarginContainer/HBox/InfoLabel

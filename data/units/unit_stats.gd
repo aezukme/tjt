@@ -39,6 +39,9 @@ const MOVE_ONE_TILE_SPEED := 1.0
 
 @export_category("Visuals")
 @export var skin_coordinates: Vector2i
+## Optional SpriteFrames for animated units (idle, move, attack).
+## When set, the unit will use AnimatedSprite2D instead of the static spritesheet.
+@export var sprite_frames: SpriteFrames
 
 @export_category("Battle")
 @export var team: Team

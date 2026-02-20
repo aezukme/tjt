@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
+[ext_resource type="Resource" path="res://data/abilities/natures_wrath.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_stats")
+name = "Druid"
+rarity = 1
+gold_cost = 3
+skin_coordinates = Vector2i(2, 4)
+max_health = 380
+health_regen = 2.5
+max_mana = 100
+starting_mana = 50
+mana_regen = 5.0
+attack_damage = 30
+ability_power = 60
+attack_speed = 0.7
+armor = 3
+magic_resist = 30
+attack_range = 3
+aggro_range = 5
+ability_resource = ExtResource("2_ability")
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

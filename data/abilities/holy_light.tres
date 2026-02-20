@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AoEHealAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/aoe_heal_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+heal_amount = 40.0
+ability_name = "Holy Light"
+description = "Bathes all allies in holy light, healing each for 40 HP."
+target_type = 4
+mana_cost = 100.0
+cooldown = 4.0
+cast_range = 250.0
