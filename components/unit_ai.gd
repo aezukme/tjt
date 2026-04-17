@@ -30,6 +30,12 @@ var attack_timer: float = 0.0
 var update_timer: float = 0.0
 var _target_lock_timer: float = 0.0  ## Countdown before target switch is allowed
 
+## Stuck detection — tracks whether the unit is making progress toward its target.
+var _last_distance_to_target: float = INF
+var _stuck_timer: float = 0.0
+const STUCK_THRESHOLD := 1.5  ## Seconds without progress before switching target
+const STUCK_PROGRESS_MIN := 4.0  ## Must close at least 4px to count as progress
+
 ## Reference to play areas for pathfinding
 var play_area: PlayArea
 var enemy_area: PlayArea
@@ -93,14 +99,40 @@ func _process(delta: float) -> void:
 		var attack_range_pixels: float = unit.stats.attack_range * CELL_SIZE.x
 		
 		if distance_to_target <= attack_range_pixels and attack_timer <= 0:
-			# In range and ready to attack
+			# In range and ready to attack — reset stuck timer
 			_try_attack()
+			_stuck_timer = 0.0
+			_last_distance_to_target = distance_to_target
 		elif distance_to_target > attack_range_pixels and (not current_target.has_meta("is_dummy_target") or unit.stats.team == UnitStats.Team.ENEMY):
+			# ── Stuck detection: if not making progress, find an alternate target ──
+			if _last_distance_to_target - distance_to_target >= STUCK_PROGRESS_MIN:
+				# Making progress — reset
+				_stuck_timer = 0.0
+				_last_distance_to_target = distance_to_target
+			else:
+				_stuck_timer += delta
+			
+			if _stuck_timer >= STUCK_THRESHOLD and _target_lock_timer <= 0:
+				# Stuck! Try to find an alternate target that we can reach
+				var alt_target = _find_alternate_target()
+				if alt_target and alt_target != current_target:
+					if DEBUG_AI:
+						print("[AI] %s: 🔀 stuck for %.1fs, switching %s → %s" % [unit.stats.name, _stuck_timer, _get_target_name(current_target), _get_target_name(alt_target)])
+					_switch_target(alt_target)
+					_stuck_timer = 0.0
+					_last_distance_to_target = INF
+					return
+				_stuck_timer = 0.0  # Reset even if no alt found, to avoid spamming
+			
 			# ── Before moving: check if a DIFFERENT enemy is right next to us ──
 			# This prevents walking through enemies to reach a farther target.
 			# Only check if we're NOT locked to our current target.
 			if _target_lock_timer <= 0:
 				var nearby: Node = _find_enemy_in_attack_range()
+				# For enemy units: also check for ally blockers in the path at 1.5× attack range.
+				# Prevents enemies from trying to walk through/past an ally to reach a farther one.
+				if not nearby and unit.stats.team == UnitStats.Team.ENEMY:
+					nearby = _find_blocker_in_path()
 				if nearby and nearby != current_target:
 					if DEBUG_AI:
 						var old_name = _get_target_name(current_target)
@@ -210,6 +242,8 @@ func _switch_target(new_target) -> void:
 	if current_target and is_instance_valid(current_target) and current_target.has_meta("is_dummy_target"):
 		current_target.queue_free()
 	current_target = new_target
+	_stuck_timer = 0.0
+	_last_distance_to_target = INF
 	var is_dummy: bool = new_target != null and new_target.has_meta("is_dummy_target") if new_target else false
 	if new_target and not is_dummy:
 		_target_lock_timer = TARGET_SWITCH_DELAY
@@ -233,6 +267,93 @@ func _find_enemy_in_attack_range():
 		if dist <= attack_range_pixels and dist < closest_dist:
 			closest_dist = dist
 			closest = enemy
+	return closest
+
+
+## ── Helper: find an alternate target when stuck behind teammates ──
+## Picks the nearest enemy that doesn't have a same-team unit between us and it.
+func _find_alternate_target() -> Node:
+	if not unit.stats:
+		return null
+	var target_group: String = UnitStats.TARGET[unit.stats.team]
+	var enemies := get_tree().get_nodes_in_group(target_group)
+	var same_team_units := get_tree().get_nodes_in_group("units").filter(func(u):
+		return is_instance_valid(u) and u != unit and u.stats and u.stats.team == unit.stats.team
+	)
+	var aggro_range_pixels: float = unit.stats.aggro_range * CELL_SIZE.x
+
+	var best: Node = null
+	var best_dist: float = INF
+
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy == unit:
+			continue
+		if enemy == current_target:
+			continue  # Skip current target (we're stuck on it)
+		if "stats" in enemy and enemy.stats and enemy.stats.health <= 0:
+			continue
+		if not _is_in_aggro_range(enemy.global_position, aggro_range_pixels):
+			continue
+
+		var dist: float = unit.global_position.distance_to(enemy.global_position)
+		# Check if the path to this enemy is blocked by a same-team unit in combat
+		var blocked := false
+		var dir_to_enemy: Vector2 = (enemy.global_position - unit.global_position).normalized()
+		for ally in same_team_units:
+			var to_ally: Vector2 = ally.global_position - unit.global_position
+			var ally_dist: float = to_ally.length()
+			if ally_dist >= dist or ally_dist < 1.0:
+				continue
+			# Is ally roughly in the line toward this enemy?
+			if dir_to_enemy.dot(to_ally.normalized()) > 0.7:
+				# Is this ally anchored (fighting)?
+				var ally_ai = ally.get_node_or_null("UnitAI")
+				if ally_ai and ally_ai.current_target and is_instance_valid(ally_ai.current_target):
+					var ally_d: float = ally.global_position.distance_to(ally_ai.current_target.global_position)
+					var ally_range: float = ally.stats.attack_range * CELL_SIZE.x
+					if ally_d <= ally_range:
+						blocked = true
+						break
+
+		if not blocked and dist < best_dist:
+			best_dist = dist
+			best = enemy
+
+	return best
+
+
+## ── Helper: find an ally that is blocking the enemy's path to its current target. ──
+## Checks within 1.5× attack range in a forward cone toward the current target.
+## Used so enemies commit to attacking blockers instead of trying to walk past them.
+func _find_blocker_in_path() -> Node:
+	if not unit.stats or unit.stats.team != UnitStats.Team.ENEMY:
+		return null
+	if not current_target or not is_instance_valid(current_target):
+		return null
+
+	var attack_range_px: float = unit.stats.attack_range * CELL_SIZE.x
+	var blocker_range: float = attack_range_px * 1.5
+	var path_dir: Vector2 = (current_target.global_position - unit.global_position).normalized()
+	var target_group: String = UnitStats.TARGET[unit.stats.team]
+	var allies := get_tree().get_nodes_in_group(target_group)
+
+	var closest: Node = null
+	var closest_dist: float = INF
+
+	for ally in allies:
+		if not is_instance_valid(ally) or ally == unit or ally == current_target:
+			continue
+		if "stats" in ally and ally.stats and ally.stats.health <= 0:
+			continue
+		var to_ally: Vector2 = ally.global_position - unit.global_position
+		var dist: float = to_ally.length()
+		if dist > blocker_range or dist < 1.0:
+			continue
+		# Ally must be roughly in the direction toward the current target (within ~72°)
+		if path_dir.dot(to_ally.normalized()) > 0.3 and dist < closest_dist:
+			closest_dist = dist
+			closest = ally
+
 	return closest
 
 
@@ -573,9 +694,9 @@ func _flash_unit(target_unit, color: Color = Color.WHITE) -> void:
 
 
 ## Adjusts movement direction to steer around same-team units blocking the path.
-## Prevents single-file stacking when multiple units share the same target.
+## Treats teammates that are actively fighting (anchored) as hard obstacles.
 func _apply_avoidance_steering(desired_dir: Vector2) -> Vector2:
-	var look_ahead: float = CELL_SIZE.x * 1.5  # Check 1.5 tiles ahead
+	var look_ahead: float = CELL_SIZE.x * 2.5  # Check 2.5 tiles ahead
 	var all_units := get_tree().get_nodes_in_group("units")
 
 	for other_unit in all_units:
@@ -590,37 +711,46 @@ func _apply_avoidance_steering(desired_dir: Vector2) -> Vector2:
 		if dist > look_ahead or dist < 1.0:
 			continue
 
-		# Is this unit roughly in the direction we're moving? (dot > 0.5 ≈ within 60°)
+		# Is this unit roughly in the direction we're moving? (dot > 0.3 ≈ within 72°)
 		var dot: float = desired_dir.dot(to_other.normalized())
-		if dot > 0.5:
+		if dot > 0.3:
 			# Teammate is in our path — steer perpendicular to go around
 			var perpendicular: Vector2 = Vector2(-desired_dir.y, desired_dir.x)
 			# Pick the side that moves AWAY from the blocking unit
 			if perpendicular.dot(to_other) > 0:
 				perpendicular = -perpendicular
-			# Stronger avoidance when closer
+			# Stronger avoidance when closer; teammates in combat are hard obstacles
 			var avoidance_strength: float = 1.0 - (dist / look_ahead)
-			desired_dir = (desired_dir + perpendicular * avoidance_strength * 0.8).normalized()
+			var other_ai = other_unit.get_node_or_null("UnitAI")
+			var other_anchored := false
+			if other_ai and other_ai.current_target and is_instance_valid(other_ai.current_target):
+				var other_dist_to_target: float = other_unit.global_position.distance_to(other_ai.current_target.global_position)
+				var other_attack_range: float = other_unit.stats.attack_range * CELL_SIZE.x
+				other_anchored = other_dist_to_target <= other_attack_range
+			# Anchored teammates are hard obstacles — steer much more aggressively
+			var weight: float = 1.8 if other_anchored else 1.0
+			desired_dir = (desired_dir + perpendicular * avoidance_strength * weight).normalized()
 
 	return desired_dir
 
 
 ## Apply separation force to avoid unit overlap.
-## Weaker during active combat, stronger while moving.
+## Units actively attacking a target are "anchored" and resist being pushed.
 func _apply_separation(delta: float) -> void:
 	if not unit or not unit.stats:
 		return
 
-	# ── Determine separation strength based on combat state ──
-	var in_combat := false
+	# ── Anchored check: if this unit is within attack range AND attacking, skip separation ──
+	# This prevents fighting units from being shoved by teammates walking up behind them.
 	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
 		var dist_to_target: float = unit.global_position.distance_to(current_target.global_position)
 		var attack_range_px: float = unit.stats.attack_range * CELL_SIZE.x
-		in_combat = dist_to_target <= attack_range_px * 1.2
+		if dist_to_target <= attack_range_px:
+			return  # Anchored — don't let teammates push us off our target
 
-	# In combat: very gentle (prevent displacement). Moving: stronger (prevent stacking).
-	var min_distance: float = 24.0 if in_combat else 30.0
-	var separation_force: float = 30.0 if in_combat else 90.0
+	# Only apply light separation to prevent perfect overlap.
+	var min_distance: float = 20.0
+	var separation_force: float = 50.0
 
 	var all_units = get_tree().get_nodes_in_group("units")
 	var separation_vector: Vector2 = Vector2.ZERO
