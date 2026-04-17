@@ -6,5 +6,5 @@
 [resource]
 script = ExtResource("1_k8x2j")
 enemy_type = ExtResource("2_orc")
-count = 9
-spawn_interval_within_group = 0.3
+count = 30
+spawn_interval_within_group = 0.8

@@ -7,7 +7,7 @@ extends Resource
 @export var wave_name: String = "Wave"
 @export var wave_description: String = ""
 
-## Enemy groups in this wave
+## Enemy groups in this wave (spawned in order)
 @export var enemy_groups: Array[WaveEnemyGroup] = []
 
 ## Spawn timing

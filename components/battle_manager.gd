@@ -120,7 +120,6 @@ func check_win_condition() -> void:
 	if current_state != State.BATTLE:
 		return
 	
-	var enemy_units := enemy_area.unit_grid.get_all_units()
 	var player_units := game_area.unit_grid.get_all_units()
 	
 	# King death = immediate defeat
@@ -134,10 +133,21 @@ func check_win_condition() -> void:
 		# King died but other units survive — still a defeat
 		print("[Battle] 👑 The King has fallen!")
 		end_battle(UnitStats.Team.ENEMY)
-	elif enemy_units.is_empty():
-		end_battle(UnitStats.Team.PLAYER)
+		return
 	elif player_units.is_empty():
 		end_battle(UnitStats.Team.ENEMY)
+		return
+	
+	# Check enemy win condition via WaveManager (enemies are free-moving, not on grid)
+	var wave_mgr = get_tree().get_first_node_in_group("wave_manager")
+	if wave_mgr:
+		# Let WaveManager handle wave completion via remaining_enemies count
+		return
+	
+	# Fallback: legacy grid-based check
+	var enemy_units := enemy_area.unit_grid.get_all_units()
+	if enemy_units.is_empty():
+		end_battle(UnitStats.Team.PLAYER)
 
 
 ## Manual trigger to start battle (for testing or button).

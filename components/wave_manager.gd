@@ -202,107 +202,106 @@ func start_next_wave() -> void:
 	await _spawn_wave(wave_config)
 
 
-## Spawns enemy units from wave config with spiral tile distribution
+## Spawns enemy units one at a time, each immediately starts walking.
+## Units spawn at random positions along the top of the enemy area.
 func _spawn_wave(wave_config: WaveConfig) -> void:
-	if not unit_spawner or not enemy_area or not enemy_area.unit_grid:
+	if not unit_spawner or not enemy_area:
 		push_error("Wave Manager: Missing spawner or enemy area")
 		return
-	
-	var grid_size: Vector2i = enemy_area.unit_grid.size
-	var center_tile: Vector2i = Vector2i(grid_size.x >> 1, grid_size.y >> 1)
-	
-	# Build list of available tiles in spiral pattern from center
-	var available_tiles: Array[Vector2i] = _get_spiral_tiles(center_tile, grid_size)
-	
-	remaining_enemies = 0
-	var tile_idx: int = 0
-	print("[WAVE] Spawning %d enemy groups" % wave_config.enemy_groups.size())
-	
-	# Spawn groups with delay between them
-	for group_idx in range(wave_config.enemy_groups.size()):
-		var group: WaveEnemyGroup = wave_config.enemy_groups[group_idx]
-		print("[WAVE]   Group %d: %d x %s" % [group_idx + 1, group.count, group.enemy_type.name if group.enemy_type else "NONE"])
-		
-		# Spawn group with delay
-		if group_idx > 0 and wave_config.spawn_interval_between_groups > 0:
-			await get_tree().create_timer(wave_config.spawn_interval_between_groups).timeout
-		
-		# Spawn enemies in this group
-		for i in range(group.count):
-			var enemy_stats: UnitStats = group.enemy_type
-			if not enemy_stats:
-				print("[WAVE]     WARNING: Enemy type is null!")
-				continue
-			
-			# Apply difficulty scaling to stats
-			var scaled_stats = _create_scaled_stats(enemy_stats)
-			print("[WAVE]     Spawning enemy %d: %s (HP: %d, DMG: %d)" % [i + 1, scaled_stats.name, int(scaled_stats.max_health), int(scaled_stats.attack_damage)])
-			
-			var spawned_unit: Node = null
-			
-			# Try to spawn at available tile from spiral
-			if tile_idx < available_tiles.size():
-				var spawn_tile: Vector2i = available_tiles[tile_idx]
-				tile_idx += 1
-				spawned_unit = unit_spawner.spawn_unit(scaled_stats, spawn_tile)
-				if spawned_unit:
-					print("[WAVE]       Spawned at tile %s" % spawn_tile)
-			
-			# Fallback: spawn without specific tile
-			if not spawned_unit:
-				spawned_unit = unit_spawner.spawn_unit(scaled_stats)
-				if spawned_unit:
-					print("[WAVE]       Spawned without specific tile (grid full)")
-			
-			# Register and connect the unit
-			if spawned_unit:
-				spawned_enemies.append(spawned_unit)
-				# Connect to stats signal, not unit signal
-				if "stats" in spawned_unit and spawned_unit.stats and spawned_unit.stats.has_signal("health_reached_zero"):
-					spawned_unit.stats.health_reached_zero.connect(_on_enemy_died.bindv([spawned_unit]))
-				remaining_enemies += 1
-			
-			# Delay between enemies in group
-			if group.spawn_interval_within_group > 0 and i < group.count - 1:
-				await get_tree().create_timer(group.spawn_interval_within_group).timeout
-	
-	# Enable AI for all spawned units
-	print("[WAVE] Total enemies spawned: %d" % remaining_enemies)
+
+	remaining_enemies = wave_config.get_total_enemies()
+	print("[WAVE] Spawning %d enemies across %d groups (streaming)" % [remaining_enemies, wave_config.enemy_groups.size()])
+
+	# Enable AI for existing player units first
 	if battle_manager:
 		battle_manager.enable_ai_for_all(true)
-		print("[WAVE] AI enabled for all units\n")
+
+	# Build a flat list of all enemies to spawn in order
+	var spawn_queue: Array[UnitStats] = []
+	for group in wave_config.enemy_groups:
+		for i in range(group.count):
+			if group.enemy_type:
+				spawn_queue.append(group.enemy_type)
+
+	# Compute spawn interval from wave config (use first group's interval as base)
+	var spawn_interval: float = 0.5
+	if not wave_config.enemy_groups.is_empty():
+		spawn_interval = wave_config.enemy_groups[0].spawn_interval_within_group
+		if spawn_interval <= 0:
+			spawn_interval = 0.5
+
+	# Spawn enemies one by one
+	for idx in range(spawn_queue.size()):
+		var base_stats: UnitStats = spawn_queue[idx]
+		var scaled_stats = _create_scaled_stats(base_stats)
+
+		var spawned_unit: Node = _spawn_enemy_at_top(scaled_stats)
+
+		if spawned_unit:
+			spawned_enemies.append(spawned_unit)
+			# Connect death signal
+			if "stats" in spawned_unit and spawned_unit.stats and spawned_unit.stats.has_signal("health_reached_zero"):
+				spawned_unit.stats.health_reached_zero.connect(_on_enemy_died.bindv([spawned_unit]))
+			# Enable AI immediately so unit starts walking
+			var ai = spawned_unit.get_node_or_null("UnitAI")
+			if ai:
+				ai.enabled = true
+			if DEBUG_SPAWNS:
+				print("[WAVE]   Spawned #%d: %s (HP: %d) — walking" % [idx + 1, scaled_stats.name, int(scaled_stats.max_health)])
+		else:
+			remaining_enemies = max(remaining_enemies - 1, 0)
+			print("[WAVE]   WARNING: Failed to spawn enemy #%d" % (idx + 1))
+
+		# Wait between spawns (skip delay on last unit)
+		if idx < spawn_queue.size() - 1:
+			await get_tree().create_timer(spawn_interval).timeout
+
+	print("[WAVE] All %d enemies deployed\n" % spawned_enemies.size())
 
 
-func _is_valid_tile(tile: Vector2i, grid_size: Vector2i) -> bool:
-	return tile.x >= 0 and tile.y >= 0 and tile.x < grid_size.x and tile.y < grid_size.y
+const DEBUG_SPAWNS := true
 
+## Spawns a single enemy at a random X along the top edge of the enemy area.
+## Does NOT use the grid — the unit is free-moving from the start.
+func _spawn_enemy_at_top(stats: UnitStats) -> Node:
+	var unit_scene = load("res://scenes/unit/enemy_unit.tscn")
+	if not unit_scene:
+		push_error("Could not load enemy_unit.tscn")
+		return null
 
-## Generates list of tiles in spiral pattern from center outward
-func _get_spiral_tiles(center: Vector2i, grid_size: Vector2i) -> Array[Vector2i]:
-	var tiles: Array[Vector2i] = []
-	var visited: Array[Vector2i] = []
-	
-	var radius: int = 0
-	var max_radius: int = max(grid_size.x, grid_size.y)
-	
-	while tiles.size() < grid_size.x * grid_size.y and radius <= max_radius:
-		# Check all tiles at this radius
-		for x in range(center.x - radius, center.x + radius + 1):
-			for y in range(center.y - radius, center.y + radius + 1):
-				# Only check edge of current radius (not interior)
-				if radius > 0 and abs(x - center.x) < radius and abs(y - center.y) < radius:
-					continue
-				
-				var tile: Vector2i = Vector2i(x, y)
-				if _is_valid_tile(tile, grid_size) and not (tile in visited):
-					visited.append(tile)
-					# Add if not occupied
-					if not enemy_area.unit_grid.is_tile_occupied(tile):
-						tiles.append(tile)
-		
-		radius += 1
-	
-	return tiles
+	var new_unit: Node = unit_scene.instantiate()
+
+	# Give independent stats copy
+	if stats is Resource:
+		new_unit.stats = stats.duplicate(true)
+	else:
+		new_unit.stats = stats
+
+	# Determine spawn position: random X near center of the enemy area, at the top row (y=0)
+	var grid_size: Vector2i = enemy_area.unit_grid.size
+	var center_x: int = grid_size.x / 2
+	var spread: int = 3  # ±3 tiles from center
+	var random_x: int = randi_range(center_x - spread, center_x + spread)
+	var spawn_tile := Vector2i(random_x, 0)
+	var spawn_pos: Vector2 = enemy_area.get_global_from_tile(spawn_tile) - Arena.HALF_CELL_SIZE
+
+	# Add to scene tree (parent to enemy area so it moves with the scene)
+	enemy_area.add_child(new_unit)
+	new_unit.global_position = spawn_pos
+
+	# Reset transform
+	new_unit.rotation = 0
+	new_unit.scale = Vector2.ONE
+	if new_unit.has_node("VelocityBasedRotation"):
+		var v = new_unit.get_node("VelocityBasedRotation")
+		if v and v.has_method("set_enabled"):
+			v.set_enabled(false)
+		elif v:
+			v.enabled = false
+
+	unit_spawner.unit_spawned.emit(new_unit)
+	return new_unit
+
 
 
 ## Creates a copy of stats with difficulty scaling applied
@@ -345,18 +344,16 @@ func _complete_wave() -> void:
 		wave_rewards_earned.emit(gold_reward, xp_reward)
 	
 	# Clean up any remaining dead/alive enemy units
-	for unit in spawned_enemies:
-		if is_instance_valid(unit):
-			unit.queue_free()
+	for u in spawned_enemies:
+		if is_instance_valid(u):
+			u.queue_free()
 	spawned_enemies.clear()
 	
-	# Clear enemy grid
-	if enemy_area and enemy_area.unit_grid:
-		for tile in enemy_area.unit_grid.units.keys():
-			var u = enemy_area.unit_grid.units[tile]
-			if u and is_instance_valid(u):
-				enemy_area.unit_grid.remove_unit(tile)
-				u.queue_free()
+	# Also clean up any enemy units still in the scene (e.g. parented to enemy_area)
+	var remaining_enemy_nodes = get_tree().get_nodes_in_group("enemy_units")
+	for u in remaining_enemy_nodes:
+		if is_instance_valid(u):
+			u.queue_free()
 	
 	# Check if all waves done
 	if current_wave_index + 1 >= waves.size():
