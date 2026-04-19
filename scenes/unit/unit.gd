@@ -15,12 +15,13 @@ const DEBUG_AI_VERBOSE: bool = false
 
 @export var stats: UnitStats : set = set_stats
 
-@onready var skin: Sprite2D = $Visuals/Skin
+@onready var skin: Node2D = $Visuals/Skin
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var mana_bar: ProgressBar = $ManaBar
 @onready var drag_and_drop: DragAndDrop = $DragAndDrop
 @onready var velocity_based_rotation: VelocityBasedRotation = $VelocityBasedRotation
 @onready var outline_highlighter: OutlineHighlighter = $OutlineHighlighter
+@onready var animator: UnitAnimator = $UnitAnimator
 
 var is_hovered := false
 var _health_flash_id: int = 0
@@ -57,6 +58,11 @@ func _ready() -> void:
 		# Connect stats signals
 		if stats:
 			_connect_stats_signals()
+		
+		# Setup animator
+		if animator:
+			animator.setup(skin, $Visuals)
+			animator.play(UnitAnimator.AnimState.IDLE)
 		
 		# Add to unit grid (only for pre-placed scene units, NOT spawner-created ones)
 		# Spawner already handles grid placement before _ready fires.
@@ -193,7 +199,11 @@ func _set_current_mana(value: float) -> void:
 ## Called when unit's health reaches zero.
 func _on_health_reached_zero() -> void:
 	print("%s died!" % stats.name)
-	UnitVisuals.handle_unit_death(self)
+	if animator and not animator.is_dead():
+		animator.play(UnitAnimator.AnimState.DEATH)
+		animator.death_animation_finished.connect(func(): UnitVisuals.handle_unit_death(self), CONNECT_ONE_SHOT)
+	else:
+		UnitVisuals.handle_unit_death(self)
 
 
 ## Spawns a floating damage number above the unit.
@@ -219,9 +229,13 @@ func set_stats(value: UnitStats) -> void:
 	if not is_node_ready():
 		await ready
 	
-	# Set the correct spritesheet based on team
-	skin.texture = value.TEAM_SPRITESHEET[value.team]
-	skin.region_rect.position = Vector2(stats.skin_coordinates) * CELL_SIZE
+	# If sprite_frames are provided, swap Sprite2D for AnimatedSprite2D
+	if value.sprite_frames:
+		_swap_to_animated_sprite(value)
+	else:
+		# Set the correct spritesheet based on team
+		skin.texture = value.TEAM_SPRITESHEET[value.team]
+		skin.region_rect.position = Vector2(stats.skin_coordinates) * CELL_SIZE
 
 	# Apply visual scale (e.g. King is larger)
 	if value.visual_scale != 1.0:
@@ -230,6 +244,27 @@ func set_stats(value: UnitStats) -> void:
 	# Connect stats signals if not in editor
 	if not Engine.is_editor_hint():
 		_connect_stats_signals()
+
+
+## Swaps the static Sprite2D skin for an AnimatedSprite2D using the stats' sprite_frames.
+func _swap_to_animated_sprite(value: UnitStats) -> void:
+	var old_skin := skin
+	var parent := old_skin.get_parent()
+	var anim_sprite := AnimatedSprite2D.new()
+	anim_sprite.name = "Skin"
+	anim_sprite.sprite_frames = value.sprite_frames
+	anim_sprite.offset = old_skin.offset
+	parent.remove_child(old_skin)
+	parent.add_child(anim_sprite)
+	parent.move_child(anim_sprite, 0)
+	old_skin.queue_free()
+	skin = anim_sprite
+	# Update velocity_based_rotation target
+	if velocity_based_rotation:
+		velocity_based_rotation.target = skin
+	# Re-setup animator with new skin
+	if animator:
+		animator.setup(skin, $Visuals)
 
 ## Resets the unit's position and disables rotation after dragging is canceled.
 func reset_after_dragging(starting_position: Vector2) -> void:

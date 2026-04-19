@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://b73kso3vipjjx" path="res://components/drag_and_drop.gd" id="4_bhlit"]
 [ext_resource type="Script" uid="uid://brk3dd83fa5el" path="res://components/velocity_based_rotation.gd" id="5_vgvef"]
 [ext_resource type="Script" uid="uid://djfhyq8ravn6l" path="res://components/unit_ai.gd" id="8_ai"]
+[ext_resource type="Script" path="res://components/unit_animator.gd" id="9_anim"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fmv3f"]
 size = Vector2(36, 36)
@@ -93,6 +94,9 @@ outline_thickness = 1
 [node name="UnitAI" type="Node" parent="."]
 script = ExtResource("8_ai")
 enabled = false
+
+[node name="UnitAnimator" type="Node" parent="."]
+script = ExtResource("9_anim")
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

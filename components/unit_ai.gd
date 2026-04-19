@@ -44,6 +44,7 @@ var enemy_area: PlayArea
 var navigation_agent: NavigationAgent2D
 var _battle_manager: Node  ## Cached BattleManager reference
 var _idle_log_timer: float = 0.0  ## Throttle IDLE log spam
+var _animator: UnitAnimator  ## Cached animator reference
 
 
 ## Called when the node enters the scene tree.
@@ -52,6 +53,7 @@ func _ready() -> void:
 	assert(unit, "UnitAI must be a child of Unit!")
 	
 	navigation_agent = unit.get_node_or_null("NavigationAgent2D")
+	_animator = unit.get_node_or_null("UnitAnimator")
 	
 	# Find play areas from the scene
 	_find_play_areas()
@@ -110,6 +112,10 @@ func _process(delta: float) -> void:
 			_try_attack()
 			_stuck_timer = 0.0
 			_last_distance_to_target = distance_to_target
+		elif distance_to_target <= attack_range_pixels:
+			# In range but on cooldown — idle
+			if _animator:
+				_animator.play(UnitAnimator.AnimState.IDLE)
 		elif distance_to_target > attack_range_pixels and (not current_target.has_meta("is_dummy_target") or unit.stats.team == UnitStats.Team.ENEMY):
 			# ── Stuck detection: if not making progress, find an alternate target ──
 			if _last_distance_to_target - distance_to_target >= STUCK_PROGRESS_MIN:
@@ -160,9 +166,16 @@ func _process(delta: float) -> void:
 			var steered_dir: Vector2 = _apply_avoidance_steering(desired_dir)
 			var distance_to_move: float = movement_speed * delta
 			unit.global_position += steered_dir * distance_to_move
+			# Animate walk
+			if _animator:
+				_animator.play(UnitAnimator.AnimState.WALK)
 			if DEBUG_AI_VERBOSE and update_timer <= 0:
 				var target_name = _get_target_name(current_target)
 				print("[AI] %s: moving → %s (dist=%.0fpx, range=%.0fpx)" % [unit.stats.name, target_name, distance_to_target, attack_range_pixels])
+	else:
+		# No valid target — idle
+		if _animator:
+			_animator.play(UnitAnimator.AnimState.IDLE)
 
 
 ## Main AI update logic — runs every update_interval seconds.
@@ -642,6 +655,10 @@ func _perform_attack(target) -> void:
 	# Prevent unit from attacking itself
 	if target == unit:
 		return
+
+	# Play attack animation
+	if _animator:
+		_animator.play(UnitAnimator.AnimState.ATTACK)
 
 	# Calculate damage
 	var damage: int = unit.stats.get_attack_damage()

@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ct4xk88g67xlv" path="res://asset/sprites/monsters.png" id="4_jn085"]
 [ext_resource type="Script" uid="uid://brk3dd83fa5el" path="res://components/velocity_based_rotation.gd" id="5_vgvef"]
 [ext_resource type="Script" uid="uid://djfhyq8ravn6l" path="res://components/unit_ai.gd" id="8_ai"]
+[ext_resource type="Script" path="res://components/unit_animator.gd" id="9_anim"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fmv3f"]
 size = Vector2(36, 36)
@@ -81,6 +82,9 @@ x_velocity_threshold = 10.0
 
 [node name="UnitAI" type="Node" parent="."]
 script = ExtResource("8_ai")
+
+[node name="UnitAnimator" type="Node" parent="."]
+script = ExtResource("9_anim")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
 path_desired_distance = 4.0

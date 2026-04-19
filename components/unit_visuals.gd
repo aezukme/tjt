@@ -81,7 +81,7 @@ static func flash_health_bar(health_bar: ProgressBar, tree: SceneTree, flash_id:
 
 
 ## Flashes a Sprite2D with a color briefly. Returns the flash id used.
-static func flash_skin(skin: Sprite2D, tree: SceneTree, flash_id: int, flash_color: Color = Color.RED) -> int:
+static func flash_skin(skin: Node2D, tree: SceneTree, flash_id: int, flash_color: Color = Color.RED) -> int:
 	if not skin or not is_instance_valid(skin):
 		return flash_id
 
