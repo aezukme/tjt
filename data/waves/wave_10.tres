@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WaveConfig" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://data/waves/wave_config.gd" id="1_wave"]
+[ext_resource type="Resource" path="res://data/waves/group_trolls_4.tres" id="2_group1"]
+[ext_resource type="Resource" path="res://data/waves/group_necros_6.tres" id="3_group2"]
+[ext_resource type="Resource" path="res://data/waves/group_orcs_8.tres" id="4_group3"]
+
+[resource]
+script = ExtResource("1_wave")
+wave_name = "Wave 10 - BOSS: The Warhost 👑"
+wave_description = "The full enemy army assembles. Trolls, necros, and orcs — survive or fall!"
+enemy_groups = [ExtResource("2_group1"), ExtResource("3_group2"), ExtResource("4_group3")]
+spawn_interval_between_groups = 2.0
+total_estimated_duration = 45.0
+gold_reward = 200
+experience_reward = 60

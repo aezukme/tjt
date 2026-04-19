@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="WaveEnemyGroup" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/waves/wave_enemy_group.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/units/skeleton_archer_enemy.tres" id="2_enemy"]
+
+[resource]
+script = ExtResource("1_script")
+enemy_type = ExtResource("2_enemy")
+count = 3
+spawn_interval_within_group = 0.5

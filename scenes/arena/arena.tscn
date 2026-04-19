@@ -15,11 +15,22 @@
 [ext_resource type="Resource" uid="uid://c8g5xn6wnajf" path="res://data/units/orc_enemy.tres" id="14_bjorn_enemy"]
 [ext_resource type="Resource" uid="uid://cvcydg1w6jk2" path="res://data/units/necro_enemy.tres" id="15_mage_enemy"]
 [ext_resource type="Script" uid="uid://de3i018dnetpo" path="res://components/wave_manager.gd" id="16_wave_mgr"]
-[ext_resource type="Resource" uid="uid://b5qakdx3jh5s" path="res://data/waves/wave_1.tres" id="17_w1"]
 [ext_resource type="Script" uid="uid://b6nyk11ct2wbt" path="res://data/waves/wave_config.gd" id="18_gy0qm"]
-[ext_resource type="Resource" uid="uid://b87gh3lmj7d5" path="res://data/waves/wave_2.tres" id="18_w2"]
-[ext_resource type="Resource" uid="uid://c47dkf3mjh8u" path="res://data/waves/wave_3.tres" id="19_w3"]
-[ext_resource type="Resource" uid="uid://d2h5p5jx8n8s" path="res://data/waves/wave_5_boss.tres" id="20_w5"]
+[ext_resource type="Resource" path="res://data/waves/wave_01.tres" id="w01"]
+[ext_resource type="Resource" path="res://data/waves/wave_02.tres" id="w02"]
+[ext_resource type="Resource" path="res://data/waves/wave_03.tres" id="w03"]
+[ext_resource type="Resource" path="res://data/waves/wave_04.tres" id="w04"]
+[ext_resource type="Resource" path="res://data/waves/wave_05.tres" id="w05"]
+[ext_resource type="Resource" path="res://data/waves/wave_06.tres" id="w06"]
+[ext_resource type="Resource" path="res://data/waves/wave_07.tres" id="w07"]
+[ext_resource type="Resource" path="res://data/waves/wave_08.tres" id="w08"]
+[ext_resource type="Resource" path="res://data/waves/wave_09.tres" id="w09"]
+[ext_resource type="Resource" path="res://data/waves/wave_10.tres" id="w10"]
+[ext_resource type="Resource" path="res://data/waves/wave_11.tres" id="w11"]
+[ext_resource type="Resource" path="res://data/waves/wave_12.tres" id="w12"]
+[ext_resource type="Resource" path="res://data/waves/wave_13.tres" id="w13"]
+[ext_resource type="Resource" path="res://data/waves/wave_14.tres" id="w14"]
+[ext_resource type="Resource" path="res://data/waves/wave_15.tres" id="w15"]
 [ext_resource type="PackedScene" uid="uid://cpdfmqflphrc" path="res://scenes/wave_display/wave_display.tscn" id="21_wave_display"]
 [ext_resource type="PackedScene" path="res://scenes/unit_selection/unit_selection_panel.tscn" id="22_unit_sel"]
 [ext_resource type="Resource" uid="uid://dk4rxstn86o22" path="res://data/units/bjorn_ally.tres" id="23_bjorn"]
@@ -220,7 +231,7 @@ game_area = NodePath("../GameArea")
 
 [node name="WaveManager" type="Node" parent="." unique_id=2098087286 groups=["wave_manager"]]
 script = ExtResource("16_wave_mgr")
-waves = Array[ExtResource("18_gy0qm")]([ExtResource("17_w1"), ExtResource("18_w2"), ExtResource("19_w3"), ExtResource("20_w5")])
+waves = Array[ExtResource("18_gy0qm")]([ExtResource("w01"), ExtResource("w02"), ExtResource("w03"), ExtResource("w04"), ExtResource("w05"), ExtResource("w06"), ExtResource("w07"), ExtResource("w08"), ExtResource("w09"), ExtResource("w10"), ExtResource("w11"), ExtResource("w12"), ExtResource("w13"), ExtResource("w14"), ExtResource("w15")])
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1563741833]
 visible = false

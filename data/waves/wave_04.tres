@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WaveConfig" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/waves/wave_config.gd" id="1_wave"]
+[ext_resource type="Resource" path="res://data/waves/group_skeleton_archers_3.tres" id="2_group1"]
+[ext_resource type="Resource" path="res://data/waves/group_orcs_4.tres" id="3_group2"]
+
+[resource]
+script = ExtResource("1_wave")
+wave_name = "Wave 4 - Bone Rain"
+wave_description = "Skeleton archers fire from behind an orc frontline."
+enemy_groups = [ExtResource("2_group1"), ExtResource("3_group2")]
+spawn_interval_between_groups = 1.5
+total_estimated_duration = 20.0
+gold_reward = 70
+experience_reward = 20

@@ -108,19 +108,20 @@
 - [x] **Specialist:** Druid (Nature's Wrath AoE damage)
 - [x] Each unit has: .tres stats, unique ability/passive, balanced gold cost
 
-### More Enemy Types
-- [ ] Need 5–8 enemy types for wave variety (currently 2: Orc, Necro)
-- [ ] **Fast:** Goblin / Wolf — low HP, high speed, swarms
-- [ ] **Tank:** Troll / Golem — high HP, slow, armor
-- [ ] **Ranged DPS:** Skeleton Archer — ranged, medium HP
+### More Enemy Types ✅
+- [x] Need 5–8 enemy types for wave variety (now 6: Orc, Necro, Goblin, Wolf, Troll, Skeleton Archer)
+- [x] **Fast:** Goblin — low HP (50), high attack speed (1.2), swarms
+- [x] **Fast Flanker:** Wolf — low HP (60), high aggro range (9), flanks backline
+- [x] **Tank:** Troll — high HP (250), slow (0.4 AS), heavy armor (15)
+- [x] **Ranged DPS:** Skeleton Archer — ranged (3), medium HP (70), high aggro (8)
 - [ ] **Healer:** Shaman — heals other enemies
 - [ ] **Boss:** Dragon / Demon Lord — very high HP, special ability, appears on boss waves
 
-### More Waves & Difficulty Curve
-- [ ] Expand from 4 to 15–20 waves for a full game
+### More Waves & Difficulty Curve ✅
+- [x] Expand from 4 to 15 waves for a full game
+- [x] Increasing enemy variety as waves progress (new types introduced gradually)
+- [x] Boss every 5th wave (Wave 5: Troll Assault, Wave 10: The Warhost, Wave 15: The Last Stand)
 - [ ] Wave generator improvements (random composition per run?)
-- [ ] Increasing enemy variety as waves progress
-- [ ] Boss every 5th wave with unique mechanics
 - [ ] Wave preview (show what's coming before build phase)
 - [ ] Income system between waves (base gold + interest on saved gold?)
 
@@ -232,19 +233,34 @@
 | Druid (Specialist) | 380 | 30 | 0.7 | 3 (ranged) | 3💰 | Nature's Wrath (AoE 40 dmg) |
 | **King** 👑 | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* |
 
-### Enemy Units (2)
-| Unit | HP | ATK | Range |
-|------|----|-----|-------|
-| Orc | 100 | 10 | 1 (melee) |
-| Necro | 60 | 10 | 3 (ranged) |
+### Enemy Units (6)
+| Unit | HP | ATK | AS | Armor | MR | Range | Role |
+|------|----|-----|------|-------|-----|-------|------|
+| Orc | 100 | 10 | 0.7 | 5 | 20 | 1 (melee) | Standard warrior |
+| Necro | 60 | 10 | 0.8 | 2 | 30 | 3 (ranged) | Ranged caster |
+| Goblin | 50 | 8 | 1.2 | 2 | 10 | 1 (melee) | Fast swarm |
+| Wolf | 60 | 12 | 1.0 | 0 | 5 | 1 (melee) | Fast flanker |
+| Troll | 250 | 15 | 0.4 | 15 | 10 | 1 (melee) | Heavy tank |
+| Skeleton Archer | 70 | 15 | 0.9 | 3 | 5 | 3 (ranged) | Ranged DPS |
 
-### Waves (4)
-| Wave | Enemies | Reward |
-|------|---------|--------|
-| 1 — First Blood | 3× Orc | 50💰, 10 XP |
-| 2 — Reinforcements | 4× Orc + 2× Necro | 80💰, 20 XP |
-| 3 — Assault | 3× Orc + 4× Necro + 4× Orc | 150💰, 40 XP |
-| 4 — Boss Wave 👑 | 4× Necro + 4× Orc | 300💰, 80 XP |
+### Waves (15)
+| Wave | Name | Enemies | Reward |
+|------|------|---------|--------|
+| 1 | First Blood | 6× Goblin | 30💰, 5 XP |
+| 2 | Orc Warband | 6× Orc | 50💰, 10 XP |
+| 3 | Wolf Pack | 4× Wolf + 6× Goblin | 60💰, 15 XP |
+| 4 | Bone Rain | 3× Skeleton Archer + 4× Orc | 70💰, 20 XP |
+| **5** | **BOSS: Troll Assault 👑** | **2× Troll + 8× Orc** | **120💰, 35 XP** |
+| 6 | Dark Magic | 4× Necro + 6× Goblin | 80💰, 25 XP |
+| 7 | Feral Onslaught | 8× Wolf + 3× Skeleton Archer | 90💰, 30 XP |
+| 8 | Siege Line | 6× Orc + 2× Troll + 4× Necro | 100💰, 35 XP |
+| 9 | Arrow Storm | 5× Skeleton Archer + 8× Wolf | 110💰, 40 XP |
+| **10** | **BOSS: The Warhost 👑** | **4× Troll + 6× Necro + 8× Orc** | **200💰, 60 XP** |
+| 11 | Goblin Horde | 10× Goblin + 5× Skeleton Archer | 130💰, 45 XP |
+| 12 | Undead Legion | 6× Necro + 4× Orc + 2× Troll | 140💰, 50 XP |
+| 13 | The Wild Hunt | 8× Wolf + 4× Troll + 3× Skeleton Archer | 160💰, 55 XP |
+| 14 | Total War | 8× Orc + 6× Necro + 4× Wolf + 4× Troll | 180💰, 65 XP |
+| **15** | **FINAL: The Last Stand 👑** | **4× Troll + 5× Skeleton Archer + 10× Goblin + 6× Necro** | **500💰, 100 XP** |
 
 ---
 

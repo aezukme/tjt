@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+name = "Goblin"
+skin_coordinates = Vector2i(2, 0)
+team = 1
+max_health = 50
+max_mana = 100
+mana_regen = 2.0
+attack_damage = 8
+attack_speed = 1.2
+armor = 2
+magic_resist = 10
+attack_range = 1
+aggro_range = 7
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

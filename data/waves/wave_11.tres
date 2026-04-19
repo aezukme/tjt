@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WaveConfig" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/waves/wave_config.gd" id="1_wave"]
+[ext_resource type="Resource" path="res://data/waves/group_goblins_10.tres" id="2_group1"]
+[ext_resource type="Resource" path="res://data/waves/group_skeleton_archers_5.tres" id="3_group2"]
+
+[resource]
+script = ExtResource("1_wave")
+wave_name = "Wave 11 - Goblin Horde"
+wave_description = "Endless goblins pour in while skeleton archers cover them."
+enemy_groups = [ExtResource("2_group1"), ExtResource("3_group2")]
+spawn_interval_between_groups = 1.0
+total_estimated_duration = 25.0
+gold_reward = 130
+experience_reward = 45

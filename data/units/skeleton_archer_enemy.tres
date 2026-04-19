@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+name = "Skeleton Archer"
+skin_coordinates = Vector2i(1, 4)
+team = 1
+max_health = 70
+max_mana = 100
+mana_regen = 2.0
+attack_damage = 15
+attack_speed = 0.9
+armor = 3
+magic_resist = 5
+attack_range = 3
+aggro_range = 8
+metadata/_custom_type_script = "uid://xf3ubegfusxx"
