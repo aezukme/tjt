@@ -5,6 +5,7 @@ extends PanelContainer
 ## Clicking selects this unit type for placement on the arena.
 
 signal card_clicked(unit_stats: UnitStats)
+signal card_drag_started(unit_stats: UnitStats)
 
 @onready var name_label: Label = $VBox/NameLabel
 @onready var sprite_preview: TextureRect = $VBox/SpriteContainer/SpritePreview
@@ -14,6 +15,11 @@ signal card_clicked(unit_stats: UnitStats)
 var unit_stats: UnitStats
 var is_selected: bool = false
 var can_afford: bool = true
+
+# Drag detection
+var _press_position := Vector2.ZERO
+var _is_pressing := false
+const DRAG_THRESHOLD := 8.0
 
 
 func _ready() -> void:
@@ -96,11 +102,22 @@ func set_selected(selected: bool) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if not can_afford:
 			return
-		card_clicked.emit(unit_stats)
+		if event.pressed:
+			_is_pressing = true
+			_press_position = event.global_position
+		else:
+			if _is_pressing:
+				_is_pressing = false
+				card_clicked.emit(unit_stats)
 		accept_event()
+	elif event is InputEventMouseMotion and _is_pressing:
+		if _press_position.distance_to(event.global_position) > DRAG_THRESHOLD:
+			_is_pressing = false
+			card_drag_started.emit(unit_stats)
+			accept_event()
 
 
 func _on_mouse_entered() -> void:

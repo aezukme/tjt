@@ -8,6 +8,8 @@ const UnitSelectionCardScene = preload("res://scenes/unit_selection/unit_selecti
 
 ## Emitted when a card is clicked and the player should place a unit.
 signal unit_selected(unit_stats: UnitStats)
+## Emitted when a card is dragged — enters drag-placement mode.
+signal unit_drag_started(unit_stats: UnitStats)
 ## Emitted when placement is cancelled (right-click / ESC).
 signal placement_cancelled
 
@@ -50,6 +52,7 @@ func _build_cards() -> void:
 		card_container.add_child(card)
 		card.setup(stats)
 		card.card_clicked.connect(_on_card_clicked)
+		card.card_drag_started.connect(_on_card_drag_started)
 		_cards[stats.resource_path] = card
 
 	_update_info()
@@ -83,6 +86,22 @@ func _on_card_clicked(unit_stats: UnitStats) -> void:
 
 	unit_selected.emit(unit_stats)
 	print("[Selection] 🎯 Selected %s (cost: %d 💰) — click a tile to place" % [unit_stats.name, unit_stats.gold_cost])
+
+
+func _on_card_drag_started(unit_stats: UnitStats) -> void:
+	if deployed_count >= max_deployed_units:
+		return
+	if player_stats and player_stats.gold < unit_stats.gold_cost:
+		return
+	# Select the card visually
+	var card = _cards.get(unit_stats.resource_path)
+	if _selected_card and _selected_card != card:
+		_selected_card.set_selected(false)
+	_selected_card = card
+	_selected_stats = unit_stats
+	if card:
+		card.set_selected(true)
+	unit_drag_started.emit(unit_stats)
 
 
 ## Called by arena after a unit is successfully placed.

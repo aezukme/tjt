@@ -128,10 +128,14 @@ func _start_idle() -> void:
 
 func _process_idle(_delta: float) -> void:
 	_idle_time += _delta
+	# Wrap to avoid float precision issues over long sessions
+	if _idle_time > 1000.0:
+		_idle_time = fmod(_idle_time, 1.0 / IDLE_BOB_SPEED)
+	var bob := sin(_idle_time * IDLE_BOB_SPEED * TAU) * IDLE_BOB_AMOUNT
 	if skin is Sprite2D:
-		skin.offset.y = _base_offset.y + sin(_idle_time * IDLE_BOB_SPEED * TAU) * IDLE_BOB_AMOUNT
+		skin.offset.y = _base_offset.y + bob
 	else:
-		skin.position.y = sin(_idle_time * IDLE_BOB_SPEED * TAU) * IDLE_BOB_AMOUNT
+		skin.position.y = bob
 
 
 # ── Procedural walk ──
@@ -177,6 +181,7 @@ func _start_attack() -> void:
 	_attack_tween.tween_callback(func():
 		if not _is_dead:
 			current_state = AnimState.IDLE
+			_idle_time = 0.0
 	)
 
 

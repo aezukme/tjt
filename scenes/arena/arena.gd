@@ -33,6 +33,17 @@ var wave_manager: Node
 # Placement mode state
 var _placement_stats: UnitStats = null  ## The unit type being placed (null = not in placement mode)
 var _placement_ghost: Sprite2D = null  ## Ghost sprite following the cursor
+var _drag_placing: bool = false  ## True when placing via card drag (release to place)
+
+# Camera zoom
+const ZOOM_MIN := 0.5
+const ZOOM_MAX := 2.0
+const ZOOM_STEP := 0.1
+@onready var camera: Camera2D = $Camera2D
+
+# Camera pan (middle mouse)
+var _camera_panning := false
+var _camera_pan_start := Vector2.ZERO
 
 ## Called when the node enters the scene tree. Connects unit spawner to unit mover.
 func _ready() -> void:
@@ -69,6 +80,7 @@ func _ready() -> void:
 	# ── Unit Selection Panel ──
 	if unit_selection_panel:
 		unit_selection_panel.unit_selected.connect(_on_panel_unit_selected)
+		unit_selection_panel.unit_drag_started.connect(_on_panel_unit_drag_started)
 		unit_selection_panel.placement_cancelled.connect(_on_placement_cancelled)
 		# Count pre-placed player units
 		var preplaced := get_tree().get_nodes_in_group("player_units")
@@ -293,11 +305,23 @@ func _update_toggle_button_text() -> void:
 ## Called when a card is clicked in the panel.
 func _on_panel_unit_selected(unit_stats: UnitStats) -> void:
 	_placement_stats = unit_stats
+	_drag_placing = false
 	# Hide panel while placing
 	if unit_selection_panel:
 		unit_selection_panel.visible = false
 		_update_toggle_button_text()
 	# Create ghost sprite that follows the cursor
+	_create_placement_ghost(unit_stats)
+
+
+## Called when a card is dragged in the panel — enters drag-placement mode.
+func _on_panel_unit_drag_started(unit_stats: UnitStats) -> void:
+	_placement_stats = unit_stats
+	_drag_placing = true
+	# Hide panel while dragging
+	if unit_selection_panel:
+		unit_selection_panel.visible = false
+		_update_toggle_button_text()
 	_create_placement_ghost(unit_stats)
 
 
@@ -308,6 +332,39 @@ func _on_placement_cancelled() -> void:
 
 ## Handles unhandled input for placement clicks, cancel, and right-click delete.
 func _unhandled_input(event: InputEvent) -> void:
+	# ── Mouse scroll zoom ──
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			var new_zoom := minf(camera.zoom.x + ZOOM_STEP, ZOOM_MAX)
+			camera.zoom = Vector2(new_zoom, new_zoom)
+			get_viewport().set_input_as_handled()
+			return
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			var new_zoom := maxf(camera.zoom.x - ZOOM_STEP, ZOOM_MIN)
+			camera.zoom = Vector2(new_zoom, new_zoom)
+			get_viewport().set_input_as_handled()
+			return
+
+	# ── Middle-click camera pan ──
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+		if event.pressed:
+			_camera_panning = true
+			_camera_pan_start = event.global_position
+		else:
+			_camera_panning = false
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseMotion and _camera_panning:
+		camera.position -= (event.relative / camera.zoom)
+		get_viewport().set_input_as_handled()
+		return
+
+	# ── Click outside panel closes it ──
+	if not _placement_stats and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if unit_selection_panel and unit_selection_panel.visible:
+			unit_selection_panel.visible = false
+			_update_toggle_button_text()
+
 	# ── Right-click to delete a placed unit (during prep phase, not in placement mode) ──
 	if not _placement_stats and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if battle_manager and battle_manager.current_state != BattleManager.State.BATTLE and game_area:
@@ -335,15 +392,34 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# Left-click → try to place unit on the hovered tile
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	# Left-click → try to place unit on the hovered tile (click mode: on press, drag mode: on release)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var want_place := false
+		if _drag_placing and not event.pressed:
+			want_place = true  # Drag mode: place on release
+		elif not _drag_placing and event.pressed:
+			want_place = true  # Click mode: place on press
+		if not want_place:
+			return
 		if not game_area:
+			if _drag_placing:
+				_exit_placement_mode()
+				if unit_selection_panel:
+					unit_selection_panel.cancel_selection()
 			return
 		var tile := game_area.get_hovered_tile()
 		if not game_area.is_tile_within_bounds(tile):
+			if _drag_placing:
+				_exit_placement_mode()
+				if unit_selection_panel:
+					unit_selection_panel.cancel_selection()
 			return
 		if game_area.unit_grid.is_tile_occupied(tile):
 			print("[Arena] ⚠ Tile %s is occupied!" % str(tile))
+			if _drag_placing:
+				_exit_placement_mode()
+				if unit_selection_panel:
+					unit_selection_panel.cancel_selection()
 			return
 
 		# Spawn the unit at the chosen tile
@@ -352,16 +428,30 @@ func _unhandled_input(event: InputEvent) -> void:
 			print("[Arena] 🟢 Placed %s at tile %s" % [_placement_stats.name, str(tile)])
 			if unit_selection_panel:
 				unit_selection_panel.on_unit_placed(_placement_stats)
-			# Exit placement mode (show panel for next pick)
-			_exit_placement_mode()
-			if unit_selection_panel:
-				unit_selection_panel.cancel_selection()
+			# Shift held → stay in placement mode for multi-place
+			if Input.is_key_pressed(KEY_SHIFT) and _placement_stats:
+				# Check if we can still afford / deploy more
+				var can_continue := true
+				if unit_selection_panel and unit_selection_panel.deployed_count >= unit_selection_panel.max_deployed_units:
+					can_continue = false
+				if player_stats and _placement_stats and player_stats.gold < _placement_stats.gold_cost:
+					can_continue = false
+				if not can_continue:
+					_exit_placement_mode()
+					if unit_selection_panel:
+						unit_selection_panel.cancel_selection()
+				# else: keep ghost active, stay in placement mode
+			else:
+				_exit_placement_mode()
+				if unit_selection_panel:
+					unit_selection_panel.cancel_selection()
 
 		get_viewport().set_input_as_handled()
 
 
 func _exit_placement_mode() -> void:
 	_placement_stats = null
+	_drag_placing = false
 	# Remove ghost sprite
 	if _placement_ghost and is_instance_valid(_placement_ghost):
 		_placement_ghost.queue_free()

@@ -240,6 +240,9 @@ func set_stats(value: UnitStats) -> void:
 	# Apply visual scale (e.g. King is larger)
 	if value.visual_scale != 1.0:
 		$Visuals.scale = Vector2(value.visual_scale, value.visual_scale)
+		# Re-capture base scale so animator restores the correct size after attacks
+		if animator:
+			animator._base_scale = $Visuals.scale
 	
 	# Connect stats signals if not in editor
 	if not Engine.is_editor_hint():

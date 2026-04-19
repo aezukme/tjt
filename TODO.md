@@ -80,6 +80,24 @@
 - [x] Wave display UI (wave counter, enemy count, progress bar, timer)
 - [x] Unit stats panel (live HP/mana for each ally)
 
+### Procedural Animation System ✅
+- [x] UnitAnimator component with 4 states: IDLE, WALK, ATTACK, DEATH
+- [x] Idle bob animation (1.5px, 1.5Hz sine wave)
+- [x] Walk bob + tilt animation (2.5px, 4Hz, 5° lean)
+- [x] Attack squash + lunge animation (0.15s, scale squash + forward lunge)
+- [x] Death jump + spin + fade animation (0.4s)
+- [x] AnimatedSprite2D support (auto-plays named animations when sprite_frames set)
+- [x] Wired into unit_ai.gd (walk on move, attack on strike, idle on cooldown/no target)
+- [x] Death animation plays before unit removal
+- [x] Idle animation runs during PREPARATION phase
+
+### Camera & QoL ✅
+- [x] Camera2D with mouse scroll zoom (0.5×–2.0×, 0.1 step)
+- [x] Middle-click camera pan (drag to move camera, zoom-scaled)
+- [x] Shift+click multi-place (hold Shift to keep placing same unit type)
+- [x] Drag card to grid placement (drag from card, release on tile to place)
+- [x] Click outside panel closes it (left-click on arena hides unit selection panel)
+
 ### Bug Fixes Applied ✅
 - [x] Lambda capture freed errors (WeakRef pattern)
 - [x] AI spam during PREPARATION (battle state guard)
@@ -91,6 +109,10 @@
 - [x] Enemy separation pushing fighters off targets (anchoring fix)
 - [x] check_win_condition false positive with grid-free enemies (WaveManager delegation)
 - [x] Wave completing instantly when enemies spawn off-grid (remaining_enemies counter)
+- [x] Attack tween squash bug — interrupted attack left units squashed (scale + position reset in _kill_attack_tween)
+- [x] King shrinking after first battle — _base_scale captured before visual_scale applied (re-capture after set_stats)
+- [x] Idle animation float precision — _idle_time wrapped with fmod to prevent drift over long sessions
+- [x] Attack→idle transition — _idle_time now resets when returning to idle from attack tween
 
 ---
 
@@ -172,11 +194,11 @@
 ## 📦 Low Priority / Nice to Have
 
 ### Visual Polish
-- [ ] Unit death animations (fade out, particles)
+- [x] Unit death animations (fade out, particles) — procedural death (jump+spin+fade)
 - [ ] Melee hit effects (slash sprite)
-- [ ] Ability cast animations
+- [x] Ability cast animations — attack squash+lunge procedural
 - [ ] Screen shake on boss spawn / big hits
-- [ ] Attack animations (sprite flipping/bobbing)
+- [x] Attack animations (sprite flipping/bobbing) — procedural walk bob+tilt, attack squash+lunge
 - [ ] Particle effects for status effects
 - [ ] Better backgrounds / arena tilemap art
 
@@ -265,6 +287,17 @@
 ---
 
 ## Session Log
+
+### April 2026 (Session 6) — Animation, Camera, QoL, Bug Fixes
+- ✅ Procedural UnitAnimator system added (IDLE, WALK, ATTACK, DEATH)
+- ✅ Idle bob, walk bob+tilt, attack squash+lunge, death jump+spin+fade
+- ✅ AnimatedSprite2D support prepared for future sprite sheet animations
+- ✅ Camera2D added with mouse-wheel zoom and middle-click pan
+- ✅ Shift+click multi-place and drag-card-to-grid placement implemented
+- ✅ Click outside unit panel closes it
+- ✅ Fixed King size shrink bug after first battle (base scale recaptured)
+- ✅ Added idle animation stability fix for long sessions
+- ✅ Added attack→idle transition reset so idle phase restarts cleanly
 
 ### February 2026 (Session 5) — King Unit, Arena Expansion
 - ✅ **King unit** — core game mechanic: death = Game Over
