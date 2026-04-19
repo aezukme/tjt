@@ -23,6 +23,10 @@
 - [x] Full stat reset (HP, mana, cooldowns, AI state) between rounds
 - [x] Gold + XP rewards per wave completion
 - [x] Victory when all waves cleared / Game Over when all allies die
+- [x] Streaming enemy spawn (one-by-one, each starts walking immediately)
+- [x] Enemies spawn off-grid at random X near center, free-moving from start
+- [x] WaveEnemyGroup props: enemy_type, count, spawn_interval_within_group
+- [x] Win condition delegates to WaveManager (remaining_enemies counter)
 
 ### Unit Placement ✅
 - [x] Bottom panel with unit cards (name, sprite, stats, gold cost)
@@ -59,10 +63,14 @@
 - [x] Threat tracking (incoming_damage / incoming_healing)
 - [x] Anti-overkill: prefer targets with effective HP > 0
 - [x] Anti-overheal: prefer allies with effective missing HP > 0
-- [x] Separation force to prevent unit stacking (disabled during combat)
+- [x] Separation force to prevent unit stacking (anchored units resist push)
 - [x] Enemy dummy target (walk toward King when no target)
 - [x] Pre-move intercept (switch to enemy in attack range before walking)
 - [x] Diagnostic logging with emoji markers ([AI] prefix)
+- [x] Avoidance steering (steer around same-team units, hard-obstacle for fighting allies)
+- [x] Stuck detection (switch to alternate target after 1.5s no progress)
+- [x] Path blocker detection (enemies attack blocking ally instead of walking through)
+- [x] Ally idle detection logging (⚠ IDLE warns when allies ignore combat)
 
 ### Visual Feedback ✅
 - [x] Damage numbers (float up + fade, scaled by damage)
@@ -80,12 +88,17 @@
 - [x] handle_unit_death validity check
 - [x] BattleManager type casting issues
 - [x] Mana regeneration system (battle state check)
+- [x] Enemy separation pushing fighters off targets (anchoring fix)
+- [x] check_win_condition false positive with grid-free enemies (WaveManager delegation)
+- [x] Wave completing instantly when enemies spawn off-grid (remaining_enemies counter)
 
 ---
 
 ## 🔥 High Priority — Next Up
 
-- [ ] IMPORTANT: Fix aggro, AI movement, pathfinding, and targeting (prevent pushing/stacking and erratic target switching)
+- [x] ~~IMPORTANT: Fix aggro, AI movement, pathfinding, and targeting~~ (anchoring, avoidance steering, stuck detection, blocker detection)
+- [ ] Enemy target switching still needs tuning (debug logs added)
+- [ ] Ally back-row engagement (Y aggro multiplier increased 1.0→2.0, needs testing)
 
 ### More Defender Units ✅
 - [x] Need 8–12 ally unit types for build variety (currently 8)
@@ -114,7 +127,7 @@
 ### Lane / Positioning System (Legion TD Core)
 - [x] Enemies walk toward King (replaces traditional lives system)
 - [x] King death = Game Over (no lives counter needed)
-- [ ] Enemies walk a fixed path (top to bottom through player's lane)
+- [x] Enemies stream in from top of lane, walk toward King
 - [ ] Player units are static defenders (no movement during battle)
 - [ ] Multiple lanes? (future — multiplayer prep)
 
