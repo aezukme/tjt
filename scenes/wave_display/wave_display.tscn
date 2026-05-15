@@ -66,3 +66,11 @@ text = ""
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="NextWaveLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = ""
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+autowrap_mode = 3

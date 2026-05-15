@@ -8,6 +8,7 @@ extends Control
 @onready var difficulty_label: Label = $VBoxContainer/DifficultyLabel
 @onready var timer_label: Label = $VBoxContainer/TimerLabel
 @onready var rewards_label: Label = $VBoxContainer/RewardsLabel
+@onready var next_wave_label: Label = $VBoxContainer/NextWaveLabel
 
 var wave_manager: Node
 var prep_timer: float = 0.0
@@ -58,9 +59,11 @@ func _on_wave_started(wave_number: int, _wave_config: WaveConfig) -> void:
 			label_text += " - BOSS! 👑"
 		wave_label.text = label_text
 	
-	# Clear rewards display
+	# Clear rewards and preview
 	if rewards_label:
 		rewards_label.text = ""
+	if next_wave_label:
+		next_wave_label.text = ""
 
 
 func _on_wave_completed(_wave_number: int) -> void:
@@ -68,6 +71,24 @@ func _on_wave_completed(_wave_number: int) -> void:
 	prep_timer = wave_manager.preparation_between_waves if wave_manager else 15.0
 	if enemy_count_label:
 		enemy_count_label.text = "Wave Complete!"
+	_show_next_wave_preview()
+
+
+func _show_next_wave_preview() -> void:
+	if not next_wave_label or not wave_manager:
+		return
+	var next_config: WaveConfig = wave_manager.get_next_wave_config()
+	if not next_config:
+		next_wave_label.text = "Last wave cleared!"
+		return
+	var parts: Array[String] = []
+	for group in next_config.enemy_groups:
+		if group.enemy_type:
+			parts.append("%d× %s" % [group.count, group.enemy_type.name])
+	if parts.is_empty():
+		next_wave_label.text = ""
+		return
+	next_wave_label.text = "Next: " + ", ".join(parts)
 
 
 func _on_difficulty_changed(difficulty: float) -> void:

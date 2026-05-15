@@ -116,6 +116,64 @@
 
 ---
 
+## ⚡ Legion TD 2 Core Systems — Missing
+
+> These are the mechanics that define the Legion TD genre. Without them the game is
+> a basic tower defense; with them it becomes a strategic economy game.
+
+### 1. King Lives / Leak Mechanic ✅ (partially done)
+- [x] King HP never resets between waves — permanent damage from leaks
+- [x] King health_regen = 0 (no self-healing)
+- [ ] Enemies that break through all fighters "leak" and deal -1 HP to King
+- [ ] Boss enemies deal -2 or -3 HP per leak
+- [ ] Game Over only when King HP reaches 0
+- [ ] King HP bar visible in HUD at all times
+- [ ] Current behavior (King dies = instant Game Over) replaced by leak system
+
+### 2. Economy / Worker System 🔴 (CRITICAL)
+- [ ] **Workers**: placeable units that generate +1 gold per wave instead of fighting
+- [ ] Workers cost X gold to place (e.g. 3 gold), have no combat stats
+- [ ] Income per wave = base_income + (worker_count × 1) + interest
+- [ ] Base income: fixed per wave (e.g. 5 gold/wave)
+- [ ] **Interest**: earn ~10% of unspent gold at end of build phase (rounded down, max cap)
+- [ ] Worker count visible in HUD
+- [ ] Strategic tension: spend gold on fighters (defense) vs workers (economy)
+- [ ] Max workers limit (e.g. 8) to prevent snowball
+
+### 3. Mythium System 🟡 (HIGH)
+- [ ] **Mythium**: second resource earned by clearing waves efficiently
+- [ ] Mythium earned = enemies_killed × 1 (or some formula based on wave value)
+- [ ] Mythium persists between waves (doesn't reset)
+- [ ] Single-player use of mythium:
+  - [ ] Buy **spells** — one-time battle effects (lightning strike, fortify, haste)
+  - [ ] Buy **auras** — passive buffs for current wave (armor aura, regen aura)
+  - [ ] Buy **mercenaries** — temporary powerful fighters that die after one wave
+- [ ] Mythium shop UI between waves (prep phase)
+- [ ] Mythium amount visible in HUD
+
+### 4. Faction / Synergy System ✅
+- [x] Units belong to factions: Warrior (Knight, Bjorn, Rogue), Mystic (Mage, Sage, Druid), Warden (Ranger, Priest)
+- [x] Placing 3+ Warriors → +20% ATK damage; 3+ Mystics → +20% AP; 2+ Wardens → +15% ATK speed
+- [x] SynergyManager component tracks placed units, applies/removes stat bonuses live
+- [x] SynergyPanel HUD shows active/pending synergies (dots ●●○ style)
+- [x] Faction field added to UnitStats; all ally .tres files updated
+- [ ] Faction icon shown on unit cards in UnitSelectionPanel
+
+### 5. Wave Preview / Info System ✅
+- [x] After each wave completes, prep-phase shows next wave's enemy composition
+- [x] Format: "Next: 3× Orc, 2× Troll" via NextWaveLabel in WaveDisplay
+- [x] WaveManager.get_next_wave_config() added
+- [ ] Enemy icons with HP/ATK/count displayed (currently text-only)
+- [ ] "Threat level" indicator per wave (Easy / Medium / Hard / Boss)
+
+### 6. Income & Gold HUD 🟢 (MEDIUM)
+- [ ] Gold always visible in HUD (not just on unit selection panel)
+- [ ] Income breakdown tooltip: base + workers + interest = total next wave
+- [ ] Mythium always visible next to gold
+- [ ] King HP / Lives always visible in HUD
+
+---
+
 ## 🔥 High Priority — Next Up
 
 - [x] ~~IMPORTANT: Fix aggro, AI movement, pathfinding, and targeting~~ (anchoring, avoidance steering, stuck detection, blocker detection)
@@ -170,8 +228,8 @@
 - [ ] Lifesteal mechanic
 
 ### Gold & Economy
-- [ ] Income per wave (base + interest on banked gold, like Legion TD)
-- [ ] Gold display always visible in HUD
+- [ ] ~~Income per wave (base + interest on banked gold, like Legion TD)~~ → see Legion TD 2 Core Systems above
+- [ ] Gold display always visible in HUD → see HUD section above
 - [ ] Unit sell value decay (sell for less than buy price?)
 - [ ] Balance gold costs vs wave rewards curve
 
@@ -287,6 +345,16 @@
 ---
 
 ## Session Log
+
+### May 2026 (Session 7) — Legion TD 2 Core Systems
+- ✅ TODO updated with full Legion TD 2 structural analysis
+- ✅ King HP never resets between waves (permanent damage from leaks)
+- ✅ King health_regen = 0 (no self-healing)
+- ✅ Wave Preview: after each wave, prep-phase shows next wave composition ("Next: 3× Orc, 2× Troll")
+- ✅ Faction Synergy system: Warrior/Mystic/Warden factions with stat bonuses
+- ✅ SynergyManager component: tracks placed units, applies/removes bonuses live
+- ✅ SynergyPanel HUD: shows active/pending synergies with ●●○ style indicators
+- ✅ All ally .tres files updated with faction assignments
 
 ### April 2026 (Session 6) — Animation, Camera, QoL, Bug Fixes
 - ✅ Procedural UnitAnimator system added (IDLE, WALK, ATTACK, DEATH)

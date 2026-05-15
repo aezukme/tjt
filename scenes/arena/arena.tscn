@@ -40,6 +40,8 @@
 [ext_resource type="Resource" path="res://data/waves/wave_13.tres" id="w13"]
 [ext_resource type="Resource" path="res://data/waves/wave_14.tres" id="w14"]
 [ext_resource type="Resource" path="res://data/waves/wave_15.tres" id="w15"]
+[ext_resource type="Script" path="res://components/synergy_manager.gd" id="30_syn_mgr"]
+[ext_resource type="PackedScene" path="res://scenes/synergy_panel/synergy_panel.tscn" id="31_syn_panel"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_aj7ud"]
 particle_flag_disable_z = true
@@ -120,6 +122,21 @@ grow_horizontal = 0
 
 [node name="UnitSelectionPanel" parent="UI" unique_id=630095761 instance=ExtResource("22_unit_sel")]
 available_units = Array[ExtResource("24_unit_stats")]([ExtResource("23_bjorn"), ExtResource("8_6w4xk"), ExtResource("8_sage"), ExtResource("25_knight"), ExtResource("26_ranger"), ExtResource("27_rogue"), ExtResource("28_priest"), ExtResource("29_druid")])
+
+
+[node name="SynergyPanel" parent="UI" instance=ExtResource("31_syn_panel")]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 135.0
+offset_right = -10.0
+offset_bottom = 215.0
+grow_horizontal = 0
+
+[node name="SynergyManager" type="Node" parent="."]
+script = ExtResource("30_syn_mgr")
 
 [node name="Visuals" type="Node2D" parent="." unique_id=742230370]
 metadata/_edit_lock_ = true

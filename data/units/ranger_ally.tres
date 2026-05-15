@@ -21,4 +21,5 @@ magic_resist = 15
 attack_range = 4
 aggro_range = 6
 ability_resource = ExtResource("2_ability")
+faction = 3
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

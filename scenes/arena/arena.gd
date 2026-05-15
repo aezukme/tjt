@@ -40,6 +40,8 @@ const ZOOM_MIN := 0.5
 const ZOOM_MAX := 2.0
 const ZOOM_STEP := 0.1
 @onready var camera: Camera2D = $Camera2D
+@onready var synergy_manager: SynergyManager = $SynergyManager
+@onready var synergy_panel = $UI/SynergyPanel
 
 # Camera pan (middle mouse)
 var _camera_panning := false
@@ -55,6 +57,7 @@ func _ready() -> void:
 		add_child(pool)
 
 	unit_spawner.unit_spawned.connect(unit_mover.setup_unit)
+	unit_spawner.unit_spawned.connect(_on_unit_spawned_for_synergy)
 	
 	# Connect battle manager signals
 	battle_manager.battle_started.connect(_on_battle_started)
@@ -95,6 +98,10 @@ func _ready() -> void:
 	if toggle_units_button:
 		toggle_units_button.pressed.connect(_on_toggle_units_pressed)
 
+	# ── Synergy Panel ──
+	if synergy_panel and synergy_manager:
+		synergy_panel.setup(synergy_manager)
+
 	# ── Spawn King ──
 	_spawn_king()
 
@@ -118,6 +125,13 @@ func _spawn_king() -> void:
 		print("[Arena] 👑 King spawned at tile %s" % str(king_tile))
 		# Add to king group for easy lookup
 		king_node.add_to_group("king")
+
+
+## Registers newly spawned player units with SynergyManager.
+func _on_unit_spawned_for_synergy(unit: Node) -> void:
+	if synergy_manager and unit and "stats" in unit and unit.stats:
+		if unit.stats.get("team") == UnitStats.Team.PLAYER:
+			synergy_manager.register_unit(unit)
 
 
 ## Called when battle starts - disable dragging.

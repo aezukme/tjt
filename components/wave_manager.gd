@@ -326,6 +326,14 @@ func _on_enemy_died(unit: Node) -> void:
 	print("[WAVE] Enemy died! Remaining: %d" % remaining_enemies)
 
 
+## Returns the WaveConfig for the next upcoming wave, or null if none.
+func get_next_wave_config() -> WaveConfig:
+	var next_index := current_wave_index + 1
+	if next_index < waves.size():
+		return waves[next_index]
+	return null
+
+
 func _complete_wave() -> void:
 	print("[WAVE] <<< WAVE %d COMPLETE >>>" % current_wave_number)
 	is_wave_active = false
@@ -501,6 +509,10 @@ func _reset_ally_stats() -> void:
 			continue
 		
 		if not unit.stats:
+			continue
+		
+		# King HP never resets — permanent damage from leaks
+		if unit.stats.is_king:
 			continue
 		
 		# Reset health to max
