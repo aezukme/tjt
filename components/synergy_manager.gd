@@ -56,23 +56,34 @@ func _on_unit_removed(unit: Node) -> void:
 
 
 func get_faction_count(faction: UnitStats.Faction) -> int:
+	var seen_names := {}
 	var count := 0
 	for u in _tracked_units:
 		if is_instance_valid(u) and u.stats and u.stats.faction == faction:
-			count += 1
+			var n: String = u.stats.name
+			if n not in seen_names:
+				seen_names[n] = true
+				count += 1
 	return count
 
 
 ## Returns Dictionary[Faction, int] of all tracked faction counts.
+## Only unique unit types (by stats.name) are counted per faction.
 func get_all_counts() -> Dictionary:
 	var counts := {}
+	var seen: Dictionary = {}  # faction → { name: true }
 	for u in _tracked_units:
 		if not is_instance_valid(u) or not u.stats:
 			continue
 		var f: int = u.stats.faction
 		if f == UnitStats.Faction.NONE:
 			continue
-		counts[f] = counts.get(f, 0) + 1
+		var n: String = u.stats.name
+		if f not in seen:
+			seen[f] = {}
+		if n not in seen[f]:
+			seen[f][n] = true
+			counts[f] = counts.get(f, 0) + 1
 	return counts
 
 
