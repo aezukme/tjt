@@ -62,7 +62,7 @@ func play(state: AnimState) -> void:
 	if state == current_state and state != AnimState.ATTACK:
 		return
 
-	var old_state := current_state
+	var _old_state := current_state
 	current_state = state
 
 	if _using_sprite_frames:

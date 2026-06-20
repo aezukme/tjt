@@ -30,6 +30,7 @@ func _ready() -> void:
 func setup(stats: UnitStats) -> void:
 	unit_stats = stats
 	_update_display()
+	tooltip_text = _build_tooltip()
 
 
 func _update_display() -> void:
@@ -60,6 +61,7 @@ func _update_display() -> void:
 		cost_label.text = "%d 💰" % unit_stats.gold_cost
 
 	_update_style()
+	tooltip_text = _build_tooltip()
 
 
 func set_can_afford(affordable: bool) -> void:
@@ -128,3 +130,46 @@ func _on_mouse_entered() -> void:
 func _on_mouse_exited() -> void:
 	if not is_selected:
 		modulate = Color.WHITE
+
+
+func _build_tooltip() -> String:
+	if not unit_stats:
+		return ""
+
+	var lines: Array[String] = []
+	lines.append(unit_stats.name)
+	lines.append("Cost: %d gold" % unit_stats.gold_cost)
+	lines.append("Team: %s" % _team_name(unit_stats.team))
+	lines.append("Rarity: %s" % _rarity_name(unit_stats.rarity))
+	lines.append("HP: %d | ATK: %d | Range: %d" % [unit_stats.max_health, unit_stats.attack_damage, unit_stats.attack_range])
+	lines.append("Armor: %d | MR: %d | SPD: %.1f" % [unit_stats.armor, unit_stats.magic_resist, unit_stats.attack_speed])
+	if unit_stats.faction != UnitStats.Faction.NONE:
+		lines.append("Synergy: %s" % _faction_tooltip(unit_stats.faction))
+	return "\n".join(lines)
+
+
+func _team_name(team: UnitStats.Team) -> String:
+	match team:
+		UnitStats.Team.PLAYER: return "Player"
+		UnitStats.Team.ENEMY: return "Enemy"
+	return "Unknown"
+
+
+func _rarity_name(rarity: UnitStats.Rarity) -> String:
+	match rarity:
+		UnitStats.Rarity.COMMON: return "Common"
+		UnitStats.Rarity.UNCOMMON: return "Uncommon"
+		UnitStats.Rarity.RARE: return "Rare"
+		UnitStats.Rarity.LEGENDARY: return "Legendary"
+	return "Unknown"
+
+
+func _faction_tooltip(faction: UnitStats.Faction) -> String:
+	match faction:
+		UnitStats.Faction.WARRIOR:
+			return "Warrior: +20% attack damage at 3 unique warriors."
+		UnitStats.Faction.MYSTIC:
+			return "Mystic: +20% ability power at 3 unique mystics."
+		UnitStats.Faction.WARDEN:
+			return "Warden: +15% attack speed at 2 unique wardens."
+	return "No synergy"

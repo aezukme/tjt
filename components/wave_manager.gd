@@ -279,7 +279,7 @@ func _spawn_enemy_at_top(stats: UnitStats) -> Node:
 
 	# Determine spawn position: random X near center of the enemy area, at the top row (y=0)
 	var grid_size: Vector2i = enemy_area.unit_grid.size
-	var center_x: int = grid_size.x / 2
+	var center_x: int = grid_size.x >> 1
 	var spread: int = 3  # ±3 tiles from center
 	var random_x: int = randi_range(center_x - spread, center_x + spread)
 	var spawn_tile := Vector2i(random_x, 0)

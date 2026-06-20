@@ -1,0 +1,137 @@
+[gd_scene load_steps=3 format=4]
+
+[ext_resource type="Script" path="res://scenes/hud/hud_bar.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="style_hud_panel"]
+bg_color = Color(0.06, 0.08, 0.12, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.32, 0.42, 0.55, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="HudBar" type="PanelContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 52.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("style_hud_panel")
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="GoldBlock" type="HBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="GoldLabel" type="Label" parent="MarginContainer/HBoxContainer/GoldBlock"]
+layout_mode = 2
+text = "Gold"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.92, 0.9, 0.73, 1)
+
+[node name="GoldValue" type="Label" parent="MarginContainer/HBoxContainer/GoldBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+
+[node name="Divider1" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="XpBlock" type="HBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="XpLabel" type="Label" parent="MarginContainer/HBoxContainer/XpBlock"]
+layout_mode = 2
+text = "XP"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.84, 0.95, 1)
+
+[node name="XpValue" type="Label" parent="MarginContainer/HBoxContainer/XpBlock"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.72, 0.9, 1, 1)
+
+[node name="Divider2" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="UnitsBlock" type="HBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="UnitsLabel" type="Label" parent="MarginContainer/HBoxContainer/UnitsBlock"]
+layout_mode = 2
+text = "Units"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.78, 0.9, 0.8, 1)
+
+[node name="UnitsValue" type="Label" parent="MarginContainer/HBoxContainer/UnitsBlock"]
+layout_mode = 2
+text = "0/8"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.72, 1, 0.76, 1)
+
+[node name="Divider3" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="WaveBlock" type="HBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WaveLabel" type="Label" parent="MarginContainer/HBoxContainer/WaveBlock"]
+layout_mode = 2
+text = "Wave"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.95, 0.86, 0.86, 1)
+
+[node name="WaveValue" type="Label" parent="MarginContainer/HBoxContainer/WaveBlock"]
+layout_mode = 2
+text = "0/0"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.66, 0.66, 1)
+
+[node name="Divider4" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="KingBlock" type="HBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="KingLabel" type="Label" parent="MarginContainer/HBoxContainer/KingBlock"]
+layout_mode = 2
+text = "👑 HP"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 0.87, 0.7, 1)
+
+[node name="KingBar" type="ProgressBar" parent="MarginContainer/HBoxContainer/KingBlock"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 12)
+show_percentage = false
+
+[node name="KingValue" type="Label" parent="MarginContainer/HBoxContainer/KingBlock"]
+layout_mode = 2
+text = "--"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 0.94, 0.6, 1)

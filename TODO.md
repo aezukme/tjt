@@ -124,32 +124,9 @@
 ### 1. King Lives / Leak Mechanic ✅ (partially done)
 - [x] King HP never resets between waves — permanent damage from leaks
 - [x] King health_regen = 0 (no self-healing)
-- [ ] Enemies that break through all fighters "leak" and deal -1 HP to King
-- [ ] Boss enemies deal -2 or -3 HP per leak
 - [ ] Game Over only when King HP reaches 0
 - [ ] King HP bar visible in HUD at all times
-- [ ] Current behavior (King dies = instant Game Over) replaced by leak system
-
-### 2. Economy / Worker System 🔴 (CRITICAL)
-- [ ] **Workers**: placeable units that generate +1 gold per wave instead of fighting
-- [ ] Workers cost X gold to place (e.g. 3 gold), have no combat stats
-- [ ] Income per wave = base_income + (worker_count × 1) + interest
-- [ ] Base income: fixed per wave (e.g. 5 gold/wave)
-- [ ] **Interest**: earn ~10% of unspent gold at end of build phase (rounded down, max cap)
-- [ ] Worker count visible in HUD
-- [ ] Strategic tension: spend gold on fighters (defense) vs workers (economy)
-- [ ] Max workers limit (e.g. 8) to prevent snowball
-
-### 3. Mythium System 🟡 (HIGH)
-- [ ] **Mythium**: second resource earned by clearing waves efficiently
-- [ ] Mythium earned = enemies_killed × 1 (or some formula based on wave value)
-- [ ] Mythium persists between waves (doesn't reset)
-- [ ] Single-player use of mythium:
-  - [ ] Buy **spells** — one-time battle effects (lightning strike, fortify, haste)
-  - [ ] Buy **auras** — passive buffs for current wave (armor aura, regen aura)
-  - [ ] Buy **mercenaries** — temporary powerful fighters that die after one wave
-- [ ] Mythium shop UI between waves (prep phase)
-- [ ] Mythium amount visible in HUD
+- [ ] Current behavior (King dies = instant Game Over) 
 
 ### 4. Faction / Synergy System ✅
 - [x] Units belong to factions: Warrior (Knight, Bjorn, Rogue), Mystic (Mage, Sage, Druid), Warden (Ranger, Priest)
@@ -164,7 +141,6 @@
 - [x] Format: "Next: 3× Orc, 2× Troll" via NextWaveLabel in WaveDisplay
 - [x] WaveManager.get_next_wave_config() added
 - [ ] Enemy icons with HP/ATK/count displayed (currently text-only)
-- [ ] "Threat level" indicator per wave (Easy / Medium / Hard / Boss)
 
 ### 6. Income & Gold HUD 🟢 (MEDIUM)
 - [ ] Gold always visible in HUD (not just on unit selection panel)

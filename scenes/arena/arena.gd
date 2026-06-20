@@ -15,8 +15,12 @@ const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
 @onready var battle_manager: BattleManager = $BattleManager
 @onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
-@onready var start_battle_button: Button = $UI/RightPanel/StartBattleButton
-@onready var toggle_units_button: Button = $UI/RightPanel/ToggleUnitsButton
+@onready var damage_output_value_label: Label = $UI/UnitStatsContainer/DamageOutputBlock/DamageOutputValue
+@onready var right_sidebar: RightSidebar = $UI/RightSidebar
+@onready var hud_bar: Control = $UI/HudBar
+var start_battle_button: Button
+var toggle_units_button: Button
+var quit_game_button: Button
 @onready var enemy_area: PlayArea = $EnemyArea
 @onready var game_area: PlayArea = $GameArea
 @onready var unit_selection_panel = $UI/UnitSelectionPanel
@@ -34,6 +38,7 @@ var wave_manager: Node
 var _placement_stats: UnitStats = null  ## The unit type being placed (null = not in placement mode)
 var _placement_ghost: Sprite2D = null  ## Ghost sprite following the cursor
 var _drag_placing: bool = false  ## True when placing via card drag (release to place)
+var _damage_output_total: int = 0
 
 # Camera zoom
 const ZOOM_MIN := 0.5
@@ -41,7 +46,6 @@ const ZOOM_MAX := 2.0
 const ZOOM_STEP := 0.1
 @onready var camera: Camera2D = $Camera2D
 @onready var synergy_manager: SynergyManager = $SynergyManager
-@onready var synergy_panel = $UI/SynergyPanel
 
 # Camera pan (middle mouse)
 var _camera_panning := false
@@ -64,6 +68,12 @@ func _ready() -> void:
 	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.preparation_started.connect(_on_preparation_started)
 	battle_manager.state_changed.connect(_on_battle_state_changed)
+
+	# ── Right Sidebar ──
+	if right_sidebar:
+		start_battle_button = right_sidebar.start_battle_button
+		toggle_units_button = right_sidebar.toggle_units_button
+		quit_game_button = right_sidebar.quit_game_button
 
 	# Connect UI button
 	if start_battle_button:
@@ -94,13 +104,20 @@ func _ready() -> void:
 		if player_stats:
 			unit_selection_panel.set_player_stats(player_stats)
 
+	# ── Top HUD ──
+	if hud_bar:
+		hud_bar.player_stats = player_stats
+		hud_bar.unit_selection_panel_path = NodePath("../UnitSelectionPanel")
+
 	# Toggle button for unit panel
 	if toggle_units_button:
 		toggle_units_button.pressed.connect(_on_toggle_units_pressed)
+	if quit_game_button:
+		quit_game_button.pressed.connect(_on_quit_game_pressed)
 
-	# ── Synergy Panel ──
-	if synergy_panel and synergy_manager:
-		synergy_panel.setup(synergy_manager)
+	# ── Synergy ──
+	if right_sidebar and synergy_manager:
+		right_sidebar.setup_synergy(synergy_manager)
 
 	# ── Spawn King ──
 	_spawn_king()
@@ -114,7 +131,7 @@ func _spawn_king() -> void:
 		return
 	# Place at bottom-center of the game area
 	var grid_size: Vector2i = game_area.unit_grid.size
-	var king_tile := Vector2i(int(grid_size.x / 2), grid_size.y - 1)
+	var king_tile := Vector2i(grid_size.x >> 1, grid_size.y - 1)
 	# Find a free tile near bottom-center
 	if game_area.unit_grid.is_tile_occupied(king_tile):
 		king_tile = game_area.unit_grid.get_first_available_tile()
@@ -136,6 +153,8 @@ func _on_unit_spawned_for_synergy(unit: Node) -> void:
 
 ## Called when battle starts - disable dragging.
 func _on_battle_started() -> void:
+	_damage_output_total = 0
+	_refresh_damage_output()
 	_set_drag_enabled(false)
 
 	# Only clear enemy area on first battle start, not between waves
@@ -206,6 +225,20 @@ func _on_preparation_started() -> void:
 	# Ensure Start button enabled in preparation
 	if start_battle_button:
 		start_battle_button.disabled = false
+
+
+## Records damage dealt to enemies for the left-side damage output readout.
+func register_damage_output(damage: float) -> void:
+	var applied_damage: int = max(0, int(round(damage)))
+	if applied_damage <= 0:
+		return
+	_damage_output_total += applied_damage
+	_refresh_damage_output()
+
+
+func _refresh_damage_output() -> void:
+	if damage_output_value_label:
+		damage_output_value_label.text = str(_damage_output_total)
 
 
 ## Called when battle ends with a winner.
@@ -309,6 +342,10 @@ func _on_toggle_units_pressed() -> void:
 		return
 	unit_selection_panel.visible = not unit_selection_panel.visible
 	_update_toggle_button_text()
+
+
+func _on_quit_game_pressed() -> void:
+	get_tree().quit()
 
 
 func _update_toggle_button_text() -> void:
@@ -550,7 +587,17 @@ func _process(delta: float) -> void:
 
 ## Updates the unit stats display with current ally units.
 func update_stats_display() -> void:
-	var ally_units = get_tree().get_nodes_in_group("player_units")
+	if not unit_stats_container:
+		return
+
+	var ally_units: Array[Unit] = []
+	for unit_node in get_tree().get_nodes_in_group("player_units"):
+		if unit_node is Unit:
+			var unit := unit_node as Unit
+			if unit.stats and not unit.stats.is_king:
+				ally_units.append(unit)
+
+	unit_stats_container.visible = not ally_units.is_empty()
 	var current_panels = unit_stats_container.get_children()
 	
 	# Only rebuild panels if unit count changed

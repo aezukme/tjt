@@ -43,11 +43,26 @@ func acquire(scene: PackedScene) -> Node:
 			recycled.visible = true
 			recycled.set_process(true)
 			_active_count += 1
+			# Reparent to the current scene so it behaves like a normal active node
+			var tree := Engine.get_main_loop() as SceneTree
+			if tree and tree.current_scene and recycled.get_parent() != tree.current_scene:
+				var old_parent := recycled.get_parent()
+				if old_parent and is_instance_valid(old_parent):
+					old_parent.remove_child(recycled)
+				tree.current_scene.add_child(recycled)
+			# Reset instance state if available
+			if recycled.has_method("reset"):
+				recycled.reset()
 			return recycled
 
 	# Create new
 	var projectile: Node = scene.instantiate()
-	add_child(projectile)
+	# Parent new projectiles into the current scene for normal processing/rendering
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.current_scene:
+		tree.current_scene.add_child(projectile)
+	else:
+		add_child(projectile)
 	_active_count += 1
 	return projectile
 
@@ -69,8 +84,17 @@ func release(projectile: Node, scene: PackedScene) -> void:
 		projectile.queue_free()
 		return
 
-	# Reset and hide
+	# Reset, hide and reparent back into the pool node
 	projectile.visible = false
 	projectile.set_process(false)
+	# Clear runtime state if present
+	if projectile.has_method("reset"):
+		projectile.reset()
 	projectile.is_setup = false
+	# Reparent into this pool node so it stays organized
+	if projectile.get_parent() != self:
+		var prev_parent := projectile.get_parent()
+		if prev_parent and is_instance_valid(prev_parent):
+			prev_parent.remove_child(projectile)
+		add_child(projectile)
 	pool.append(projectile)

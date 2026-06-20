@@ -581,17 +581,17 @@ func _get_player_base_target():
 	# Try to find the King and walk toward it
 	var king = _find_king_unit()
 	if king:
-		var dummy = Node2D.new()
-		dummy.global_position = king.global_position
-		dummy.set_meta("is_dummy_target", true)
-		unit.get_tree().current_scene.add_child(dummy)
-		return dummy
+		var king_target := Node2D.new()
+		king_target.global_position = king.global_position
+		king_target.set_meta("is_dummy_target", true)
+		unit.get_tree().current_scene.add_child(king_target)
+		return king_target
 	# Fallback: walk straight down
-	var dummy = Node2D.new()
-	dummy.global_position = Vector2(unit.global_position.x, 1000)
-	dummy.set_meta("is_dummy_target", true)
-	unit.get_tree().current_scene.add_child(dummy)
-	return dummy
+	var fallback_target := Node2D.new()
+	fallback_target.global_position = Vector2(unit.global_position.x, 1000)
+	fallback_target.set_meta("is_dummy_target", true)
+	unit.get_tree().current_scene.add_child(fallback_target)
+	return fallback_target
 
 
 ## Find the King unit among player units.

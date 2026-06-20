@@ -10,9 +10,22 @@ font_sizes = PackedInt32Array(12)
 font_names = PackedStringArray("Arial", "Liberation Sans")
 font_sizes = PackedInt32Array(14)
 
+[sub_resource type="StyleBoxFlat" id="style_unit_stats_panel"]
+bg_color = Color(0.07, 0.09, 0.12, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.28, 0.36, 0.45, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
 [node name="UnitStatsPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(120, 0)
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("style_unit_stats_panel")
 script = ExtResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -27,36 +40,36 @@ theme_override_font_sizes/font_size = 12
 
 [node name="HealthLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Health: 100/100"
+text = "HP: 100/100"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
 [node name="ManaLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Mana: 50/100"
+text = "MP: 50/100"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
 [node name="AttackLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Attack: 10"
+text = "ATK: 10"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
 [node name="ArmorLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Armor: 5"
+text = "AR: 5"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
 [node name="MagicResistLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Magic Resist: 20"
+text = "MR: 20"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
 [node name="AttackSpeedLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Attack Speed: 1.0"
+text = "SPD: 1.0"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10

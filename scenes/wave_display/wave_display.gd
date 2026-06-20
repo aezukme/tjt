@@ -43,10 +43,10 @@ func _process(_delta: float) -> void:
 		if prep_timer <= 0:
 			is_prep_phase = false
 			if timer_label:
-				timer_label.text = "Battle!"
+				timer_label.text = "Battle active"
 		else:
 			if timer_label:
-				timer_label.text = "Next wave in: %.1fs" % prep_timer
+				timer_label.text = "Next wave in: %ds" % int(ceil(prep_timer))
 
 
 func _on_wave_started(wave_number: int, _wave_config: WaveConfig) -> void:
@@ -56,7 +56,7 @@ func _on_wave_started(wave_number: int, _wave_config: WaveConfig) -> void:
 	if wave_label:
 		var label_text = "Wave %d" % wave_number
 		if wave_manager.is_boss_wave():
-			label_text += " - BOSS! 👑"
+			label_text += " - BOSS"
 		wave_label.text = label_text
 	
 	# Clear rewards and preview
@@ -98,16 +98,16 @@ func _on_difficulty_changed(difficulty: float) -> void:
 
 func _on_rewards_earned(gold: int, xp: int) -> void:
 	if rewards_label:
-		rewards_label.text = "💰 +%d Gold | ⭐ +%d XP" % [gold, xp]
+		rewards_label.text = "+%d Gold | +%d XP" % [gold, xp]
 
 
 func _on_all_waves_completed() -> void:
 	if wave_label:
-		wave_label.text = "🏆 VICTORY!"
+		wave_label.text = "VICTORY"
 	if enemy_count_label:
 		enemy_count_label.text = "All waves defeated!"
 	if timer_label:
-		timer_label.text = "You won!"
+		timer_label.text = "You won"
 
 
 func _update_display() -> void:
@@ -126,5 +126,5 @@ func _update_display() -> void:
 	if wave_label and wave_manager.current_wave_number > 0:
 		var label_text = "Wave %d / %d" % [wave_manager.current_wave_number, wave_manager.get_total_waves()]
 		if wave_manager.is_boss_wave():
-			label_text += " 👑"
+			label_text += " BOSS"
 		wave_label.text = label_text

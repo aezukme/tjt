@@ -11,8 +11,8 @@ func _ready() -> void:
 	# Title
 	var title := Label.new()
 	title.text = "Synergies"
-	title.add_theme_font_size_override("font_size", 10)
-	title.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0))
 	vbox.add_child(title)
 	# Rows are created dynamically on update
 	_build_rows()
@@ -43,18 +43,19 @@ func _refresh() -> void:
 		if not row:
 			break
 		var dots := ""
-		for d in threshold:
+		for d in range(threshold):
 			dots += "●" if d < count else "○"
-		var label_text := "%s %s %d/%d" % [_faction_icon(faction), def.name, count, threshold]
-		row.text = dots + " " + label_text
-		row.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2) if active else Color(0.65, 0.65, 0.65))
+		var status := " ACTIVE" if active else ""
+		var label_text := "%s %s %d/%d%s" % [_faction_icon(faction), def.name, count, threshold, status]
+		row.text = "%s  %s" % [dots, label_text]
+		row.add_theme_color_override("font_color", Color(1.0, 0.87, 0.35) if active else Color(0.76, 0.76, 0.76))
 		i += 1
 
 
 func _build_rows() -> void:
 	for faction in SynergyManager.SYNERGY_DEFS.keys():
 		var row := Label.new()
-		row.add_theme_font_size_override("font_size", 10)
+		row.add_theme_font_size_override("font_size", 12)
 		vbox.add_child(row)
 
 

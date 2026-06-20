@@ -16,7 +16,8 @@ var is_setup: bool = false
 
 func _ready() -> void:
 	# Wait for setup to be called
-	pass
+	# Ensure processing is enabled if this node is active
+	set_process(true)
 
 
 ## Reset state for reuse from pool.
@@ -60,14 +61,13 @@ func _hit_target() -> void:
 	# Deal damage via interface if available
 	if target.has_method("apply_damage"):
 		target.apply_damage(damage)
-	elif target.has_property("current_health"):
-		# Player Unit style
-		if target.has_property("current_health"):
-			target.current_health = max(target.current_health - damage, 0)
-		else:
-			# Fallback to stats resource if present
-			if target.stats:
-				target.stats.health = max(target.stats.health - damage, 0)
+		# Report damage to arena for aggregated output
+		var arena := get_tree().get_first_node_in_group("arena")
+		if arena and arena.has_method("register_damage_output"):
+			arena.call_deferred("register_damage_output", damage)
+	elif target is Unit:
+		# Unit-style direct health damage.
+		target.current_health = max(target.current_health - damage, 0)
 	# Visual feedback if supported
 	if target.has_method("flash_skin"):
 		target.flash_skin(hit_color)
@@ -96,6 +96,9 @@ func setup(from, to, proj_damage: float, color: Color = Color.ORANGE_RED) -> voi
 	
 	if sprite:
 		sprite.modulate = color
+
+	# Ensure processing is enabled (some pooled instances may have been disabled)
+	set_process(true)
 	
 	# Face the target
 	if target:
