@@ -674,6 +674,15 @@ func _perform_attack(target) -> void:
 	# Apply damage using a common method if available, otherwise fallback to stats
 	if UnitUtils.is_unit_node(target):
 		target.apply_damage(damage)
+
+		# Notify arena aggregated damage readout
+		var arena: Node = unit.get_tree().get_first_node_in_group("arena")
+		if arena and arena.has_method("register_damage_output"):
+			arena.call_deferred("register_damage_output", damage)
+
+		# Notify attacker about damage dealt for per-unit counters
+		if unit and unit.has_method("register_damage_dealt"):
+			unit.register_damage_dealt(damage)
 	else:
 		# Fallback: adjust resource health which will emit signals
 		if target.stats:
@@ -789,7 +798,7 @@ func _heuristic(a: Vector2i, b: Vector2i) -> int:
 ## Finds the play areas from the scene tree.
 func _find_play_areas() -> void:
 	# Get arena node
-	var arena := get_tree().get_first_node_in_group("arena")
+	var arena: Node = get_tree().get_first_node_in_group("arena")
 	if not arena:
 		print("ERROR: Could not find Arena node in group 'arena'!")
 		return

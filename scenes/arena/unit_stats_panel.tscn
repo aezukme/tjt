@@ -50,6 +50,12 @@ text = "MP: 50/100"
 theme_override_fonts/font = SubResource("system_font")
 theme_override_font_sizes/font_size = 10
 
+[node name="DamageLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "DMG: 0"
+theme_override_fonts/font = SubResource("system_font")
+theme_override_font_sizes/font_size = 10
+
 [node name="AttackLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "ATK: 10"

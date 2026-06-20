@@ -4,6 +4,7 @@ extends PanelContainer
 @onready var name_label: Label = $VBoxContainer/NameLabel
 @onready var health_label: Label = $VBoxContainer/HealthLabel
 @onready var mana_label: Label = $VBoxContainer/ManaLabel
+@onready var damage_label: Label = $VBoxContainer/DamageLabel
 @onready var attack_label: Label = $VBoxContainer/AttackLabel
 @onready var armor_label: Label = $VBoxContainer/ArmorLabel
 @onready var magic_resist_label: Label = $VBoxContainer/MagicResistLabel
@@ -35,12 +36,16 @@ func connect_signals() -> void:
 		return
 	unit.health_changed.connect(update_stats)
 	unit.mana_changed.connect(update_stats)
+	if unit.has_method("register_damage_dealt") and not unit.damage_dealt_changed.is_connected(update_stats):
+		unit.damage_dealt_changed.connect(update_stats)
 
 func disconnect_signals() -> void:
 	if unit.health_changed.is_connected(update_stats):
 		unit.health_changed.disconnect(update_stats)
 	if unit.mana_changed.is_connected(update_stats):
 		unit.mana_changed.disconnect(update_stats)
+	if unit.has_method("register_damage_dealt") and unit.damage_dealt_changed.is_connected(update_stats):
+		unit.damage_dealt_changed.disconnect(update_stats)
 
 func update_stats(_new_value: int = -1) -> void:
 	if not unit or not unit.stats:
@@ -54,6 +59,8 @@ func update_stats(_new_value: int = -1) -> void:
 	armor_label.text = "AR: %d" % unit.stats.armor
 	magic_resist_label.text = "MR: %d" % unit.stats.magic_resist
 	attack_speed_label.text = "SPD: %.1f" % unit.stats.attack_speed
+	# Per-unit total damage dealt
+	damage_label.text = "DMG: %d" % int(unit.damage_dealt) if unit.has_method("register_damage_dealt") else "DMG: 0"
 	tooltip_text = _build_tooltip()
 
 

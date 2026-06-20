@@ -15,6 +15,11 @@ const CELL_SIZE := Vector2(32, 32)
 var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
 
+signal damage_dealt_changed(new_damage: float)
+
+## Track damage dealt by this unit (useful for analytics / debugging)
+var damage_dealt: float = 0.0
+
 ## Threat bookkeeping — lets AI avoid overkill / overheal
 var incoming_damage: float = 0.0
 var incoming_healing: float = 0.0
@@ -129,6 +134,18 @@ func apply_damage(damage: int) -> void:
 		stats.health = max(stats.health - damage, 0)
 	# Reduce incoming_damage since this damage has now landed
 	incoming_damage = maxf(incoming_damage - damage, 0.0)
+
+
+## Register damage dealt by this unit (for parity with `Unit` interface)
+func register_damage_dealt(amount: float) -> void:
+	damage_dealt += amount
+	damage_dealt_changed.emit(damage_dealt)
+
+
+## Reset per-battle damage counter and notify UI
+func reset_damage_dealt() -> void:
+	damage_dealt = 0.0
+	damage_dealt_changed.emit(damage_dealt)
 
 
 ## Sets the unit's stats and updates the skin position accordingly.

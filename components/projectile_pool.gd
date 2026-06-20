@@ -22,6 +22,8 @@ static func get_instance() -> ProjectilePool:
 var _pools: Dictionary = {}
 ## Track active count for debug
 var _active_count: int = 0
+## Preload projectile script so we can attach it at runtime when tscn has no ext_resource
+const PROJECTILE_SCRIPT := preload("res://scenes/projectile/projectile.gd")
 
 
 func _ready() -> void:
@@ -36,15 +38,21 @@ func acquire(scene: PackedScene) -> Node:
 
 	var pool: Array = _pools[key]
 
+	# Resolve scene tree once
+	var tree := Engine.get_main_loop() as SceneTree
+
 	# Reuse from pool if available
 	if not pool.is_empty():
 		var recycled: Node = pool.pop_back()
 		if is_instance_valid(recycled):
+			# Ensure the runtime script is attached (tscn may not include it)
+			if not recycled.has_method("setup") and PROJECTILE_SCRIPT:
+				recycled.set_script(PROJECTILE_SCRIPT)
+
 			recycled.visible = true
 			recycled.set_process(true)
 			_active_count += 1
 			# Reparent to the current scene so it behaves like a normal active node
-			var tree := Engine.get_main_loop() as SceneTree
 			if tree and tree.current_scene and recycled.get_parent() != tree.current_scene:
 				var old_parent := recycled.get_parent()
 				if old_parent and is_instance_valid(old_parent):
@@ -57,8 +65,10 @@ func acquire(scene: PackedScene) -> Node:
 
 	# Create new
 	var projectile: Node = scene.instantiate()
+	# Ensure runtime script is attached to new instances
+	if not projectile.has_method("setup") and PROJECTILE_SCRIPT:
+		projectile.set_script(PROJECTILE_SCRIPT)
 	# Parent new projectiles into the current scene for normal processing/rendering
-	var tree := Engine.get_main_loop() as SceneTree
 	if tree and tree.current_scene:
 		tree.current_scene.add_child(projectile)
 	else:

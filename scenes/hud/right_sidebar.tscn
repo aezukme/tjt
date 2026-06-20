@@ -1,29 +1,26 @@
-[gd_scene load_steps=3 format=4]
+[gd_scene format=3 uid="uid://c8gofmyeaafsm"]
 
-[ext_resource type="Script" path="res://scenes/hud/right_sidebar.gd" id="1_sidebar"]
+[ext_resource type="Script" uid="uid://crvsmljt3gl5m" path="res://scenes/hud/right_sidebar.gd" id="1_sidebar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.06, 0.08, 0.12, 0.92)
 border_width_left = 2
-border_width_top = 0
-border_width_right = 0
-border_width_bottom = 0
 border_color = Color(0.28, 0.38, 0.52, 0.95)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_start"]
-bg_color = Color(0.16, 0.35, 0.20, 1.0)
+bg_color = Color(0.16, 0.35, 0.2, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.36, 0.68, 0.40, 0.9)
+border_color = Color(0.36, 0.68, 0.4, 0.9)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
-corner_radius_bottom_left = 4
 corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_quit"]
-bg_color = Color(0.38, 0.14, 0.14, 1.0)
+bg_color = Color(0.38, 0.14, 0.14, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -31,114 +28,112 @@ border_width_bottom = 1
 border_color = Color(0.72, 0.32, 0.32, 0.95)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
-corner_radius_bottom_left = 4
 corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
-[node name="RightSidebar" type="PanelContainer"]
+[node name="RightSidebar" type="PanelContainer" unique_id=1434678616]
 custom_minimum_size = Vector2(160, 0)
+offset_right = 160.0
+offset_bottom = 280.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_sidebar")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=1967681048]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=528492371]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 
-[node name="WaveSection" type="VBoxContainer" parent="Margin/VBox"]
+[node name="WaveSection" type="VBoxContainer" parent="Margin/VBox" unique_id=1729444487]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="WaveLabel" type="Label" parent="Margin/VBox/WaveSection"]
+[node name="WaveLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=1600379923]
 layout_mode = 2
-text = "Wave 0 / 0"
-theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 15
+text = "Wave 0 / 0"
 
-[node name="WaveProgressBar" type="ProgressBar" parent="Margin/VBox/WaveSection"]
-layout_mode = 2
+[node name="WaveProgressBar" type="ProgressBar" parent="Margin/VBox/WaveSection" unique_id=87925120]
 custom_minimum_size = Vector2(0, 8)
-max_value = 100.0
+layout_mode = 2
 show_percentage = false
 
-[node name="EnemyCountLabel" type="Label" parent="Margin/VBox/WaveSection"]
+[node name="EnemyCountLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=616833741]
 layout_mode = 2
-text = "Enemies: 0"
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.82, 0.76, 0.76, 1)
-
-[node name="DifficultyLabel" type="Label" parent="Margin/VBox/WaveSection"]
-layout_mode = 2
-text = "Difficulty: 1.0x"
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
-
-[node name="TimerLabel" type="Label" parent="Margin/VBox/WaveSection"]
-layout_mode = 2
-text = ""
 theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.72, 0.9, 1.0, 1)
+text = "Enemies: 0"
 
-[node name="RewardsLabel" type="Label" parent="Margin/VBox/WaveSection"]
+[node name="DifficultyLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=2134186661]
 layout_mode = 2
-text = ""
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(1.0, 0.87, 0.35, 1)
+text = "Difficulty: 1.0x"
 
-[node name="NextWaveLabel" type="Label" parent="Margin/VBox/WaveSection"]
+[node name="TimerLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=1568693949]
 layout_mode = 2
-text = ""
-autowrap_mode = 3
+theme_override_colors/font_color = Color(0.72, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="RewardsLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=1438135050]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
 theme_override_font_sizes/font_size = 11
+
+[node name="NextWaveLabel" type="Label" parent="Margin/VBox/WaveSection" unique_id=885188960]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.78, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
 
-[node name="Sep1" type="HSeparator" parent="Margin/VBox"]
+[node name="Sep1" type="HSeparator" parent="Margin/VBox" unique_id=1606999415]
 layout_mode = 2
 
-[node name="SynergySection" type="VBoxContainer" parent="Margin/VBox"]
+[node name="SynergySection" type="VBoxContainer" parent="Margin/VBox" unique_id=880898432]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="SynergyTitle" type="Label" parent="Margin/VBox/SynergySection"]
+[node name="SynergyTitle" type="Label" parent="Margin/VBox/SynergySection" unique_id=1550933106]
 layout_mode = 2
-text = "Synergies"
+theme_override_colors/font_color = Color(0.88, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.88, 0.93, 1.0, 1)
+text = "Synergies"
 
-[node name="SynergyRows" type="VBoxContainer" parent="Margin/VBox/SynergySection"]
+[node name="SynergyRows" type="VBoxContainer" parent="Margin/VBox/SynergySection" unique_id=1873958857]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Spacer" type="Control" parent="Margin/VBox"]
+[node name="Spacer" type="Control" parent="Margin/VBox" unique_id=594867859]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Sep2" type="HSeparator" parent="Margin/VBox"]
+[node name="Sep2" type="HSeparator" parent="Margin/VBox" unique_id=527936314]
 layout_mode = 2
 
-[node name="ButtonSection" type="VBoxContainer" parent="Margin/VBox"]
+[node name="ButtonSection" type="VBoxContainer" parent="Margin/VBox" unique_id=396939157]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ToggleUnitsButton" type="Button" parent="Margin/VBox/ButtonSection"]
+[node name="ToggleUnitsButton" type="Button" parent="Margin/VBox/ButtonSection" unique_id=841378145]
 layout_mode = 2
 focus_mode = 0
 text = "Units ▼"
 
-[node name="StartBattleButton" type="Button" parent="Margin/VBox/ButtonSection"]
+[node name="StartBattleButton" type="Button" parent="Margin/VBox/ButtonSection" unique_id=2094032815]
 layout_mode = 2
 focus_mode = 0
-text = "Start Battle"
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_start")
+text = "Start Battle"
 
-[node name="QuitGameButton" type="Button" parent="Margin/VBox/ButtonSection"]
+[node name="QuitGameButton" type="Button" parent="Margin/VBox/ButtonSection" unique_id=186962987]
 layout_mode = 2
 focus_mode = 0
-text = "Quit Game"
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_quit")
+text = "Quit Game"

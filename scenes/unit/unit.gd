@@ -7,6 +7,7 @@ signal health_reached_zero
 signal health_changed(new_health: int)
 signal mana_bar_filled
 signal mana_changed(new_mana: int)  # Receives int for UI display
+signal damage_dealt_changed(new_damage: float)
 
 const CELL_SIZE := Vector2(32, 32)
 
@@ -35,6 +36,8 @@ var _passive_applied: bool = false  ## Prevents passive from stacking on re-init
 ## Threat bookkeeping — lets AI avoid overkill / overheal
 var incoming_damage: float = 0.0   ## Total damage already "promised" by attackers this tick
 var incoming_healing: float = 0.0  ## Total healing already "promised" by healers this tick
+## Total damage this unit has dealt during the current battle
+var damage_dealt: float = 0.0
 
 ## Effective HP that AI should use for target selection.
 ## Returns current_health minus damage already in-flight, clamped to 0.
@@ -368,6 +371,18 @@ func apply_damage(damage: int) -> void:
 	current_health = max(current_health - damage, 0)
 	# Reduce incoming_damage since this damage has now landed
 	incoming_damage = maxf(incoming_damage - damage, 0.0)
+
+
+## Register damage this unit has dealt to others (for per-unit DPS/damage counters)
+func register_damage_dealt(amount: float) -> void:
+	damage_dealt += amount
+	damage_dealt_changed.emit(damage_dealt)
+
+
+## Reset per-battle damage counter and notify UI
+func reset_damage_dealt() -> void:
+	damage_dealt = 0.0
+	damage_dealt_changed.emit(damage_dealt)
 
 
 ## Called when ability cooldown finishes

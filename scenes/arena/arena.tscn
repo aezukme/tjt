@@ -25,8 +25,8 @@
 [ext_resource type="Resource" path="res://data/units/priest_ally.tres" id="28_priest"]
 [ext_resource type="Resource" path="res://data/units/druid_ally.tres" id="29_druid"]
 [ext_resource type="Script" uid="uid://l34ftjtcydik" path="res://components/synergy_manager.gd" id="30_syn_mgr"]
-[ext_resource type="PackedScene" path="res://scenes/hud/right_sidebar.tscn" id="33_right_sidebar"]
 [ext_resource type="PackedScene" path="res://scenes/hud/hud_bar.tscn" id="32_hud_bar"]
+[ext_resource type="PackedScene" uid="uid://c8gofmyeaafsm" path="res://scenes/hud/right_sidebar.tscn" id="33_right_sidebar"]
 [ext_resource type="Resource" path="res://data/waves/wave_01.tres" id="w01"]
 [ext_resource type="Resource" path="res://data/waves/wave_02.tres" id="w02"]
 [ext_resource type="Resource" path="res://data/waves/wave_03.tres" id="w03"]
@@ -76,15 +76,20 @@ position = Vector2(480, 270)
 [node name="UI" type="CanvasLayer" parent="." unique_id=1959617770]
 
 [node name="HudBar" parent="UI" unique_id=268781359 instance=ExtResource("32_hud_bar")]
+offset_left = -1.0
+offset_top = 0.0
+offset_right = -120.0
 grow_horizontal = 2
 
 [node name="UnitStatsContainer" type="VBoxContainer" parent="UI" unique_id=1270896939]
-anchors_preset = 4
+anchors_preset = -1
+anchor_left = 0.001
 anchor_top = 0.5
+anchor_right = 0.001
 anchor_bottom = 0.5
-offset_left = 10.0
+offset_left = 9.04
 offset_top = -150.0
-offset_right = 80.0
+offset_right = 79.04
 offset_bottom = 150.0
 grow_vertical = 2
 
@@ -94,30 +99,31 @@ theme_override_constants/separation = 4
 
 [node name="DamageOutputLabel" type="Label" parent="UI/UnitStatsContainer/DamageOutputBlock" unique_id=1053935218]
 layout_mode = 2
-text = "DMG"
-theme_override_font_sizes/font_size = 11
 theme_override_colors/font_color = Color(1, 0.83, 0.38, 1)
+theme_override_font_sizes/font_size = 11
+text = "DMG"
 
 [node name="DamageOutputValue" type="Label" parent="UI/UnitStatsContainer/DamageOutputBlock" unique_id=1846035470]
 layout_mode = 2
-text = "0"
-theme_override_font_sizes/font_size = 11
 theme_override_colors/font_color = Color(1, 0.95, 0.62, 1)
+theme_override_font_sizes/font_size = 11
+text = "0"
 
 [node name="DamageOutputSep" type="HSeparator" parent="UI/UnitStatsContainer" unique_id=2142041845]
 layout_mode = 2
 
 [node name="RightSidebar" parent="UI" unique_id=702302058 instance=ExtResource("33_right_sidebar")]
-layout_mode = 3
+custom_minimum_size = Vector2(120, 0)
+anchors_preset = 11
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = 62.0
-offset_right = 0.0
-offset_bottom = 0.0
+offset_left = -122.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -98.0
 grow_horizontal = 0
+grow_vertical = 2
 
 [node name="UnitSelectionPanel" parent="UI" unique_id=630095761 instance=ExtResource("22_unit_sel")]
 available_units = Array[ExtResource("24_unit_stats")]([ExtResource("23_bjorn"), ExtResource("8_6w4xk"), ExtResource("8_sage"), ExtResource("25_knight"), ExtResource("26_ranger"), ExtResource("27_rogue"), ExtResource("28_priest"), ExtResource("29_druid")])
@@ -159,6 +165,8 @@ tile_set = ExtResource("1_1qjuf")
 script = ExtResource("4_jx0ua")
 unit_grid = NodePath("ArenaUnitGrid")
 tile_highlighter = NodePath("TileHighlighter")
+metadata/_edit_group_ = true
+metadata/_edit_lock_ = true
 
 [node name="Decor" type="TileMapLayer" parent="GameArea" unique_id=1687133488]
 modulate = Color(1, 1, 1, 0.43137255)

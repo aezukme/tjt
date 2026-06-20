@@ -55,7 +55,7 @@ func _get_best_target(caster: Unit, targets: Array) -> Node:
 
 func _spawn_projectile(caster, target) -> void:
 	if not ProjectileScene:
-		_apply_direct_hit(target)
+		_apply_direct_hit(target, caster)
 		return
 
 	# Use object pool if available, otherwise instantiate directly
@@ -68,33 +68,23 @@ func _spawn_projectile(caster, target) -> void:
 		caster.get_tree().current_scene.add_child(projectile)
 
 	projectile.global_position = caster.global_position
-	# Ensure the projectile instance has the runtime script available; attach if missing.
-	if not projectile.has_method("setup"):
-		var proj_script = load("res://scenes/projectile/projectile.gd")
-		if proj_script:
-			projectile.set_script(proj_script)
+	# Try to ensure the runtime script is attached (single load only)
+	var proj_script = load("res://scenes/projectile/projectile.gd")
+	if not projectile.has_method("setup") and proj_script:
+		projectile.set_script(proj_script)
 
 	# Call setup if available, otherwise fallback to direct hit
 	if projectile.has_method("setup"):
 		projectile.setup(caster, target, damage, Color.ORANGE_RED)
 		return
 
-	# If the instantiated scene lacks the script (missing ext_resource), try to attach it.
-	var proj_script = load("res://scenes/projectile/projectile.gd")
-	if proj_script:
-		# Attach the script to the instance and retry setup
-		projectile.set_script(proj_script)
-		if projectile.has_method("setup"):
-			projectile.setup(caster, target, damage, Color.ORANGE_RED)
-			return
-
 	push_warning("[Fireball] Projectile scene is missing setup(); applying direct damage.")
-	_apply_direct_hit(target)
+	_apply_direct_hit(target, caster)
 	if is_instance_valid(projectile):
 		projectile.queue_free()
 
 
-func _apply_direct_hit(target: Node) -> void:
+func _apply_direct_hit(target: Node, caster: Node = null) -> void:
 	if not target:
 		return
 
@@ -105,3 +95,7 @@ func _apply_direct_hit(target: Node) -> void:
 
 	if target.has_method("flash_skin"):
 		target.flash_skin(Color.ORANGE_RED)
+
+	# Track per-unit damage when projectile is not available
+	if caster and caster.has_method("register_damage_dealt"):
+		caster.register_damage_dealt(damage)

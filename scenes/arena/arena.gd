@@ -30,6 +30,7 @@ var quit_game_button: Button
 @export var enemy_wave := []
 @export_range(1, 3) var enemy_spawn_batch_size: int = 1
 @export var enemy_spawn_interval: float = 0.45
+@export var auto_restart_after_battle: bool = false
 
 # Wave system
 var wave_manager: Node
@@ -157,6 +158,11 @@ func _on_battle_started() -> void:
 	_refresh_damage_output()
 	_set_drag_enabled(false)
 
+	# Reset per-unit damage counters at the start of each battle
+	for u in get_tree().get_nodes_in_group("units"):
+		if is_instance_valid(u) and u.has_method("reset_damage_dealt"):
+			u.reset_damage_dealt()
+
 	# Only clear enemy area on first battle start, not between waves
 	# (wave manager handles its own cleanup between waves)
 	if wave_manager and wave_manager.current_wave_index >= 0:
@@ -255,6 +261,21 @@ func _on_battle_ended(winner: UnitStats.Team) -> void:
 	
 	# Re-enable dragging for surviving player units
 	_set_drag_enabled(true)
+
+	# Auto-restart the arena scene after battle if configured.
+	if auto_restart_after_battle:
+		# Only restart between waves (not on final victory/defeat handled elsewhere)
+		if wave_manager and wave_manager.current_wave_index + 1 < wave_manager.waves.size():
+			await get_tree().create_timer(0.6).timeout
+			var packed: PackedScene = load("res://scenes/arena/arena.tscn")
+			get_tree().change_scene_to_packed(packed)
+			return
+		# Legacy flow without wave_manager: always restart
+		if not wave_manager:
+			await get_tree().create_timer(0.6).timeout
+			var packed2: PackedScene = load("res://scenes/arena/arena.tscn")
+			get_tree().change_scene_to_packed(packed2)
+			return
 
 
 ## Called when wave_manager reports all waves cleared.
