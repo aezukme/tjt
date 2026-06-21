@@ -17,6 +17,7 @@ const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
 @onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
 @onready var damage_output_value_label: Label = $UI/UnitStatsContainer/DamageOutputBlock/DamageOutputValue
 @onready var right_sidebar: RightSidebar = $UI/RightSidebar
+@onready var time_panel: TimePanel = $UI/TimePanel
 @onready var hud_bar: Control = $UI/HudBar
 var start_battle_button: Button
 var toggle_units_button: Button
@@ -249,15 +250,21 @@ func _refresh_damage_output() -> void:
 
 ## Called when battle ends with a winner.
 func _on_battle_ended(winner: UnitStats.Team) -> void:
+	if winner == UnitStats.Team.ENEMY:
+		var wave_num: int = wave_manager.current_wave_number if wave_manager else 0
+		if _was_king_defeat():
+			print("[Arena] ❌ DEFEAT! The King has fallen on Wave %d!" % wave_num)
+		else:
+			print("[Arena] ❌ DEFEAT! All player units eliminated.")
+		_transition_to_game_over()
+		return
+
 	if wave_manager and wave_manager.current_wave_index + 1 < wave_manager.waves.size():
 		# Between waves — not a final result yet
 		print("[Arena] ✅ Wave %d complete! Preparing for next wave..." % wave_manager.current_wave_number)
 	elif winner == UnitStats.Team.PLAYER:
 		print("[Arena] ✅ VICTORY! All waves cleared!")
 		# Victory transition is handled by _on_all_waves_completed
-	else:
-		print("[Arena] ❌ DEFEAT! All player units eliminated.")
-		_transition_to_game_over()
 	
 	# Re-enable dragging for surviving player units
 	_set_drag_enabled(true)
@@ -286,6 +293,8 @@ func _on_all_waves_completed() -> void:
 
 ## Transitions to the Victory screen after a short delay.
 func _transition_to_victory() -> void:
+	if time_panel:
+		time_panel.stop()
 	await get_tree().create_timer(END_SCREEN_DELAY).timeout
 	var victory_scene: PackedScene = load(VICTORY_SCENE)
 	var screen: Control = victory_scene.instantiate()
@@ -306,13 +315,25 @@ func _transition_to_victory() -> void:
 
 ## Transitions to the Game Over screen after a short delay.
 func _transition_to_game_over() -> void:
+	if time_panel:
+		time_panel.stop()
 	await get_tree().create_timer(END_SCREEN_DELAY).timeout
 	var go_scene: PackedScene = load(GAME_OVER_SCENE)
 	var screen: Control = go_scene.instantiate()
 	screen.set("wave_reached", wave_manager.current_wave_number if wave_manager else 0)
+	screen.set("king_fell", _was_king_defeat())
 	get_tree().root.add_child(screen)
 	get_tree().current_scene = screen
 	queue_free()
+
+
+func _was_king_defeat() -> bool:
+	for u in get_tree().get_nodes_in_group("player_units"):
+		if not is_instance_valid(u):
+			continue
+		if u is Unit and u.stats and not u.stats.is_king:
+			return true
+	return false
 
 
 func _on_start_battle_pressed() -> void:

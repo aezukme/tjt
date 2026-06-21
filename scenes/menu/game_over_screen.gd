@@ -11,6 +11,7 @@ const ARENA_SCENE := "res://scenes/arena/arena.tscn"
 @onready var stats_label: Label = $CenterContainer/VBoxContainer/StatsLabel
 
 var wave_reached: int = 0
+var king_fell: bool = false
 
 
 func _ready() -> void:
@@ -20,8 +21,9 @@ func _ready() -> void:
 	_update_stats()
 
 
-func setup(p_wave: int) -> void:
+func setup(p_wave: int, p_king_fell: bool = false) -> void:
 	wave_reached = p_wave
+	king_fell = p_king_fell
 	if is_inside_tree():
 		_update_stats()
 
@@ -29,7 +31,10 @@ func setup(p_wave: int) -> void:
 func _update_stats() -> void:
 	if stats_label:
 		if wave_reached > 0:
-			stats_label.text = "Defeated on Wave %d" % wave_reached
+			if king_fell:
+				stats_label.text = "The King has fallen on Wave %d" % wave_reached
+			else:
+				stats_label.text = "Defeated on Wave %d" % wave_reached
 		else:
 			stats_label.text = ""
 

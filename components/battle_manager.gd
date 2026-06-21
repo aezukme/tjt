@@ -67,6 +67,8 @@ func start_battle() -> void:
 
 ## Ends the battle with a winner.
 func end_battle(winner: UnitStats.Team) -> void:
+	if current_state == State.ENDED:
+		return
 	_change_state(State.ENDED)
 	battle_ended.emit(winner)
 	

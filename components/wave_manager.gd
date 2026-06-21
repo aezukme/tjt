@@ -80,6 +80,7 @@ func _ready() -> void:
 	# Connect battle manager signals
 	if battle_manager:
 		battle_manager.battle_started.connect(_on_battle_started)
+		battle_manager.battle_ended.connect(_on_battle_ended)
 		if battle_manager.has_signal("state_changed"):
 			battle_manager.state_changed.connect(_on_battle_state_changed)
 		print("[WAVE] Connected to BattleManager signals")
@@ -170,6 +171,12 @@ func _on_battle_started() -> void:
 
 func _on_battle_state_changed(_new_state: BattleManager.State) -> void:
 	pass
+
+
+func _on_battle_ended(winner: UnitStats.Team) -> void:
+	if winner == UnitStats.Team.ENEMY:
+		is_wave_active = false
+		is_waiting_for_next_wave = false
 
 
 ## Starts the next wave
