@@ -93,15 +93,22 @@ func _play_sprite_frames_animation(state: AnimState) -> void:
 	match state:
 		AnimState.IDLE:
 			anim_name = "idle"
+			# Ensure procedural timers are reset when switching to idle
+			_start_idle()
 		AnimState.WALK:
 			anim_name = "walk"
+			_start_walk()
 		AnimState.ATTACK:
 			anim_name = "attack"
+			# Make sure any procedural attack tweens are cleared when using sprite frames
+			_kill_attack_tween()
 		AnimState.DEATH:
 			anim_name = "death"
 			_is_dead = true
 
 	if anim_sprite.sprite_frames and anim_sprite.sprite_frames.has_animation(anim_name):
+		# Reset the sprite playback speed to the default in case it was modified elsewhere
+		anim_sprite.speed_scale = 1.0
 		anim_sprite.play(anim_name)
 		if state == AnimState.DEATH:
 			if not anim_sprite.animation_finished.is_connected(_on_sprite_death_finished):
