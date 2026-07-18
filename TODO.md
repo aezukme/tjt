@@ -390,5 +390,12 @@
 - ✅ Float-based health/mana regeneration
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
+### July 2026 (Session 8) — Documentation Update
+- ✅ Game Design Document updated with English translation, current implementation status, and accurate project information
+- ✅ README updated to reflect Legion TD identity (not TFT), current unit roster, accurate technical specs, and development status
+- ✅ TODO updated with current date and session log
+- ✅ All documentation aligned with skill file guidelines (Godot Architect, Game Designer, Content Generator, QA Tester)
+- ✅ Project structure analyzed and documented (8 ally units, 6 enemy types, 15 waves, 3 factions)
+
 ---
-*Last Updated: February 2026 (Session 5)*
+*Last Updated: July 2026 (Session 8)*

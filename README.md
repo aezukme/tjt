@@ -1,32 +1,44 @@
-# TJT - Auto-Battler (TFT-style)
+# TJT - Legion TD-Style Wave Defense
 
-A Godot 4.6-based auto-battler game inspired by Teamfight Tactics. Players place ally units on a grid arena and watch them battle waves of enemies in automated combat.
+A Godot 4.6-based multiplayer wave-defense strategy game inspired by Legion TD 2. Players build armies during preparation phases, defend their King from incoming waves, and outplay opponents through positioning, synergies, and strategic resource management.
 
 ## Description
 
-Wave-based auto-battler with strategic unit placement, ability systems, and progressive difficulty. Key features:
+Legion TD-style wave defense with strategic unit placement, faction synergies, and progressive difficulty. Key features:
 
-- **Wave System**: 4+ progressive waves with difficulty scaling (5% per wave), preparation phases between rounds, and boss waves
+- **Wave System**: 15 progressive waves with boss waves every 5 rounds, preparation phases between rounds
+- **King Defense**: Protect your King from incoming enemy waves — King damage is permanent
+- **Faction Synergies**: Warrior (+20% ATK), Mystic (+20% AP), Warden (+15% ATK SPD) bonuses for faction builds
 - **Auto-Combat**: AI-driven pathfinding (A*), targeting, and combat — units fight automatically once battle starts
-- **Ability System**: Mana-based abilities with auto-cast (Fireball, Mending Bolt, AOE), passive abilities (Warrior's Endurance), and projectile visuals
-- **Unit Management**: Drag-and-drop placement, stat tracking (HP, mana, attack, armor, magic resist, attack speed), between-wave position restore and stat reset
+- **Ability System**: Mana-based abilities with auto-cast (Fireball, Mending Bolt, AoE), passive abilities (Warrior's Endurance, Iron Bastion)
+- **Unit Management**: Drag-and-drop placement, stat tracking, between-wave position restore and stat reset
 - **Battle Flow**: Preparation → Battle → Wave Complete → 30s prep (skippable) → next wave → repeat
-- **Economy**: Gold rewards per wave, experience system (planned)
+- **Economy**: Gold costs, wave rewards, unit selling (full refund), interest system (planned)
 
 ## Current Units
 
-### Allies
-| Unit | Role | HP | ATK | Range | Ability |
-|------|------|-----|-----|-------|---------|
-| **Bjorn** | Warrior/Tank | 500 | 50 | Melee | Warrior's Endurance (+20% HP regen) |
-| **Mage** | Ranged DPS | 400 | 40 | 3 tiles | Fireball (100 dmg, projectile) |
-| **Sage** | Healer/Support | 350 | 25 | 3 tiles | Mending Bolt (heal 60 or damage 50) |
+### Ally Units (8 + King)
+| Unit | Faction | Role | Cost | Ability |
+|------|---------|------|------|----------|
+| **Bjorn** | Warrior | Tank | 1💰 | Warrior's Endurance (+20% regen) |
+| **Knight** | Warrior | Tank | 2💰 | Iron Bastion (+5 armor) |
+| **Mage** | Mystic | DPS | 2💰 | Fireball (100 dmg projectile) |
+| **Sage** | Mystic | Support | 3💰 | Mending Bolt (heal 60 / dmg 50) |
+| **Druid** | Mystic | Specialist | 3💰 | Nature's Wrath (AoE 40 dmg) |
+| **Ranger** | Warden | DPS | 3💰 | Power Shot (120 dmg projectile) |
+| **Rogue** | Warrior | DPS | 3💰 | Deadly Focus (+25% ATK) |
+| **Priest** | Warden | Support | 4💰 | Holy Light (AoE heal 40) |
+| **King** 👑 | — | — | — | *(none yet)* |
 
-### Enemies
-| Unit | Role | HP | ATK | Range |
-|------|------|-----|-----|-------|
-| **Orc** | Melee bruiser | 100 | 10 | Melee |
-| **Necro** | Ranged caster | 60 | 10 | 3 tiles |
+### Enemy Units (6)
+| Unit | HP | ATK | AS | Range | Role |
+|------|----|-----|------|-------|------|
+| **Orc** | 100 | 10 | 0.7 | 1 | Standard warrior |
+| **Necro** | 60 | 10 | 0.8 | 3 | Ranged caster |
+| **Goblin** | 50 | 8 | 1.2 | 1 | Fast swarm |
+| **Wolf** | 60 | 12 | 1.0 | 1 | Fast flanker |
+| **Troll** | 250 | 15 | 0.4 | 1 | Heavy tank |
+| **Skeleton Archer** | 70 | 15 | 0.9 | 3 | Ranged DPS |
 
 ## Project Structure
 
@@ -101,7 +113,8 @@ Each unit has the following stats (configured in .tres files):
 ## Requirements
 
 - Godot Engine 4.6+ (GL Compatibility renderer)
-- Viewport: 640×360, window: 1300×750
+- Viewport: 960×540
+- Window: 1920×1080
 - Integer scaling, pixel-perfect 2D snapping
 
 ## How to Run
@@ -122,4 +135,26 @@ Each unit has the following stats (configured in .tres files):
 See LICENSE file for details.
 
 ---
-*Built with Godot Engine 4.6.1 — Last updated: February 2026*
+
+## Development Status
+
+**Current Version**: v0.9 (Pre-Alpha)
+
+**Progress**:
+- ✅ Core gameplay loop (90%)
+- ✅ Wave system (15 waves)
+- ✅ Unit placement (8 units max)
+- ✅ Ability system (8 abilities)
+- ✅ Combat AI with A* pathfinding
+- ✅ King system
+- ✅ Faction/synergy system
+- ✅ Procedural animations
+- 🟡 Economy (40% — income/interest pending)
+- 🔴 Multiplayer (10% — foundation only)
+
+See [Game Design Document.md](Game%20Design%20Document.md) for full design vision.
+See [TODO.md](TODO.md) for detailed task breakdown.
+
+---
+
+*Built with Godot Engine 4.6 — Last updated: July 2026*
