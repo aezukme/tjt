@@ -35,23 +35,16 @@ func _ready() -> void:
 
 
 func set_player_stats(value: PlayerStats) -> void:
-	if player_stats:
-		if player_stats.changed.is_connected(_on_player_stats_changed):
-			player_stats.changed.disconnect(_on_player_stats_changed)
-		if player_stats.income_changed.is_connected(_on_income_changed):
-			player_stats.income_changed.disconnect(_on_income_changed)
+	if player_stats and player_stats.changed.is_connected(_on_player_stats_changed):
+		player_stats.changed.disconnect(_on_player_stats_changed)
 
 	player_stats = value
 
-	if player_stats:
-		if not player_stats.changed.is_connected(_on_player_stats_changed):
-			player_stats.changed.connect(_on_player_stats_changed)
-		if not player_stats.income_changed.is_connected(_on_income_changed):
-			player_stats.income_changed.connect(_on_income_changed)
+	if player_stats and not player_stats.changed.is_connected(_on_player_stats_changed):
+		player_stats.changed.connect(_on_player_stats_changed)
 
 	if is_inside_tree():
 		_refresh_resources()
-		_refresh_income_tooltip()
 
 
 func _process(delta: float) -> void:
@@ -68,13 +61,6 @@ func _process(delta: float) -> void:
 
 func _on_player_stats_changed() -> void:
 	_refresh_resources()
-	if player_stats:
-		player_stats.calculate_income()
-		_refresh_income_tooltip()
-
-
-func _on_income_changed(_new_income: int) -> void:
-	_refresh_income_tooltip()
 
 
 func _on_wave_started(_wave_number: int, _wave_config: WaveConfig) -> void:
@@ -113,20 +99,6 @@ func _refresh_resources() -> void:
 	else:
 		gold_value_label.text = "--"
 		xp_value_label.text = "--"
-
-
-func _refresh_income_tooltip() -> void:
-	if not player_stats:
-		gold_value_label.tooltip_text = "Available gold for placing units."
-		return
-	
-	player_stats.calculate_income()
-	var breakdown: Dictionary = player_stats.get_income_breakdown()
-	var tooltip := "Available gold for placing units.\n\nIncome Breakdown:\n"
-	tooltip += "Total: +%d\n" % breakdown.total
-	tooltip += "Base: +%d\n" % breakdown.base
-	tooltip += "Interest: +%d (1 per 10 gold, max 10)" % breakdown.interest
-	gold_value_label.tooltip_text = tooltip
 
 
 func _refresh_units() -> void:
@@ -195,11 +167,9 @@ func _setup_tooltips() -> void:
 	king_hp_value_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	king_hp_bar.mouse_filter = Control.MOUSE_FILTER_STOP
 
+	gold_value_label.tooltip_text = "Available gold for placing units."
 	xp_value_label.tooltip_text = "Experience earned from cleared waves."
 	units_value_label.tooltip_text = "Deployed player units / maximum allowed units."
 	wave_value_label.tooltip_text = "Current wave status and prep state."
 	king_hp_value_label.tooltip_text = "King health. If it reaches 0, you lose."
 	king_hp_bar.tooltip_text = "King health bar."
-	
-	# Gold tooltip is set dynamically based on income calculation
-	_refresh_income_tooltip()

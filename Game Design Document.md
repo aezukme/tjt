@@ -1,8 +1,16 @@
-# TJT Game Design Document v1.0
+Da, i zapravo bih ti preporučio da to uradiš sada, dok je projekat još relativno mali.
 
-This document serves as the authoritative source for TJT's design vision, core mechanics, and development roadmap. It ensures the project maintains its Legion TD identity and doesn't drift into other genres (TFT, Vampire Survivors, RTS, MOBA).
+Na osnovu README-a i TODO-a koje si okačio, već postoji dovoljno informacija za **v1 GDD (Game Design Document)**.
 
-Document Structure:
+Po mom iskustvu, najveći problem indie projekata nije kod nego što posle 3-6 meseci zaboraviš:
+
+* šta je originalna vizija,
+* šta je "must-have",
+* šta je "nice-to-have",
+* zašto je neka odluka doneta,
+* šta čini igru drugačijom od konkurencije.
+
+Zbog toga bih za TJT napravio dokument od 15-20 strana sa sledećom strukturom:
 
 # 1. High Concept
 
@@ -35,27 +43,27 @@ Genre:
 
 # 2. Pillars
 
-This is the most important section of the GDD.
+Ovo je najvažniji deo GDD-a.
 
 ### Pillar 1 — Strategy Over Reflexes
 
-The winner should be smarter, not faster. Combat is automated; decisions happen during preparation phases.
+Pobednik treba da bude pametniji, ne brži.
 
 ### Pillar 2 — Economy Matters
 
-Saving gold is as important as spending gold. Interest system rewards strategic saving.
+Čuvanje golda mora biti jednako važno kao trošenje golda.
 
 ### Pillar 3 — Positioning Wins Games
 
-Unit arrangement matters more than raw DPS. Frontline, backline, and flanking create tactical depth.
+Raspored jedinica mora biti važniji od čistog DPS-a.
 
 ### Pillar 4 — Predictable, Learnable Waves
 
-Players learn wave patterns. No random compositions; waves are designed and balanced.
+Igrač treba da uči wave obrasce.
 
 ### Pillar 5 — Multiplayer Fairness
 
-No RNG decides matches. Deterministic combat, visible information, equal starting conditions.
+Nikakav RNG ne sme odlučivati partiju.
 
 ---
 
@@ -87,26 +95,33 @@ Next Wave
 
 # 4. Match Structure
 
-### Early Game (Waves 1-5)
+### Early Game
 
-Focus:
-- Basic economy (gold management, interest)
-- Basic frontline (tanks vs DPS positioning)
-- Learning unit roles and abilities
+Wave 1-5
 
-### Mid Game (Waves 6-10)
+Fokus:
 
-Focus:
-- Synergy optimization (Warrior/Mystic/Warden bonuses)
-- Counter-building (adapting to wave compositions)
-- King health management (leak consequences)
+* osnovna ekonomija
+* osnovni frontline
 
-### Late Game (Waves 11-15)
+### Mid Game
 
-Focus:
-- Build optimization (maximizing DPS efficiency)
-- Leak management (surviving with low King HP)
-- King pressure (enemy waves designed to break defenses)
+Wave 6-10
+
+Fokus:
+
+* sinergije
+* counter-buildovi
+
+### Late Game
+
+Wave 11-15
+
+Fokus:
+
+* optimizacija
+* leak management
+* king pressure
 
 ---
 
@@ -114,59 +129,59 @@ Focus:
 
 ## Gold
 
-Used for:
-- Purchasing units (current cost range: 1-4 gold)
-- Future: unit upgrades
-- Future: special abilities/items
+Koristi se za:
+
+* kupovinu jedinica
+* unapređenja
+* buduće sisteme
 
 ## Income
 
-Received each wave completion.
+Dobija se svake runde.
 
 Formula:
-```
+
+```text
 Base Income
-+ Bonus Income (from waves)
-+ Interest (on saved gold)
++ Bonus Income
++ Interest
 ```
 
-## Interest System (Planned)
+## Interest
 
-Formula:
-```
+Primer:
+
+```text
 10 saved gold = +1 income
 20 saved gold = +2 income
 30 saved gold = +3 income
 ```
 
-Cap: +10 income maximum
+Cap:
 
-This rewards strategic saving and creates economy management depth.
+```text
++10 income
+```
 
 ---
 
 # 6. King System
 
-The King represents the player's lives.
+King predstavlja živote igrača.
 
-Characteristics:
-- No HP regeneration (health_regen = 0)
-- Damage is permanent between waves
-- Death = instant Game Over
-- Must be visible in HUD throughout the match
+Karakteristike:
 
-Current Implementation:
-- King auto-spawns at bottom-center of GameArea
-- 2500 HP, 40 ATK, 0.5 AS, 8 Armor, 25 MR
-- Visual scale 1.5× for prominence
-- Unsellable and unremovable
-- Does not count against max deployed units limit
+* ne regeneriše HP
+* šteta je trajna
+* smrt znači poraz
+
+King mora biti prikazan u HUD-u tokom cele partije.
 
 ---
 
 # 7. Leak System
 
-When enemy bypasses defense:
+Kad neprijatelj prođe odbranu:
 
 ```text
 Enemy reaches King
@@ -182,28 +197,29 @@ King HP reduced permanently
 
 # 8. Factions & Synergies
 
-### Warrior (3 units required)
+### Warrior
 
-Units: Bjorn, Knight, Rogue
+3 Units:
 
-Bonus: +20% Attack Damage
+```text
++20% Attack Damage
+```
 
-### Mystic (3 units required)
+### Mystic
 
-Units: Mage, Sage, Druid
+3 Units:
 
-Bonus: +20% Ability Power
+```text
++20% Ability Power
+```
 
-### Warden (2 units required)
+### Warden
 
-Units: Ranger, Priest
+2 Units:
 
-Bonus: +15% Attack Speed
-
-Current Implementation:
-- SynergyManager tracks placed units and applies/removes bonuses live
-- SynergyPanel HUD shows active/pending synergies with ●●○ indicators
-- All ally units have faction assignments in UnitStats resources
+```text
++15% Attack Speed
+```
 
 ---
 
@@ -211,27 +227,31 @@ Current Implementation:
 
 ### Tank
 
-Units: Bjorn, Knight
+Primer:
 
-Role: High HP, frontline, absorb damage
+* Bjorn
+* Knight
 
 ### DPS
 
-Units: Mage, Ranger, Rogue
+Primer:
 
-Role: Damage dealers, ranged and melee variants
+* Ranger
+* Rogue
+* Mage
 
 ### Support
 
-Units: Sage, Priest
+Primer:
 
-Role: Healing, sustain, team utility
+* Sage
+* Priest
 
 ### Specialist
 
-Units: Druid
+Primer:
 
-Role: AoE damage, unique mechanics
+* Druid
 
 ---
 
@@ -241,19 +261,19 @@ Role: AoE damage, unique mechanics
 
 ### Swarm
 
-Many weak enemies.
+Mnogo slabih neprijatelja.
 
 ### Tank
 
-Few strong enemies.
+Malo jakih neprijatelja.
 
 ### Mixed
 
-Combination of both.
+Kombinacija.
 
 ### Boss
 
-Major test of player build.
+Veliki test builda.
 
 ---
 
@@ -261,110 +281,83 @@ Major test of player build.
 
 ### Authority
 
-Server-authoritative.
+Server authoritative.
 
 ### Clients
 
-Visual representation only.
+Vizuelna reprezentacija.
 
 ### Sync
 
-Synchronize:
+Sinhronizovati:
 
-* Purchases
-* Sales
-* Unit placement
-* Wave start
-* Economy
+* kupovinu
+* prodaju
+* postavljanje
+* start wave
+* economy
 
-Do NOT synchronize:
+Ne sinhronizovati:
 
-* Pure visual effects
+* čiste vizuelne efekte
 
 ---
 
 # 12. Content Roadmap
 
-## Milestone 1 — Core Gameplay
+## Milestone 1
 
-Status: 90%
+Core Gameplay
 
-Completed:
-- Build/Battle/End loop
-- Wave system (15 waves)
-- Unit placement (8 units max)
-- Ability system (8 abilities)
-- Combat AI with A* pathfinding
-- King system
-- Faction/synergy system
-- Procedural animations
+Status:
 
-Remaining:
-- Income/interest system
-- HUD polish
+90%
 
-## Milestone 2 — Economy Complete
+## Milestone 2
 
-Status: 40%
+Economy Complete
 
-Completed:
-- Gold costs
-- Wave rewards
-- Unit selling (full refund)
+Status:
 
-Remaining:
-- Income per wave
-- Interest on saved gold
-- Gold HUD visibility
-- Mythium system (future)
+40%
 
-## Milestone 3 — Multiplayer Foundation
+## Milestone 3
 
-Status: 10%
+Multiplayer Foundation
 
-Completed:
-- Server-authoritative architecture planned
-- Scene-based architecture
-- Signal-driven systems
+Status:
 
-Remaining:
-- Network sync implementation
-- Dedicated server support
-- 2v2 support
-- Replay system
+10%
 
-## Milestone 4 — Beta
+## Milestone 4
 
-Status: 0%
+Beta
 
-Remaining:
-- Full multiplayer implementation
-- Balance testing
-- Content polish
-- UI/UX refinement
+Status:
+
+0%
 
 ---
 
 # 13. Technical Architecture
 
 ### Managers
-- BattleManager: State machine (PREPARATION/BATTLE/ENDED)
-- WaveManager: Wave progression, enemy spawning, rewards
-- SynergyManager: Faction tracking, bonus application
+
+* BattleManager
+* WaveManager
+* SynergyManager
 
 ### Components
-- UnitAI: A* pathfinding, targeting, combat logic
-- UnitAnimator: Procedural animations (IDLE/WALK/ATTACK/DEATH)
-- UnitVisuals: Health bars, damage numbers, visual feedback
-- UnitGrid: Tile occupation tracking
-- UnitMover: Drag-and-drop placement
-- ProjectilePool: Object pooling for abilities
+
+* UnitAI
+* UnitAnimator
+* UnitVisuals
 
 ### Data
-- UnitStats: Unit configuration (.tres resources)
-- WaveConfig: Wave composition and difficulty
-- Ability Resources: Ability definitions and parameters
-- PlayerStats: Gold, XP, economy data
+
+* UnitStats
+* WaveConfig
+* Ability Resources
 
 ---
 
@@ -393,47 +386,8 @@ A multiplayer Godot game that captures the strategic depth of Legion TD 2 while 
 
 ---
 
-This GDD is mandatory before multiplayer development. Every new feature must be evaluated against this document by asking:
+Iskreno, ovo bih smatrao obaveznim pre nego što kreneš u multiplayer, jer ćeš kasnije svaku novu ideju moći da proveriš pitanjem:
 
-> "Does this align with the GDD?"
+> "Da li je ovo u skladu sa GDD-om?"
 
-This prevents the project from becoming a confused mix of Legion TD, TFT, RPG, and generic tower defense without clear identity.
-
----
-
-# 16. Current Implementation Status
-
-## Implemented Units (8 Allies + King)
-| Unit | Faction | Role | Cost | Ability |
-|------|---------|------|------|----------|
-| Bjorn | Warrior | Tank | 1💰 | Warrior's Endurance (+20% regen) |
-| Knight | Warrior | Tank | 2💰 | Iron Bastion (+5 armor) |
-| Mage | Mystic | DPS | 2💰 | Fireball (100 dmg projectile) |
-| Sage | Mystic | Support | 3💰 | Mending Bolt (heal 60 / dmg 50) |
-| Druid | Mystic | Specialist | 3💰 | Nature's Wrath (AoE 40 dmg) |
-| Ranger | Warden | DPS | 3💰 | Power Shot (120 dmg projectile) |
-| Rogue | Warrior | DPS | 3💰 | Deadly Focus (+25% ATK) |
-| Priest | Warden | Support | 4💰 | Holy Light (AoE heal 40) |
-| King | — | — | — | *(none yet)* |
-
-## Implemented Enemies (6)
-| Unit | HP | ATK | AS | Range | Role |
-|------|----|-----|------|-------|------|
-| Orc | 100 | 10 | 0.7 | 1 | Standard warrior |
-| Necro | 60 | 10 | 0.8 | 3 | Ranged caster |
-| Goblin | 50 | 8 | 1.2 | 1 | Fast swarm |
-| Wolf | 60 | 12 | 1.0 | 1 | Fast flanker |
-| Troll | 250 | 15 | 0.4 | 1 | Heavy tank |
-| Skeleton Archer | 70 | 15 | 0.9 | 3 | Ranged DPS |
-
-## Technical Stack
-- **Engine**: Godot 4.6+
-- **Language**: GDScript (typed)
-- **Architecture**: Scene-based, composition over inheritance
-- **Renderer**: GL Compatibility
-- **Viewport**: 960×540
-- **Window**: 1920×1080
-
----
-
-*Last Updated: July 2026*
+To sprečava da projekat vremenom postane mešavina Legion TD-a, TFT-a, RPG-a i tower defense-a bez jasnog identiteta.
