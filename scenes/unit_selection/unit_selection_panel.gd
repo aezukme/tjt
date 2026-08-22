@@ -41,6 +41,13 @@ func _ready() -> void:
 	_build_cards()
 
 
+## Replaces the available units and rebuilds cards. Called by Arena when
+## loading a deck from DeckManager.
+func set_available_units(units: Array[UnitStats]) -> void:
+	available_units = units
+	_build_cards()
+
+
 func _build_cards() -> void:
 	for child in card_container.get_children():
 		child.queue_free()

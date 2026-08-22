@@ -18,6 +18,10 @@ config/name="tjt"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
+[autoload]
+
+DeckManager="*res://components/deck_manager.gd"
+
 [display]
 
 window/size/viewport_width=960

@@ -42,7 +42,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
-text = "Auto-Battler"
+text = "Legion TD meets OCG"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer"]
@@ -54,6 +54,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(120, 32)
 theme_override_font_sizes/font_size = 14
 text = "Play"
+
+[node name="DeckManagerButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 32)
+theme_override_font_sizes/font_size = 14
+text = "Deck Manager"
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2

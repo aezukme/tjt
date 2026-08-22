@@ -91,6 +91,12 @@ func _ready() -> void:
 		unit_selection_panel.unit_selected.connect(_on_panel_unit_selected)
 		unit_selection_panel.unit_drag_started.connect(_on_panel_unit_drag_started)
 		unit_selection_panel.placement_cancelled.connect(_on_placement_cancelled)
+		# Load deck from DeckManager (saved/default — always available)
+		if not DeckManager.selected_deck.is_empty():
+			unit_selection_panel.set_available_units(DeckManager.selected_deck.duplicate())
+			print("[Arena] Loaded deck with %d units from DeckManager" % DeckManager.selected_deck.size())
+		else:
+			push_warning("[Arena] Deck is empty! Using default available_units from scene.")
 		# Count pre-placed player units
 		var preplaced := get_tree().get_nodes_in_group("player_units")
 		unit_selection_panel.deployed_count = preplaced.size()
@@ -367,6 +373,13 @@ func _on_placement_cancelled() -> void:
 
 ## Handles unhandled input for placement clicks, cancel, and right-click delete.
 func _unhandled_input(event: InputEvent) -> void:
+	# ── Space toggles unit selection panel ──
+	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_SPACE:
+		if battle_manager and battle_manager.current_state != BattleManager.State.BATTLE:
+			_on_toggle_units_pressed()
+			get_viewport().set_input_as_handled()
+			return
+
 	# ── Mouse scroll zoom ──
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:

@@ -30,6 +30,7 @@ See `Game Design Document.md` for full design spec.
 - Production-ready code — no placeholders
 - Maintainability over cleverness
 - Explain tradeoffs in comments when non-obvious
+- **Console logging**: every new component or feature should log key actions to console with a `[Tag]` prefix (e.g. `[DeckManager]`, `[WAVE]`, `[Battle]`). This makes debugging easier for both developer and AI agent. Log initialization, state changes, errors, and important events.
 
 ## Architecture
 
