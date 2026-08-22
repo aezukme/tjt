@@ -1,7 +1,7 @@
 class_name GameOverScreen
 extends Control
 
-## Shown when all player units are eliminated.
+## Shown when the King has fallen (HP reached 0).
 
 const MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 const ARENA_SCENE := "res://scenes/arena/arena.tscn"
@@ -31,12 +31,9 @@ func setup(p_wave: int, p_king_fell: bool = false) -> void:
 func _update_stats() -> void:
 	if stats_label:
 		if wave_reached > 0:
-			if king_fell:
-				stats_label.text = "The King has fallen on Wave %d" % wave_reached
-			else:
-				stats_label.text = "Defeated on Wave %d" % wave_reached
+			stats_label.text = "The King has fallen on Wave %d" % wave_reached
 		else:
-			stats_label.text = ""
+			stats_label.text = "The King has fallen"
 
 
 func _on_retry() -> void:

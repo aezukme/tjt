@@ -1,393 +1,449 @@
-Da, i zapravo bih ti preporučio da to uradiš sada, dok je projekat još relativno mali.
+# TJT — Game Design Document
 
-Na osnovu README-a i TODO-a koje si okačio, već postoji dovoljno informacija za **v1 GDD (Game Design Document)**.
+> **One-line pitch:** Legion TD 2 wave defense meets OCG deck-building and
+> permadeath. Build a deck, pick a King, defend your lane, lose units forever.
 
-Po mom iskustvu, najveći problem indie projekata nije kod nego što posle 3-6 meseci zaboraviš:
-
-* šta je originalna vizija,
-* šta je "must-have",
-* šta je "nice-to-have",
-* zašto je neka odluka doneta,
-* šta čini igru drugačijom od konkurencije.
-
-Zbog toga bih za TJT napravio dokument od 15-20 strana sa sledećom strukturom:
+---
 
 # 1. High Concept
 
 **TJT**
 
-Multiplayer wave-defense strategy game inspired by Legion TD 2.
+A hybrid strategy game that fuses **Legion TD 2** wave-defense gameplay with
+**Original Card Game (OCG)** deck-building and **permadeath**.
 
-Players build armies during preparation phases, defend their King from incoming waves, develop economic advantages, and outplay opponents through positioning, synergies, and strategic resource management.
+Players build a predefined **unit deck** before the match, choose a **King**
+(with future aura effects), place static defenders on their lane, and survive
+progressive waves of enemies. Dead units stay dead — every loss is permanent,
+so positioning and deck composition matter more than economy spam.
 
 Target Modes:
 
-* 1v1
-* 2v2 (future)
+- Single-player (wave survival) — current focus
+- 1v1 (future)
+- 2v2 / 3v3 / 4v2 / Coop (future)
 
 Engine:
 
-* Godot 4.6
+- Godot 4.7
 
 Platform:
 
-* PC
+- PC
 
 Genre:
 
-* Multiplayer Strategy
-* Auto Combat
-* Wave Defense
+- Strategy
+- Wave Defense
+- Deck-Building
+- Auto Combat
+- Permadeath
 
 ---
 
-# 2. Pillars
+# 2. Design Identity
 
-Ovo je najvažniji deo GDD-a.
+TJT is **not**:
+
+- TFT-style auto-battler (no board swapping, no items, no shop reroll)
+- Vampire Survivors / RTS / MOBA
+
+TJT **is**:
+
+- Legion TD 2 wave defense (static defenders, progressive waves, King defense)
+- OCG deck-building (predefined unit set chosen before the match)
+- Permadeath (units that die in a match stay dead — like card games)
+- King auras (planned — King type grants passive effects to defenders)
+- Multiplayer-first (future 1v1 / 2v2 / 3v3 / 4v4 / coop)
+
+## 2.1 Legion TD 2 Influences
+
+- Static defenders placed on a lane during build phase
+- Progressive, learnable wave patterns (15 waves, boss every 5th)
+- Unit tiers (currently up to 7) and per-unit upgrade paths (planned)
+- King as the player's life — leak damage is permanent
+- Map / lane design (expanding with multiplayer in mind)
+- Sending units to opponents in PvP (planned — sent from your personal
+  predefined deck, **no separate mercenary barracks**)
+
+## 2.2 Where Legion TD Influence Ends
+
+- **Deck-building**: each player pre-selects a unit set before the match,
+  similar to an OCG deck. You fight with what you brought.
+- **King selection**: players choose a King type before the match. Future
+  Kings will grant aura effects to defenders.
+- **Permadeath**: a unit that dies during a match is gone for the rest of
+  the match. There is no respawn, no wave-reset revive. This mirrors card
+  games where played cards are consumed.
+
+---
+
+# 3. Pillars
 
 ### Pillar 1 — Strategy Over Reflexes
+The winner should be smarter, not faster.
 
-Pobednik treba da bude pametniji, ne brži.
+### Pillar 2 — Every Loss is Permanent
+Permadeath makes each placement decision meaningful. Losing your tank on
+wave 3 means fighting waves 4-15 without it.
 
-### Pillar 2 — Economy Matters
+### Pillar 3 — Deck Composition Wins Games
+What you bring to the match matters as much as how you place it.
 
-Čuvanje golda mora biti jednako važno kao trošenje golda.
+### Pillar 4 — Positioning Wins Games
+Unit arrangement must be more important than pure DPS.
 
-### Pillar 3 — Positioning Wins Games
+### Pillar 5 — Predictable, Learnable Waves
+Players should learn wave patterns.
 
-Raspored jedinica mora biti važniji od čistog DPS-a.
-
-### Pillar 4 — Predictable, Learnable Waves
-
-Igrač treba da uči wave obrasce.
-
-### Pillar 5 — Multiplayer Fairness
-
-Nikakav RNG ne sme odlučivati partiju.
+### Pillar 6 — Multiplayer Fairness
+No RNG should decide a match.
 
 ---
 
-# 3. Core Gameplay Loop
+# 4. Core Gameplay Loop
 
 ```text
+Pre-match: Build Deck + Choose King
+    ↓
 Preparation Phase
     ↓
-Buy Units
-    ↓
-Position Units
+Place Defenders (from deck)
     ↓
 Start Wave
     ↓
 Automated Combat
     ↓
-Leak Resolution
-    ↓
-King Damage
+Leak Resolution (enemies that reach King deal permanent damage)
     ↓
 Rewards
     ↓
-Income Calculation
+Next Wave (dead units do NOT return — permadeath)
     ↓
-Next Wave
+Repeat until King HP = 0 or all waves cleared
 ```
 
 ---
 
-# 4. Match Structure
+# 5. Match Structure
 
-### Early Game
+### Early Game — Wave 1-5
+Focus:
 
-Wave 1-5
+- Basic economy
+- Basic frontline
+- Learn wave patterns
 
-Fokus:
+### Mid Game — Wave 6-10
+Focus:
 
-* osnovna ekonomija
-* osnovni frontline
+- Synergies
+- Counter-builds
+- Managing permadeath losses
 
-### Mid Game
+### Late Game — Wave 11-15
+Focus:
 
-Wave 6-10
-
-Fokus:
-
-* sinergije
-* counter-buildovi
-
-### Late Game
-
-Wave 11-15
-
-Fokus:
-
-* optimizacija
-* leak management
-* king pressure
+- Optimization with remaining deck
+- Leak management
+- King pressure
 
 ---
 
-# 5. Economy
+# 6. Permadeath
 
-## Gold
+Unlike Legion TD 2 (where defenders revive each wave), TJT units that die
+during a match stay dead for the rest of the match.
 
-Koristi se za:
+Implications:
 
-* kupovinu jedinica
-* unapređenja
-* buduće sisteme
+- Deck depth matters — you need enough units to survive 15 waves
+- Positioning is critical — a bad placement can cost you a key unit forever
+- Tank economy is real — losing your frontline early cascades
+- Healing/support units are more valuable (keeping units alive preserves them)
 
-## Income
-
-Dobija se svake runde.
-
-Formula:
-
-```text
-Base Income
-+ Bonus Income
-+ Interest
-```
-
-## Interest
-
-Primer:
-
-```text
-10 saved gold = +1 income
-20 saved gold = +2 income
-30 saved gold = +3 income
-```
-
-Cap:
-
-```text
-+10 income
-```
+This mirrors OCG/card games where played cards are consumed and cannot be
+reused within the same match.
 
 ---
 
-# 6. King System
+# 7. King System
 
-King predstavlja živote igrača.
+King represents the player's lives.
 
-Karakteristike:
+Characteristics:
 
-* ne regeneriše HP
-* šteta je trajna
-* smrt znači poraz
+- King HP never resets between waves — permanent damage from leaks
+- King death = match over
+- King must be visible in HUD at all times
+- King does not count against deployed unit limit
 
-King mora biti prikazan u HUD-u tokom cele partije.
+Planned:
+
+- **King selection**: players choose a King type before the match
+- **King auras**: each King type grants passive effects to defenders
+  (e.g. +armor aura, +regen aura, +attack speed aura)
 
 ---
 
-# 7. Leak System
+# 8. Leak System
 
-Kad neprijatelj prođe odbranu:
+When an enemy passes the defense and reaches the King:
 
 ```text
 Enemy reaches King
 ↓
-Enemy deals leak damage
+Enemy deals leak damage to King
 ↓
-Enemy removed
+Enemy is removed
 ↓
 King HP reduced permanently
+↓
+Match ends only when King HP reaches 0
 ```
 
 ---
 
-# 8. Factions & Synergies
+# 9. Deck-Building System (Planned)
+
+Before the match, each player assembles a **deck** — a predefined set of
+units they will have access to during the match.
+
+Design goals:
+
+- Players choose units from their collection before the match starts
+- The deck limits what can be placed during build phases
+- Deck composition is a strategic decision (tank-heavy? synergy-focused?
+  rush-friendly?)
+- In PvP, players send units from their own deck to attack opponents
+  (no separate mercenary barracks — your deck IS your offense and defense)
+
+Open questions (to resolve during design):
+
+- Deck size limits (min/max units)
+- Whether units are single-use (one copy per deck) or multi-copy
+- How deck-building interacts with gold/economy during the match
+- Whether the King choice modifies the deck rules
+
+---
+
+# 10. Factions & Synergies
 
 ### Warrior
-
-3 Units:
-
+3 unique units:
 ```text
 +20% Attack Damage
 ```
 
 ### Mystic
-
-3 Units:
-
+3 unique units:
 ```text
 +20% Ability Power
 ```
 
 ### Warden
-
-2 Units:
-
+2 unique units:
 ```text
 +15% Attack Speed
 ```
 
 ---
 
-# 9. Unit Classes
+# 11. Unit Classes
 
 ### Tank
-
-Primer:
-
-* Bjorn
-* Knight
+Examples: Bjorn, Knight
 
 ### DPS
-
-Primer:
-
-* Ranger
-* Rogue
-* Mage
+Examples: Ranger, Rogue, Mage
 
 ### Support
-
-Primer:
-
-* Sage
-* Priest
+Examples: Sage, Priest
 
 ### Specialist
-
-Primer:
-
-* Druid
+Examples: Druid
 
 ---
 
-# 10. Wave Design
+# 12. Unit Tiers & Upgrades (Planned)
+
+Units have tiers (currently up to 7).
+
+Planned:
+
+- Per-unit upgrade paths (Legion TD-style)
+- Each unit may have one or more upgrade options
+- Upgrades are chosen during the match (strategic decision)
+
+---
+
+# 13. Wave Design
 
 ## Wave Categories
 
 ### Swarm
-
-Mnogo slabih neprijatelja.
+Many weak enemies.
 
 ### Tank
-
-Malo jakih neprijatelja.
+Few strong enemies.
 
 ### Mixed
-
-Kombinacija.
+Combination.
 
 ### Boss
+Big build test.
 
-Veliki test builda.
+Current waves: 15 total, with boss waves at 5, 10, 15.
 
 ---
 
-# 11. Multiplayer Architecture
+# 14. Economy (To Be Designed)
+
+The economy system will be designed **after** core gameplay and design
+pillars are locked. This avoids building economy on top of mechanics that
+may still change.
+
+Likely components (inspired by Legion TD 2):
+
+- Gold (spent on units and upgrades)
+- Income (earned each round)
+- Interest (bonus income for saved gold)
+- Workers / Mythium (under consideration)
+
+Design constraint: economy must support permadeath (losing units permanently
+must interact meaningfully with gold/income).
+
+---
+
+# 15. Multiplayer Architecture (Future)
 
 ### Authority
-
 Server authoritative.
 
 ### Clients
-
-Vizuelna reprezentacija.
+Visual representation.
 
 ### Sync
+Synchronize:
 
-Sinhronizovati:
+- Unit placement
+- Unit selling/removal
+- Start wave
+- Economy
+- Deck composition
+- King selection
+- PvP unit sending
 
-* kupovinu
-* prodaju
-* postavljanje
-* start wave
-* economy
+Do not synchronize:
 
-Ne sinhronizovati:
+- Pure visual effects
 
-* čiste vizuelne efekte
-
----
-
-# 12. Content Roadmap
-
-## Milestone 1
-
-Core Gameplay
-
-Status:
-
-90%
-
-## Milestone 2
-
-Economy Complete
-
-Status:
-
-40%
-
-## Milestone 3
-
-Multiplayer Foundation
-
-Status:
-
-10%
-
-## Milestone 4
-
-Beta
-
-Status:
-
-0%
+### PvP Unit Sending
+Players send units from their **personal deck** to attack opponents.
+There is **no separate mercenary barracks** — your deck is both your
+defense and your offense.
 
 ---
 
-# 13. Technical Architecture
+# 16. Content Roadmap
+
+## Milestone 1 — Core Gameplay
+Status: ~90%
+
+- Wave system (15 waves)
+- Battle flow (prep -> battle -> reward)
+- Unit AI (pathfinding, targeting, abilities)
+- King system (basic)
+- Synergy system
+
+## Milestone 2 — Identity & Documentation
+Status: in progress
+
+- README aligned with GDD
+- GDD reflects Legion TD + OCG + permadeath vision
+- TODO reflects current priorities
+
+## Milestone 3 — Permadeath & Leak
+Status: 0%
+
+- Units do not revive between waves
+- Leak damage to King on enemy contact
+- Game over only on King HP = 0
+
+## Milestone 4 — Deck-Building
+Status: 0%
+
+- Pre-match unit set selection
+- Deck limits and rules
+- King selection
+
+## Milestone 5 — Economy
+Status: 0%
+
+- Designed after core gameplay is locked
+- Income, interest, workers (TBD)
+
+## Milestone 6 — Unit Upgrades
+Status: 0%
+
+- Per-unit upgrade paths
+- Tier progression
+
+## Milestone 7 — Multiplayer Foundation
+Status: 0%
+
+- Server authority
+- 1v1 first, then 2v2 / 3v3 / 4v4 / coop
+- PvP unit sending from deck
+
+## Milestone 8 — Beta
+Status: 0%
+
+---
+
+# 17. Technical Architecture
 
 ### Managers
-
-* BattleManager
-* WaveManager
-* SynergyManager
+- BattleManager
+- WaveManager
+- SynergyManager
 
 ### Components
-
-* UnitAI
-* UnitAnimator
-* UnitVisuals
+- UnitAI
+- UnitAnimator
+- UnitVisuals
 
 ### Data
-
-* UnitStats
-* WaveConfig
-* Ability Resources
+- UnitStats
+- WaveConfig
+- Ability Resources
+- PlayerStats
 
 ---
 
-# 14. UX Principles
+# 18. UX Principles
 
 ### Always Visible
-
-* Gold
-* Income
-* Wave Number
-* King HP
+- Gold
+- Wave Number
+- King HP
+- Dead units (so player knows what they've lost)
 
 ### Never Hidden
-
-* Synergies
-* Upcoming Wave
-* Leak Damage
+- Synergies
+- Upcoming Wave
+- Leak Damage
 
 ---
 
-# 15. Long-Term Vision
+# 19. Long-Term Vision
 
 Release Goal:
 
-A multiplayer Godot game that captures the strategic depth of Legion TD 2 while remaining approachable and maintainable for a small development team.
+A multiplayer Godot game that captures the strategic depth of Legion TD 2,
+adds OCG-style deck-building and permadeath for higher stakes, and remains
+approachable and maintainable for a small development team.
 
 ---
 
-Iskreno, ovo bih smatrao obaveznim pre nego što kreneš u multiplayer, jer ćeš kasnije svaku novu ideju moći da proveriš pitanjem:
-
-> "Da li je ovo u skladu sa GDD-om?"
-
-To sprečava da projekat vremenom postane mešavina Legion TD-a, TFT-a, RPG-a i tower defense-a bez jasnog identiteta.
+*Last updated: August 2026*

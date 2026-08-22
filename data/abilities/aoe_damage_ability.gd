@@ -18,7 +18,7 @@ func execute(caster: Unit, targets: Array) -> void:
 		if not is_instance_valid(target):
 			continue
 		if target.has_method("apply_damage"):
-			target.apply_damage(int(damage))
+			target.apply_damage(int(damage), UnitStats.DamageType.MAGICAL)
 		elif "current_health" in target:
 			target.current_health -= damage
 		else:

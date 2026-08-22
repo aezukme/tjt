@@ -27,6 +27,7 @@ const DEBUG_AI_VERBOSE: bool = false
 var is_hovered := false
 var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
+var _is_dead: bool = false  ## Guard: prevents multiple death signal emissions
 var current_health: float : set = _set_current_health
 var current_mana: float : set = _set_current_mana
 var ability_on_cooldown: bool = false
@@ -187,7 +188,8 @@ func _set_current_health(value: float) -> void:
 		_spawn_damage_number(damage_taken)
 	
 	health_changed.emit(int(current_health))
-	if current_health <= 0:
+	if current_health <= 0 and not _is_dead:
+		_is_dead = true
 		health_reached_zero.emit()
 
 
@@ -201,7 +203,12 @@ func _set_current_mana(value: float) -> void:
 
 ## Called when unit's health reaches zero.
 func _on_health_reached_zero() -> void:
-	print("%s died!" % stats.name)
+	# _is_dead guard in _set_current_health prevents duplicate calls
+	# Permadeath toast — only for player units (not King, not enemies)
+	if stats.team == UnitStats.Team.PLAYER and not stats.is_king:
+		var toast_mgr := get_tree().get_first_node_in_group("toast_manager")
+		if toast_mgr and toast_mgr.has_method("show_toast"):
+			toast_mgr.show_toast("%s has fallen permanently" % stats.name, 2.5, Color(1.0, 0.35, 0.35))
 	if animator and not animator.is_dead():
 		animator.play(UnitAnimator.AnimState.DEATH)
 		animator.death_animation_finished.connect(func(): UnitVisuals.handle_unit_death(self), CONNECT_ONE_SHOT)
@@ -367,10 +374,15 @@ func cast_ability() -> bool:
 
 
 ## Apply damage to this unit (uniform interface for AI/abilities).
-func apply_damage(damage: int) -> void:
-	current_health = max(current_health - damage, 0)
+## damage_type controls armor/MR reduction (default PHYSICAL for auto-attacks).
+func apply_damage(damage: int, damage_type: UnitStats.DamageType = UnitStats.DamageType.PHYSICAL) -> void:
+	var reduced: float = UnitStats.calculate_reduced_damage(
+		float(damage), damage_type, stats.armor if stats else 0, stats.magic_resist if stats else 0
+	)
+	var final_damage: int = roundi(reduced)
+	current_health = max(current_health - final_damage, 0)
 	# Reduce incoming_damage since this damage has now landed
-	incoming_damage = maxf(incoming_damage - damage, 0.0)
+	incoming_damage = maxf(incoming_damage - final_damage, 0.0)
 
 
 ## Register damage this unit has dealt to others (for per-unit DPS/damage counters)

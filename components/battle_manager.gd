@@ -118,26 +118,37 @@ func _clear_all_unit_highlights() -> void:
 
 
 ## Checks win/lose condition - called when a unit dies.
+## Defeat condition: King HP reaches 0 (King is no longer alive).
+## Victory condition: delegated to WaveManager (remaining_enemies counter).
+## King death is checked regardless of battle state — the King dying during
+## a death animation after the wave was cleared should still end the game.
 func check_win_condition() -> void:
-	if current_state != State.BATTLE:
-		return
-	
+	# Always check King death, even outside BATTLE state (death animation
+	# may finish after WaveManager already ended the wave)
 	var player_units := game_area.unit_grid.get_all_units()
-	
-	# King death = immediate defeat
 	var king_alive := false
 	for u in player_units:
 		if is_instance_valid(u) and u.stats and u.stats.is_king:
-			king_alive = true
+			if u.current_health > 0.0:
+				king_alive = true
 			break
 	
-	if not king_alive and not player_units.is_empty():
-		# King died but other units survive — still a defeat
+	# Also check player_units group — King may have been removed from grid
+	# but not yet freed (queue_free is deferred)
+	if not king_alive:
+		for u in get_tree().get_nodes_in_group("player_units"):
+			if is_instance_valid(u) and u is Unit and u.stats and u.stats.is_king:
+				if u.current_health > 0.0:
+					king_alive = true
+				break
+	
+	if not king_alive:
 		print("[Battle] 👑 The King has fallen!")
 		end_battle(UnitStats.Team.ENEMY)
 		return
-	elif player_units.is_empty():
-		end_battle(UnitStats.Team.ENEMY)
+	
+	# Wave completion check only applies during BATTLE
+	if current_state != State.BATTLE:
 		return
 	
 	# Check enemy win condition via WaveManager (enemies are free-moving, not on grid)

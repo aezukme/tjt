@@ -131,7 +131,7 @@ func _execute_damage(caster: Unit, targets: Array) -> void:
 
 	# Apply damage
 	if target.has_method("apply_damage"):
-		target.apply_damage(int(damage))
+		target.apply_damage(int(damage), UnitStats.DamageType.MAGICAL)
 	elif "current_health" in target:
 		target.current_health = max(target.current_health - damage, 0)
 	elif "stats" in target and target.stats:

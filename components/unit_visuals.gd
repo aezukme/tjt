@@ -133,6 +133,12 @@ static func handle_unit_death(unit: Node) -> void:
 		var tile = play_area.get_tile_from_global(unit.global_position)
 		play_area.unit_grid.remove_unit(tile)
 
+	# If this is a player unit (not King), notify unit selection panel to decrement count
+	if unit.is_in_group("player_units") and unit.stats and not unit.stats.is_king:
+		var unit_selection_panel = unit.get_tree().get_first_node_in_group("unit_selection_panel")
+		if unit_selection_panel and unit_selection_panel.has_method("on_unit_removed"):
+			unit_selection_panel.on_unit_removed()
+
 	var battle_manager := unit.get_tree().get_first_node_in_group("battle_manager")
 	if battle_manager:
 		battle_manager.check_win_condition()

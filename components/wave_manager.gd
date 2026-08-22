@@ -553,6 +553,13 @@ func _reset_ally_stats() -> void:
 			ai.path.clear()
 			ai.attack_timer = 0.0
 		
+		# Reset animator to IDLE — prevents stuck WALK/ATTACK state during
+		# preparation phase (AI is disabled and won't call play(IDLE) itself)
+		if unit.has_node("UnitAnimator"):
+			var animator = unit.get_node("UnitAnimator")
+			if animator and animator.has_method("play"):
+				animator.play(UnitAnimator.AnimState.IDLE)
+		
 		reset_count += 1
 	
 	print("[WAVE] ♻ Reset stats for %d ally units" % reset_count)

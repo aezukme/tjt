@@ -103,7 +103,7 @@ func _refresh_resources() -> void:
 
 func _refresh_units() -> void:
 	if unit_selection_panel:
-		units_value_label.text = "%d/%d" % [unit_selection_panel.deployed_count, unit_selection_panel.max_deployed_units]
+		units_value_label.text = "%d" % unit_selection_panel.deployed_count
 	else:
 		units_value_label.text = "--"
 

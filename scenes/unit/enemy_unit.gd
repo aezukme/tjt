@@ -14,6 +14,7 @@ const CELL_SIZE := Vector2(32, 32)
 
 var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
+var _is_dead: bool = false  ## Guard: prevents multiple death signal emissions
 
 signal damage_dealt_changed(new_damage: float)
 
@@ -120,6 +121,9 @@ func _update_mana_bar() -> void:
 
 ## Called when unit's health reaches zero.
 func _on_health_reached_zero() -> void:
+	if _is_dead:
+		return
+	_is_dead = true
 	print("%s died!" % stats.name)
 	if animator and not animator.is_dead():
 		animator.play(UnitAnimator.AnimState.DEATH)
@@ -129,8 +133,15 @@ func _on_health_reached_zero() -> void:
 
 
 ## Apply damage to this enemy unit (uniform interface for AI/abilities).
-func apply_damage(damage: int) -> void:
+## damage_type controls armor/MR reduction (default PHYSICAL for auto-attacks).
+func apply_damage(damage: int, damage_type: UnitStats.DamageType = UnitStats.DamageType.PHYSICAL) -> void:
 	if stats:
+		var reduced: float = UnitStats.calculate_reduced_damage(
+			float(damage), damage_type, stats.armor, stats.magic_resist
+		)
+		var final_damage: int = roundi(reduced)
+		stats.health = max(stats.health - final_damage, 0)
+	else:
 		stats.health = max(stats.health - damage, 0)
 	# Reduce incoming_damage since this damage has now landed
 	incoming_damage = maxf(incoming_damage - damage, 0.0)

@@ -9,6 +9,7 @@ signal mana_bar_filled
 
 enum Rarity {COMMON, UNCOMMON, RARE, LEGENDARY}
 enum Team {PLAYER, ENEMY}
+enum DamageType {PHYSICAL, MAGICAL, PURE}
 enum Faction {
 	NONE,
 	WARRIOR,  ## Knight, Bjorn, Rogue — 3× bonus: +20% ATK damage
@@ -34,7 +35,6 @@ const TEAM_SPRITESHEET := {
 }
 
 const MAX_ATTACK_RANGE := 5
-const MANA_PER_ATTACK := 10
 const MOVE_ONE_TILE_SPEED := 1.0
 
 @export_category("Data")
@@ -101,6 +101,23 @@ func get_max_health() -> int:
 
 func get_attack_damage() -> int:
 	return attack_damage
+
+
+## Returns damage after applying armor or magic resist reduction.
+## Armor and magic_resist are treated as direct percentages: 15 armor = 15% reduction.
+## Capped at 90% to prevent full immunity (max 90 armor/MR effective).
+## Pure: no reduction.
+static func calculate_reduced_damage(damage: float, type: DamageType, armor: int, magic_resist: int) -> float:
+	match type:
+		DamageType.PHYSICAL:
+			var reduction: float = clampf(float(armor), 0.0, 90.0) / 100.0
+			return damage * (1.0 - reduction)
+		DamageType.MAGICAL:
+			var reduction: float = clampf(float(magic_resist), 0.0, 90.0) / 100.0
+			return damage * (1.0 - reduction)
+		DamageType.PURE:
+			return damage
+	return damage
 
 
 func get_time_between_attacks() -> float:

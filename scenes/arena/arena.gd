@@ -15,7 +15,7 @@ const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
 @onready var battle_manager: BattleManager = $BattleManager
 @onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
-@onready var damage_output_value_label: Label = $UI/UnitStatsContainer/DamageOutputBlock/DamageOutputValue
+@onready var damage_output_value_label: Label = get_node_or_null("UI/UnitStatsContainer/DamageOutputBlock/DamageOutputValue")
 @onready var right_sidebar: RightSidebar = $UI/RightSidebar
 @onready var time_panel: TimePanel = $UI/TimePanel
 @onready var hud_bar: Control = $UI/HudBar
@@ -23,15 +23,9 @@ var start_battle_button: Button
 var toggle_units_button: Button
 var quit_game_button: Button
 @onready var enemy_area: PlayArea = $EnemyArea
-@onready var game_area: PlayArea = $GameArea
+@onready var game_area: PlayArea = $GameArea                                                               
 @onready var unit_selection_panel = $UI/UnitSelectionPanel
-
-# LEGACY: Old enemy wave spawn system - kept for compatibility
-# Now using WaveManager system instead
-@export var enemy_wave := []
-@export_range(1, 3) var enemy_spawn_batch_size: int = 1
-@export var enemy_spawn_interval: float = 0.45
-@export var auto_restart_after_battle: bool = false
+@onready var toast_manager: ToastManager = $UI/ToastManager
 
 # Wave system
 var wave_manager: Node
@@ -179,51 +173,10 @@ func _on_battle_started() -> void:
 				if is_instance_valid(u):
 					u.queue_free()
 	
-	# If wave manager exists, it handles spawning
-	# Otherwise fall back to legacy enemy_wave system
+	# Wave manager handles spawning
 	if wave_manager:
 		# Wave manager will start first wave automatically
 		return
-	
-	# LEGACY: Spawn configured enemy wave via UnitSpawner at/around center in batches
-	if enemy_wave and unit_spawner and enemy_area and enemy_area.unit_grid:
-		var grid_size: Vector2i = enemy_area.unit_grid.size
-		var center_tile: Vector2i = Vector2i(grid_size.x >> 1, grid_size.y >> 1)
-
-		# Offsets to place multiple enemies around center (spiral-ish)
-		var offsets: Array[Vector2i] = [Vector2i(0,0), Vector2i(-1,0), Vector2i(1,0), Vector2i(0,-1), Vector2i(0,1), Vector2i(-1,-1), Vector2i(1,-1), Vector2i(-1,1), Vector2i(1,1)]
-
-		var total: int = int(enemy_wave.size())
-		var batch: int = max(1, int(enemy_spawn_batch_size))
-		var i: int = 0
-		while i < total:
-			# Spawn this batch
-			var end_idx: int = min(i + batch, total)
-			for j in range(i, end_idx):
-				var enemy_stats: UnitStats = enemy_wave[j]
-				if not enemy_stats:
-					continue
-
-				var placed: bool = false
-				for off in offsets:
-					var try_tile: Vector2i = Vector2i(center_tile.x + off.x, center_tile.y + off.y)
-					if try_tile.x < 0 or try_tile.y < 0 or try_tile.x >= grid_size.x or try_tile.y >= grid_size.y:
-						continue
-					if not enemy_area.unit_grid.is_tile_occupied(try_tile):
-						unit_spawner.spawn_unit(enemy_stats, try_tile)
-						placed = true
-						break
-				if not placed:
-					unit_spawner.spawn_unit(enemy_stats)
-
-			i += batch
-			# Wait between batches if more remain
-			if i < total and enemy_spawn_interval > 0:
-				await get_tree().create_timer(enemy_spawn_interval).timeout
-
-			# After spawning all batches, enable AI for all units so newly spawned enemies become active
-			if battle_manager and battle_manager.has_method("enable_ai_for_all"):
-				battle_manager.enable_ai_for_all(true)
 
 
 ## Called when preparation starts - enable dragging.
@@ -252,10 +205,8 @@ func _refresh_damage_output() -> void:
 func _on_battle_ended(winner: UnitStats.Team) -> void:
 	if winner == UnitStats.Team.ENEMY:
 		var wave_num: int = wave_manager.current_wave_number if wave_manager else 0
-		if _was_king_defeat():
-			print("[Arena] ❌ DEFEAT! The King has fallen on Wave %d!" % wave_num)
-		else:
-			print("[Arena] ❌ DEFEAT! All player units eliminated.")
+		# King HP = 0 is the only defeat condition
+		print("[Arena] ❌ DEFEAT! The King has fallen on Wave %d!" % wave_num)
 		_transition_to_game_over()
 		return
 
@@ -268,21 +219,6 @@ func _on_battle_ended(winner: UnitStats.Team) -> void:
 	
 	# Re-enable dragging for surviving player units
 	_set_drag_enabled(true)
-
-	# Auto-restart the arena scene after battle if configured.
-	if auto_restart_after_battle:
-		# Only restart between waves (not on final victory/defeat handled elsewhere)
-		if wave_manager and wave_manager.current_wave_index + 1 < wave_manager.waves.size():
-			await get_tree().create_timer(0.6).timeout
-			var packed: PackedScene = load("res://scenes/arena/arena.tscn")
-			get_tree().change_scene_to_packed(packed)
-			return
-		# Legacy flow without wave_manager: always restart
-		if not wave_manager:
-			await get_tree().create_timer(0.6).timeout
-			var packed2: PackedScene = load("res://scenes/arena/arena.tscn")
-			get_tree().change_scene_to_packed(packed2)
-			return
 
 
 ## Called when wave_manager reports all waves cleared.
@@ -305,11 +241,11 @@ func _transition_to_victory() -> void:
 	if wave_manager and wave_manager.player_stats:
 		gold = wave_manager.player_stats.gold
 		xp = wave_manager.player_stats.xp
-	screen.set("waves_cleared", total_waves)
-	screen.set("gold_earned", gold)
-	screen.set("xp_earned", xp)
 	get_tree().root.add_child(screen)
 	get_tree().current_scene = screen
+	# Call setup() after adding to tree so _ready() has run and labels exist
+	if screen.has_method("setup"):
+		screen.setup(total_waves, gold, xp)
 	queue_free()
 
 
@@ -320,20 +256,26 @@ func _transition_to_game_over() -> void:
 	await get_tree().create_timer(END_SCREEN_DELAY).timeout
 	var go_scene: PackedScene = load(GAME_OVER_SCENE)
 	var screen: Control = go_scene.instantiate()
-	screen.set("wave_reached", wave_manager.current_wave_number if wave_manager else 0)
-	screen.set("king_fell", _was_king_defeat())
 	get_tree().root.add_child(screen)
 	get_tree().current_scene = screen
+	# Call setup() after adding to tree so _ready() has run and labels exist
+	if screen.has_method("setup"):
+		screen.setup(wave_manager.current_wave_number if wave_manager else 0, _was_king_defeat())
 	queue_free()
 
 
+## Returns true if the defeat was caused by the King falling (HP reached 0).
+## Since King HP = 0 is the only defeat condition, this checks whether the
+## King is dead: either not present among player units, or present but at 0 HP.
 func _was_king_defeat() -> bool:
 	for u in get_tree().get_nodes_in_group("player_units"):
 		if not is_instance_valid(u):
 			continue
-		if u is Unit and u.stats and not u.stats.is_king:
-			return true
-	return false
+		if u is Unit and u.stats and u.stats.is_king:
+			# King still in the scene — check if actually dead
+			return u.current_health <= 0.0
+	# King not found among player units — has been removed (died and freed)
+	return true
 
 
 func _on_start_battle_pressed() -> void:
@@ -523,13 +465,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				unit_selection_panel.on_unit_placed(_placement_stats)
 			# Shift held → stay in placement mode for multi-place
 			if Input.is_key_pressed(KEY_SHIFT) and _placement_stats:
-				# Check if we can still afford / deploy more
-				var can_continue := true
-				if unit_selection_panel and unit_selection_panel.deployed_count >= unit_selection_panel.max_deployed_units:
-					can_continue = false
+				# Check if we can still afford
 				if player_stats and _placement_stats and player_stats.gold < _placement_stats.gold_cost:
-					can_continue = false
-				if not can_continue:
 					_exit_placement_mode()
 					if unit_selection_panel:
 						unit_selection_panel.cancel_selection()

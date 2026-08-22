@@ -1,14 +1,16 @@
-[gd_resource type="Resource" script_class="WaveConfig" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WaveConfig" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://data/waves/wave_config.gd" id="1_wave"]
-[ext_resource type="Resource" path="res://data/waves/group_goblins_6.tres" id="2_group"]
+[ext_resource type="Resource" path="res://data/waves/group_goblins_10.tres" id="2_group"]
+[ext_resource type="Resource" path="res://data/waves/group_orcs_6.tres" id="3_group"]
+[ext_resource type="Resource" path="res://data/waves/group_skeleton_archers_5.tres" id="4_group"]
 
 [resource]
 script = ExtResource("1_wave")
 wave_name = "Wave 1 - First Blood"
-wave_description = "A small goblin scouting party. Easy pickings."
-enemy_groups = [ExtResource("2_group")]
-spawn_interval_between_groups = 0.0
-total_estimated_duration = 10.0
-gold_reward = 30
-experience_reward = 5
+wave_description = "A heavy scouting party. Goblins, orcs, and archers — good luck."
+enemy_groups = [ExtResource("2_group"), ExtResource("3_group"), ExtResource("4_group")]
+spawn_interval_between_groups = 1.5
+total_estimated_duration = 20.0
+gold_reward = 50
+experience_reward = 10

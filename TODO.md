@@ -1,8 +1,24 @@
-# TODO List — TJT (Legion TD-style Tower Defense)
+# TODO List — TJT (Legion TD 2 + OCG Deck-Building + Permadeath)
 
-> **Game Design:** Players place defender units on their lane during a build phase,
-> then enemy waves march in and fight automatically. Survive all waves to win.
-> Inspired by *Legion TD* (WC3) / *Legion TD 2*, NOT autobattlers like TFT.
+> **Game Design:** A hybrid strategy game fusing Legion TD 2 wave defense with
+> OCG deck-building and permadeath. Players build a predefined unit deck before
+> the match, choose a King (with future aura effects), place static defenders,
+> and survive progressive waves. Dead units stay dead — every loss is permanent.
+> Inspired by *Legion TD 2* and card games, NOT autobattlers like TFT.
+
+---
+
+## Plan — Budući milestone-ovi (nakon core stabilizacije)
+
+- [ ] Ekonomija — osnovni income, interest, workers/mythium (vezano za PvP).
+- [ ] Deck-building sistem — pre-match unit set selekcija (OCG stil).
+- [ ] King selekcija — biranje tipa Kinga pre partije.
+- [ ] King aurore — pasivni efekti Kinga na defendere.
+- [ ] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7.
+- [ ] PvP slanje unita — iz ličnog deck-a, bez posebnog barracks-a.
+- [ ] Multiplayer — 1v1, 2v2, 3v3, 4v4, coop (server authoritative).
+- [ ] Map / lane dizajn — više arena layout-a.
+- [ ] Graveyard meni — dropdown meni sa info o svim fallen unitima (slično graveyard-u u Yu-Gi-Oh igri).
 
 ---
 
@@ -121,12 +137,11 @@
 > These are the mechanics that define the Legion TD genre. Without them the game is
 > a basic tower defense; with them it becomes a strategic economy game.
 
-### 1. King Lives / Leak Mechanic ✅ (partially done)
+### 1. King Lives / Leak Mechanic ✅
 - [x] King HP never resets between waves — permanent damage from leaks
 - [x] King health_regen = 0 (no self-healing)
-- [ ] Game Over only when King HP reaches 0
-- [ ] King HP bar visible in HUD at all times
-- [ ] Current behavior (King dies = instant Game Over) 
+- [x] Game Over only when King HP reaches 0 (King fights alone if all allies die)
+- [x] King HP bar visible in HUD at all times
 
 ### 4. Faction / Synergy System ✅
 - [x] Units belong to factions: Warrior (Knight, Bjorn, Rogue), Mystic (Mage, Sage, Druid), Warden (Ranger, Priest)

@@ -89,7 +89,7 @@ func _apply_direct_hit(target: Node, caster: Node = null) -> void:
 		return
 
 	if target.has_method("apply_damage"):
-		target.apply_damage(damage)
+		target.apply_damage(damage, UnitStats.DamageType.MAGICAL)
 	elif target is Unit:
 		target.current_health = max(target.current_health - damage, 0)
 

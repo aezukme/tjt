@@ -37,6 +37,7 @@ var _cards: Dictionary = {}
 
 
 func _ready() -> void:
+	add_to_group("unit_selection_panel")
 	_build_cards()
 
 
@@ -59,10 +60,6 @@ func _build_cards() -> void:
 
 
 func _on_card_clicked(unit_stats: UnitStats) -> void:
-	if deployed_count >= max_deployed_units:
-		print("[Selection] ⚠ Max units (%d) reached!" % max_deployed_units)
-		return
-
 	# Check gold
 	if player_stats and player_stats.gold < unit_stats.gold_cost:
 		print("[Selection] ⚠ Not enough gold! Need %d, have %d" % [unit_stats.gold_cost, player_stats.gold])
@@ -89,8 +86,6 @@ func _on_card_clicked(unit_stats: UnitStats) -> void:
 
 
 func _on_card_drag_started(unit_stats: UnitStats) -> void:
-	if deployed_count >= max_deployed_units:
-		return
 	if player_stats and player_stats.gold < unit_stats.gold_cost:
 		return
 	# Select the card visually
@@ -115,10 +110,8 @@ func on_unit_placed(unit_stats: UnitStats = null) -> void:
 	_update_info()
 	# Keep selected for rapid multi-placement of same type
 	# (user can click multiple tiles to place more)
-	if deployed_count >= max_deployed_units:
-		cancel_selection()
 	# Auto-cancel if can no longer afford the selected unit
-	elif player_stats and _selected_stats and player_stats.gold < _selected_stats.gold_cost:
+	if player_stats and _selected_stats and player_stats.gold < _selected_stats.gold_cost:
 		cancel_selection()
 
 
@@ -146,7 +139,7 @@ func _update_info() -> void:
 		var gold_text := ""
 		if player_stats:
 			gold_text = "  💰 %d" % player_stats.gold
-		info_label.text = "%d / %d%s" % [deployed_count, max_deployed_units, gold_text]
+		info_label.text = "Units: %d%s" % [deployed_count, gold_text]
 
 
 ## Update which cards the player can afford.

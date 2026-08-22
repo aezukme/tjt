@@ -673,7 +673,8 @@ func _perform_attack(target) -> void:
 
 	# Apply damage using a common method if available, otherwise fallback to stats
 	if UnitUtils.is_unit_node(target):
-		target.apply_damage(damage)
+		# Auto-attacks are physical damage (abilities use their own type)
+		target.apply_damage(damage, UnitStats.DamageType.PHYSICAL)
 
 		# Notify arena aggregated damage readout
 		var arena: Node = unit.get_tree().get_first_node_in_group("arena")
