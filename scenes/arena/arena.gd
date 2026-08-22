@@ -139,8 +139,6 @@ func _spawn_king() -> void:
 		king_tile = game_area.unit_grid.get_first_available_tile()
 	var king_node := unit_spawner.spawn_unit(king_stats, king_tile)
 	if king_node:
-		# King doesn't count toward deployed limit
-		# (deployed_count was already incremented by spawn signal, so undo it)
 		print("[Arena] 👑 King spawned at tile %s" % str(king_tile))
 		# Add to king group for easy lookup
 		king_node.add_to_group("king")
@@ -422,6 +420,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 
+	# ── Quick sell: E key to delete hovered unit (during prep phase) ──
+	if not _placement_stats and event.is_action_pressed("quick_sell"):
+		if battle_manager and battle_manager.current_state != BattleManager.State.BATTLE and game_area:
+			var tile := game_area.get_hovered_tile()
+			if game_area.is_tile_within_bounds(tile) and game_area.unit_grid.is_tile_occupied(tile):
+				_remove_placed_unit(tile)
+				get_viewport().set_input_as_handled()
+				return
+
 	if not _placement_stats:
 		return
 
@@ -542,6 +549,11 @@ func _create_placement_ghost(unit_stats: UnitStats) -> void:
 
 	_placement_ghost = Sprite2D.new()
 	_placement_ghost.texture = UnitStats.TEAM_SPRITESHEET.get(unit_stats.team)
+	if not _placement_ghost.texture:
+		push_warning("[Arena] No spritesheet found for team %d — ghost will be invisible" % unit_stats.team)
+		_placement_ghost.queue_free()
+		_placement_ghost = null
+		return
 	_placement_ghost.region_enabled = true
 	_placement_ghost.region_rect = Rect2(
 		Vector2(unit_stats.skin_coordinates) * CELL_SIZE,

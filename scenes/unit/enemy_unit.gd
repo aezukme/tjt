@@ -16,6 +16,23 @@ var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
 var _is_dead: bool = false  ## Guard: prevents multiple death signal emissions
 
+## Current health — synced with stats.health for interface compatibility with Unit.
+## This allows abilities and AI to use `current_health` uniformly on both Unit and EnemyUnit.
+var current_health: float :
+	get:
+		return float(stats.health) if stats else 0.0
+	set(value):
+		if stats:
+			stats.health = int(maxi(value, 0))
+
+## Current mana — synced with stats.mana for interface compatibility with Unit.
+var current_mana: float :
+	get:
+		return float(stats.mana) if stats else 0.0
+	set(value):
+		if stats:
+			stats.mana = int(clampi(value, 0, stats.max_mana))
+
 signal damage_dealt_changed(new_damage: float)
 
 ## Track damage dealt by this unit (useful for analytics / debugging)
@@ -26,13 +43,11 @@ var incoming_damage: float = 0.0
 var incoming_healing: float = 0.0
 
 func get_effective_health() -> float:
-	if stats:
-		return maxf(stats.health - incoming_damage, 0.0)
-	return 0.0
+	return maxf(current_health - incoming_damage, 0.0)
 
 func get_effective_missing_health() -> float:
 	if stats:
-		var effective_hp: float = minf(stats.health + incoming_healing, stats.max_health)
+		var effective_hp: float = minf(current_health + incoming_healing, stats.max_health)
 		return maxf(stats.max_health - effective_hp, 0.0)
 	return 0.0
 
@@ -143,14 +158,13 @@ func _on_health_reached_zero() -> void:
 ## Apply damage to this enemy unit (uniform interface for AI/abilities).
 ## damage_type controls armor/MR reduction (default PHYSICAL for auto-attacks).
 func apply_damage(damage: int, damage_type: UnitStats.DamageType = UnitStats.DamageType.PHYSICAL) -> void:
-	if stats:
-		var reduced: float = UnitStats.calculate_reduced_damage(
-			float(damage), damage_type, stats.armor, stats.magic_resist
-		)
-		var final_damage: int = roundi(reduced)
-		stats.health = max(stats.health - final_damage, 0)
-	else:
-		stats.health = max(stats.health - damage, 0)
+	if not stats:
+		return
+	var reduced: float = UnitStats.calculate_reduced_damage(
+		float(damage), damage_type, stats.armor, stats.magic_resist
+	)
+	var final_damage: int = roundi(reduced)
+	current_health = maxf(current_health - final_damage, 0.0)
 	# Reduce incoming_damage since this damage has now landed
 	incoming_damage = maxf(incoming_damage - damage, 0.0)
 

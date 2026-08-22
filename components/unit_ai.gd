@@ -98,10 +98,18 @@ func _process(delta: float) -> void:
 	
 	# Separation logic — gentle push between same-team units only
 	_apply_separation(delta)
-	
+
 	# Y-sort: units lower on screen render on top for depth illusion
-	unit.z_index = int(unit.global_position.y)
-	
+	# Only update when position changes AND unit is not hovered (hover sets z_index=4096)
+	if not ("is_hovered" in unit and unit.is_hovered):
+		var y_z: int = int(unit.global_position.y)
+		if y_z != unit.z_index:
+			unit.z_index = y_z
+
+	# ── Leak mechanic: enemies that reach the King deal damage and despawn ──
+	if unit.stats and unit.stats.team == UnitStats.Team.ENEMY:
+		_check_leak_to_king()
+
 	# Attempt attack if in range and cooldown ready
 	if current_target and is_instance_valid(current_target):
 		var distance_to_target: float = unit.global_position.distance_to(current_target.global_position)
@@ -926,3 +934,33 @@ func _apply_separation(delta: float) -> void:
 func _on_velocity_computed(safe_velocity: Vector2) -> void:
 	# Apply computed velocity from navigation
 	unit.global_position += safe_velocity * get_process_delta_time()
+
+
+## Leak mechanic: when an enemy reaches the King, it deals leak damage and despawns.
+## This replaces normal attack-on-King behavior per the GDD.
+func _check_leak_to_king() -> void:
+	if not unit or not is_instance_valid(unit):
+		return
+	if not unit.stats or unit.stats.team != UnitStats.Team.ENEMY:
+		return
+	# Only check if we're close to the King's row (bottom of arena)
+	var king = _find_king_unit()
+	if not king or not is_instance_valid(king):
+		return
+	var dist_to_king: float = unit.global_position.distance_to(king.global_position)
+	# Leak triggers when enemy is within 1 tile of the King
+	if dist_to_king <= CELL_SIZE.x:
+		# Calculate leak damage based on enemy's attack damage
+		var leak_damage: int = unit.stats.get_attack_damage()
+		print("[AI] %s: 💥 LEAKED! Reached King, dealing %d leak damage" % [unit.stats.name, leak_damage])
+		# Apply damage to King
+		if king.has_method("apply_damage"):
+			king.apply_damage(leak_damage, UnitStats.DamageType.PHYSICAL)
+		elif "current_health" in king:
+			king.current_health = maxf(king.current_health - leak_damage, 0.0)
+		# Spawn death VFX
+		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
+		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+			vfx_spawner.spawn_vfx_on_unit("death_effect", unit)
+		# Despawn the enemy (leaked through)
+		UnitVisuals.handle_unit_death(unit)

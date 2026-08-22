@@ -79,7 +79,7 @@ func _filter_by_range(caster: Unit, targets: Array, max_range: float) -> Array:
 	return filtered
 
 
-## Helper: Get all enemy units
+## Helper: Get all enemy units (filters dead/freed nodes)
 func _get_enemy_units(caster: Unit) -> Array:
 	var enemies := []
 	var group_name = "player_units" if caster.stats.team == UnitStats.Team.ENEMY else "enemy_units"
@@ -89,14 +89,14 @@ func _get_enemy_units(caster: Unit) -> Array:
 	for unit in nodes:
 		if DEBUG_ABILITY:
 			print("[AbilityDebug] candidate: %s (class=%s)" % [unit, unit.get_class()])
-		# Accept nodes that implement the unit interface via UnitUtils
-		if UnitUtils.is_unit_node(unit):
+		# Accept nodes that implement the unit interface via UnitUtils and are alive
+		if UnitUtils.is_unit_node(unit) and _is_unit_alive(unit):
 			enemies.append(unit)
-	
+
 	return enemies
 
 
-## Helper: Get all ally units (including caster)
+## Helper: Get all ally units (including caster, filters dead/freed nodes)
 func _get_ally_units(caster: Unit) -> Array:
 	var allies := []
 	var group_name = "player_units" if caster.stats.team == UnitStats.Team.PLAYER else "enemy_units"
@@ -106,14 +106,14 @@ func _get_ally_units(caster: Unit) -> Array:
 	for unit in nodes:
 		if DEBUG_ABILITY:
 			print("[AbilityDebug] candidate: %s (class=%s)" % [unit, unit.get_class()])
-		# Accept nodes that implement the unit interface via UnitUtils
-		if UnitUtils.is_unit_node(unit):
+		# Accept nodes that implement the unit interface via UnitUtils and are alive
+		if UnitUtils.is_unit_node(unit) and _is_unit_alive(unit):
 			allies.append(unit)
-	
+
 	return allies
 
 
-## Helper: Get units within range
+## Helper: Get units within range (filters dead/freed nodes)
 func _get_units_in_range(caster: Unit, ability_range: float) -> Array:
 	var units_in_range := []
 	var nodes := caster.get_tree().get_nodes_in_group("units")
@@ -122,12 +122,27 @@ func _get_units_in_range(caster: Unit, ability_range: float) -> Array:
 	for unit in nodes:
 		if DEBUG_ABILITY:
 			print("[AbilityDebug] range candidate: %s (class=%s) pos=%s" % [unit, unit.get_class(), unit.global_position])
-		# Accept nodes that implement the unit interface via UnitUtils
-		if UnitUtils.is_unit_node(unit) and unit != caster:
+		# Accept nodes that implement the unit interface via UnitUtils and are alive
+		if UnitUtils.is_unit_node(unit) and unit != caster and _is_unit_alive(unit):
 			var dist := caster.global_position.distance_to(unit.global_position)
 			if DEBUG_ABILITY:
 				print("[AbilityDebug] dist to %s = %.1f (range=%.1f)" % [unit, dist, ability_range])
 			if dist <= ability_range:
 				units_in_range.append(unit)
-	
+
 	return units_in_range
+
+
+## Returns true if the unit is alive (HP > 0). Works for both Unit and EnemyUnit.
+func _is_unit_alive(unit: Node) -> bool:
+	if not is_instance_valid(unit):
+		return false
+	# Check _is_dead guard (present on both Unit and EnemyUnit)
+	if "_is_dead" in unit and unit._is_dead:
+		return false
+	# Check HP via current_health or stats.health
+	if "current_health" in unit:
+		return unit.current_health > 0.0
+	if unit.stats and "health" in unit.stats:
+		return unit.stats.health > 0
+	return true  # Can't determine, allow it

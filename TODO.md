@@ -11,9 +11,9 @@
 ## Plan — Budući milestone-ovi (nakon core stabilizacije)
 
 - [ ] Ekonomija — osnovni income, interest, workers/mythium (vezano za PvP).
-- [ ] Deck-building sistem — pre-match unit set selekcija (OCG stil).
+- [x] Deck-building sistem — pre-match unit set selekcija (OCG stil).
 - [ ] King selekcija — biranje tipa Kinga pre partije.
-- [ ] King aurore — pasivni efekti Kinga na defendere.
+- [ ] King aura — pasivni efekti Kinga na defendere.
 - [ ] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7.
 - [ ] PvP slanje unita — iz ličnog deck-a, bez posebnog barracks-a.
 - [ ] Multiplayer — 1v1, 2v2, 3v3, 4v4, coop (server authoritative).
@@ -31,7 +31,7 @@
 - [x] Start Battle button (also skips prep timer between waves)
 
 ### Wave System ✅
-- [x] WaveManager with 4 configurable waves + boss wave
+- [x] WaveManager with 15 configurable waves + 3 boss waves
 - [x] WaveConfig resources with EnemyGroup composition
 - [x] Progressive difficulty scaling (+5% per wave)
 - [x] 30-second prep timer between waves (skippable)
@@ -95,6 +95,25 @@
 - [x] Unit skin flash on hit
 - [x] Wave display UI (wave counter, enemy count, progress bar, timer)
 - [x] Unit stats panel (live HP/mana for each ally)
+- [x] VFX system — VFXSpawner component with spritesheet-based animated effects
+- [x] Fireball explosion VFX (explosion_fire on projectile hit)
+- [x] AOE ability VFX (explosion_magic on caster + targets)
+- [x] Heal VFX (explosion_heal on healed ally)
+- [x] Harm VFX (explosion_dark on damaged enemy)
+- [x] Death VFX (death_effect on unit death)
+- [x] Physical hit VFX (hit_physical on melee attack)
+- [x] Animated enemy sprites (Crab, Jumper, Octopus with SpriteFrames)
+
+### Deck Manager System ✅
+- [x] DeckManager autoload singleton for persistent deck storage
+- [x] Deck Selection scene — choose 7 units from all available ally units
+- [x] Save & Load deck to/from user://deck.cfg (ConfigFile)
+- [x] Default deck if no saved data exists
+- [x] Right-click to deselect unit from deck
+- [x] Explicit Save button (manual saving)
+- [x] Main Menu: "Play" loads Arena with saved deck, "Deck Manager" opens DeckSelection
+- [x] Arena reads deck from DeckManager instead of hardcoded list
+- [x] Spacebar toggles unit selection panel in Arena
 
 ### Procedural Animation System ✅
 - [x] UnitAnimator component with 4 states: IDLE, WALK, ATTACK, DEATH
@@ -129,6 +148,16 @@
 - [x] King shrinking after first battle — _base_scale captured before visual_scale applied (re-capture after set_stats)
 - [x] Idle animation float precision — _idle_time wrapped with fmod to prevent drift over long sessions
 - [x] Attack→idle transition — _idle_time now resets when returning to idle from attack tween
+- [x] Game Over bug — King with 0 HP was incorrectly detected as alive (explicit current_health > 0 check)
+- [x] Duplicate permadeath toast — _is_dead guard prevents multiple health_reached_zero emissions
+- [x] EnemyUnit.apply_damage null-pointer — else branch accessing stats when null (early return guard)
+- [x] handle_unit_death wrong tile — now finds tile by iterating grid.units instead of global_position
+- [x] Dual HP system — EnemyUnit now has current_health/current_mana properties synced with stats
+- [x] Dead units attacking — AI disabled on death (ai.enabled = false in _on_health_reached_zero)
+- [x] VFX "default" animation error — SpriteFrames.new() already has "default", now removed before adding
+- [x] AnimatedSprite2D playing empty "default" animation — now plays "idle" if available
+- [x] Placement ghost null texture — push_warning + early return if no spritesheet for team
+- [x] z_index override on hover — UnitAI no longer sets z_index when unit is hovered
 
 ---
 
@@ -142,6 +171,7 @@
 - [x] King health_regen = 0 (no self-healing)
 - [x] Game Over only when King HP reaches 0 (King fights alone if all allies die)
 - [x] King HP bar visible in HUD at all times
+- [x] Leak mechanic — enemies reaching King deal leak damage (= attack_damage) and despawn
 
 ### 4. Faction / Synergy System ✅
 - [x] Units belong to factions: Warrior (Knight, Bjorn, Rogue), Mystic (Mage, Sage, Druid), Warden (Ranger, Priest)
@@ -221,6 +251,7 @@
 ### Combat Improvements
 - [x] Target stickiness (units commit to current target while alive + in range)
 - [x] Target switch delay (0.8s lock prevents erratic switching)
+- [x] Ability target filtering — dead/freed units filtered from get_valid_targets
 - [ ] Tank aggro system (enemies prefer attacking nearest/taunting unit)
 - [ ] Attack priority options (closest, lowest HP, highest threat)
 - [ ] Critical hit system
@@ -237,6 +268,7 @@
 
 ### Build Phase UX
 - [x] Right-click to remove placed units (refunds full gold cost)
+- [x] Quick sell hotkey (E key removes hovered unit during prep phase)
 - [ ] Drag units to reposition during build phase
 - [ ] Unit tooltip on hover (full stats, ability description)
 - [ ] Undo last placement button
@@ -304,6 +336,7 @@
 - [ ] Fix sage_ally.tres UID warning (uid://dh3al0rharm01)
 - [ ] Consistent naming conventions (snake_case vs PascalCase)
 - [x] Warrior's Endurance passive stacking on each unit placement — FIXED (guard flag + stats order)
+- [ ] **Unit/EnemyUnit code duplication** — set_stats, _swap_to_animated_sprite, _on_health_reached_zero, _connect_stats_signals, apply_damage are duplicated. Future refactor: introduce UnitBase class or shared component.
 
 ---
 
@@ -322,7 +355,7 @@
 | Druid (Specialist) | 380 | 30 | 0.7 | 3 (ranged) | 3💰 | Nature's Wrath (AoE 40 dmg) |
 | **King** 👑 | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* |
 
-### Enemy Units (6)
+### Enemy Units (9)
 | Unit | HP | ATK | AS | Armor | MR | Range | Role |
 |------|----|-----|------|-------|-----|-------|------|
 | Orc | 100 | 10 | 0.7 | 5 | 20 | 1 (melee) | Standard warrior |
@@ -331,14 +364,17 @@
 | Wolf | 60 | 12 | 1.0 | 0 | 5 | 1 (melee) | Fast flanker |
 | Troll | 250 | 15 | 0.4 | 15 | 10 | 1 (melee) | Heavy tank |
 | Skeleton Archer | 70 | 15 | 0.9 | 3 | 5 | 3 (ranged) | Ranged DPS |
+| Crab | 120 | 12 | 1.0 | 8 | 10 | 1 (melee) | Armored melee (animated) |
+| Jumper | 60 | 18 | 1.5 | 2 | 15 | 1 (melee) | Fast assassin (animated) |
+| Octopus | 80 | 14 | 0.8 | 4 | 30 | 3 (ranged) | Magic ranged, large (animated) |
 
 ### Waves (15)
 | Wave | Name | Enemies | Reward |
 |------|------|---------|--------|
 | 1 | First Blood | 6× Goblin | 30💰, 5 XP |
 | 2 | Orc Warband | 6× Orc | 50💰, 10 XP |
-| 3 | Wolf Pack | 4× Wolf + 6× Goblin | 60💰, 15 XP |
-| 4 | Bone Rain | 3× Skeleton Archer + 4× Orc | 70💰, 20 XP |
+| 3 | Wolf Pack | 4× Wolf + 6× Goblin + 4× Crab | 60💰, 15 XP |
+| 4 | Bone Rain | 3× Skeleton Archer + 4× Orc + 5× Jumper + 3× Octopus | 70💰, 20 XP |
 | **5** | **BOSS: Troll Assault 👑** | **2× Troll + 8× Orc** | **120💰, 35 XP** |
 | 6 | Dark Magic | 4× Necro + 6× Goblin | 80💰, 25 XP |
 | 7 | Feral Onslaught | 8× Wolf + 3× Skeleton Archer | 90💰, 30 XP |
@@ -354,6 +390,31 @@
 ---
 
 ## Session Log
+
+### August 2026 (Session 8) — VFX System, Animated Enemies, Review Fixes
+- ✅ VFX system — VFXSpawner component with 8 VFX types (explosions, hit effects, death)
+- ✅ VFX integrated into abilities (fireball, AOE, heal, harm) and combat (melee hit, death)
+- ✅ VFX assets copied from Animation Pack, Bullet Impact 32x32, explosion pack 1
+- ✅ 3 new animated enemy units: Crab, Jumper, Octopus (from warped-files assets)
+- ✅ SpriteFrames generated for all 3 new enemies (idle + walk animations)
+- ✅ UnitStats .tres files created for Crab, Jumper, Octopus with balanced stats
+- ✅ Wave 3 and 4 updated to include new enemy types
+- ✅ Deck Manager system — persistent deck storage, Deck Selection scene, Main Menu integration
+- ✅ Arena reads deck from DeckManager instead of hardcoded list
+- ✅ Spacebar toggles unit selection panel in Arena
+- ✅ Game Over bug fix — King with 0 HP incorrectly detected as alive
+- ✅ Duplicate permadeath toast fix — _is_dead guard on health_reached_zero
+- ✅ Review fixes (10 items):
+  - ✅ EnemyUnit.apply_damage null-pointer (critical)
+  - ✅ handle_unit_death wrong tile (grid iteration instead of global_position)
+  - ✅ Dual HP system unified (current_health property on EnemyUnit)
+  - ✅ Leak mechanic implemented (enemies deal damage to King and despawn)
+  - ✅ Stale comment removed from _spawn_king
+  - ✅ Ability target filtering (dead units excluded)
+  - ✅ Quick sell hotkey (E key) connected
+  - ✅ Placement ghost null texture guard
+  - ✅ z_index optimization (only update on position change, skip when hovered)
+  - ✅ Unit/EnemyUnit code duplication noted for future refactor
 
 ### May 2026 (Session 7) — Legion TD 2 Core Systems
 - ✅ TODO updated with full Legion TD 2 structural analysis
@@ -424,4 +485,4 @@
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: February 2026 (Session 5)*
+*Last Updated: August 2026 (Session 8)*
