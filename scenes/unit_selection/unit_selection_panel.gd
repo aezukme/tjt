@@ -69,7 +69,6 @@ func _build_cards() -> void:
 func _on_card_clicked(unit_stats: UnitStats) -> void:
 	# Check gold
 	if player_stats and player_stats.gold < unit_stats.gold_cost:
-		print("[Selection] ⚠ Not enough gold! Need %d, have %d" % [unit_stats.gold_cost, player_stats.gold])
 		return
 
 	# If clicking the same card again, deselect
@@ -89,7 +88,6 @@ func _on_card_clicked(unit_stats: UnitStats) -> void:
 		card.set_selected(true)
 
 	unit_selected.emit(unit_stats)
-	print("[Selection] 🎯 Selected %s (cost: %d 💰) — click a tile to place" % [unit_stats.name, unit_stats.gold_cost])
 
 
 func _on_card_drag_started(unit_stats: UnitStats) -> void:
@@ -112,7 +110,6 @@ func on_unit_placed(unit_stats: UnitStats = null) -> void:
 	# Deduct gold
 	if player_stats and unit_stats:
 		player_stats.gold -= unit_stats.gold_cost
-		print("[Selection] 💰 Spent %d gold (remaining: %d)" % [unit_stats.gold_cost, player_stats.gold])
 	_update_affordability()
 	_update_info()
 	# Keep selected for rapid multi-placement of same type

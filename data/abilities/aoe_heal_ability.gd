@@ -8,7 +8,6 @@ class_name AoEHealAbility
 
 func execute(caster: Unit, targets: Array) -> void:
 	if targets.is_empty():
-		print("[AoEHeal] No valid targets!")
 		return
 
 	var healed_count: int = 0
@@ -34,8 +33,5 @@ func execute(caster: Unit, targets: Array) -> void:
 		if target.has_method("flash_skin"):
 			target.flash_skin(Color.GREEN)
 		healed_count += 1
-
-	print("[AoEHeal] %s casts %s, healed %d allies for %.0f HP each!" % [
-		caster.stats.name, ability_name, healed_count, heal_amount])
 
 	caster.flash_skin(Color.GREEN)

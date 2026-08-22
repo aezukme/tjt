@@ -6,6 +6,7 @@ class_name Projectile
 @export var speed: float = 300.0
 @export var damage: float = 50.0
 @export var hit_color: Color = Color.ORANGE_RED
+@export var _is_basic_attack: bool = false  ## If true, uses hit_physical VFX instead of explosion_fire
 
 var target
 var caster
@@ -27,10 +28,12 @@ func reset() -> void:
 	is_setup = false
 	damage = 50.0
 	hit_color = Color.ORANGE_RED
+	_is_basic_attack = false
 	rotation = 0.0
 	global_position = Vector2.ZERO
 	if sprite:
 		sprite.modulate = Color.ORANGE_RED
+		sprite.scale = Vector2(1.5, 1.5)
 
 
 func _process(delta: float) -> void:
@@ -55,12 +58,15 @@ func _process(delta: float) -> void:
 
 func _hit_target() -> void:
 	if not target or not is_instance_valid(target):
-		print("[Projectile] Hit but target invalid!")
+		_return_to_pool()
+		return
+	# Dummy targets (like player base) don't take damage — just despawn
+	if target.has_meta("is_dummy_target"):
 		_return_to_pool()
 		return
 	# Deal damage via interface if available
 	if target.has_method("apply_damage"):
-		target.apply_damage(damage)
+		target.apply_damage(int(damage))
 		# Report damage to arena for aggregated output
 		var arena: Node = get_tree().get_first_node_in_group("arena")
 		if arena and arena.has_method("register_damage_output"):
@@ -76,10 +82,12 @@ func _hit_target() -> void:
 	if target.has_method("flash_skin"):
 		target.flash_skin(hit_color)
 
-	# Spawn VFX explosion on hit
+	# Spawn hit VFX on target (explosion_fire for ability projectiles, hit_physical for basic attacks)
 	var vfx_spawner = get_tree().get_first_node_in_group("vfx_spawner")
 	if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
-		vfx_spawner.spawn_vfx_on_unit("explosion_fire", target)
+		# Use hit_physical for basic attacks (smaller), explosion_fire for ability projectiles
+		var vfx_type = "hit_physical" if _is_basic_attack else "explosion_fire"
+		vfx_spawner.spawn_vfx_on_unit(vfx_type, target)
 
 	# Return to pool instead of freeing
 	_return_to_pool()
@@ -96,15 +104,18 @@ func _return_to_pool() -> void:
 
 
 
-func setup(from, to, proj_damage: float, color: Color = Color.ORANGE_RED) -> void:
+func setup(from, to, proj_damage: float, color: Color = Color.ORANGE_RED, is_basic: bool = false) -> void:
 	caster = from
 	target = to
 	damage = proj_damage
 	hit_color = color
+	_is_basic_attack = is_basic
 	is_setup = true
 	
 	if sprite:
 		sprite.modulate = color
+		# Basic attack projectiles are much smaller than ability projectiles
+		sprite.scale = Vector2(0.4, 0.4) if is_basic else Vector2(1.5, 1.5)
 
 	# Ensure processing is enabled (some pooled instances may have been disabled)
 	set_process(true)
@@ -112,5 +123,3 @@ func setup(from, to, proj_damage: float, color: Color = Color.ORANGE_RED) -> voi
 	# Face the target
 	if target:
 		look_at(target.global_position)
-	
-	print("[Projectile] Spawned from %s to %s, damage: %d" % [caster.stats.name if caster else "?", target.stats.name if target else "?", damage])

@@ -138,7 +138,6 @@ func _on_card_clicked(stats: UnitStats) -> void:
 			return
 		_mark_selected(stats, true)
 	_update_counter()
-	print("[DeckSelection] Toggled %s — deck now has %d units" % [stats.name, DeckManager.selected_deck.size()])
 
 
 ## Right-click always removes the unit from the deck (if selected).
@@ -147,7 +146,6 @@ func _on_card_right_clicked(stats: UnitStats) -> void:
 		DeckManager.remove_unit(stats)
 		_mark_selected(stats, false)
 		_update_counter()
-		print("[DeckSelection] Right-click removed %s — deck now has %d units" % [stats.name, DeckManager.selected_deck.size()])
 
 
 func _mark_selected(stats: UnitStats, selected: bool) -> void:
@@ -198,7 +196,6 @@ func _on_back_pressed() -> void:
 
 func _on_save_pressed() -> void:
 	DeckManager.save_deck()
-	print("[DeckSelection] Deck saved manually")
 	# Brief visual feedback
 	save_button.text = "Saved!"
 	await get_tree().create_timer(1.0).timeout
@@ -212,7 +209,6 @@ func _on_clear_pressed() -> void:
 		var unit_stats: UnitStats = card.get_meta("unit_stats")
 		_apply_card_style(card, unit_stats, false)
 	_update_counter()
-	print("[DeckSelection] Deck cleared")
 
 
 func _faction_name(faction: UnitStats.Faction) -> String:

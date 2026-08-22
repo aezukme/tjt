@@ -330,7 +330,6 @@ func _on_mana_bar_filled() -> void:
 		return
 	
 	if ability_on_cooldown:
-		print("[Ability] %s ability on cooldown!" % stats.name)
 		return
 	
 	# Cast the ability
@@ -362,7 +361,6 @@ func cast_ability() -> bool:
 			var range_msg = ""
 			if ability.cast_range > 0:
 				range_msg = " (range: %.0f)" % ability.cast_range
-			print("[Ability] No valid targets for %s's %s%s!" % [stats.name, ability.ability_name, range_msg])
 		# Don't consume mana if no targets
 		return false
 	
@@ -370,7 +368,6 @@ func cast_ability() -> bool:
 	current_mana = 0
 	
 	# Execute ability
-	print("[Ability] %s casts %s!" % [stats.name, ability.ability_name])
 	ability.execute(self, targets)
 
 	# Start cooldown if needed
@@ -408,4 +405,3 @@ func reset_damage_dealt() -> void:
 ## Called when ability cooldown finishes
 func _on_ability_cooldown_finished() -> void:
 	ability_on_cooldown = false
-	print("[Ability] %s ability ready!" % stats.name)

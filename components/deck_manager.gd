@@ -91,7 +91,6 @@ func save_deck() -> void:
 		paths.append(stats.resource_path)
 	config.set_value("deck", "units", paths)
 	config.save(SAVE_PATH)
-	print("[DeckManager] Deck saved (%d units)" % selected_deck.size())
 
 
 ## Loads the deck from disk. Falls back to default deck if no save exists.
@@ -105,7 +104,6 @@ func _load_deck() -> void:
 			var stats: UnitStats = load(path)
 			if stats:
 				selected_deck.append(stats)
-		print("[DeckManager] Deck loaded from save (%d units)" % selected_deck.size())
 	else:
 		# First launch — use default deck
 		selected_deck.clear()
@@ -113,5 +111,4 @@ func _load_deck() -> void:
 			var stats: UnitStats = load(path)
 			if stats:
 				selected_deck.append(stats)
-		print("[DeckManager] No save found — using default deck (%d units)" % selected_deck.size())
 		save_deck()

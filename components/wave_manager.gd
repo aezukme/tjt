@@ -51,7 +51,6 @@ var saved_ally_positions: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("wave_manager")
-	print("[WAVE] WaveManager._ready() starting...")
 	
 	# Set references from @onready
 	battle_manager = _battle_manager
@@ -74,8 +73,6 @@ func _ready() -> void:
 		if "player_stats" in get_parent() and get_parent().player_stats:
 			player_stats = get_parent().player_stats
 	
-	print("[WAVE] References - BattleManager: %s, UnitSpawner: %s, EnemyArea: %s, GameArea: %s, PlayerStats: %s" % [battle_manager != null, unit_spawner != null, enemy_area != null, game_area != null, player_stats != null])
-	print("[WAVE] Loaded %d waves" % waves.size())
 	
 	# Connect battle manager signals
 	if battle_manager:
@@ -83,7 +80,6 @@ func _ready() -> void:
 		battle_manager.battle_ended.connect(_on_battle_ended)
 		if battle_manager.has_signal("state_changed"):
 			battle_manager.state_changed.connect(_on_battle_state_changed)
-		print("[WAVE] Connected to BattleManager signals")
 	else:
 		push_error("WaveManager: Could not find BattleManager!")
 	
@@ -91,39 +87,33 @@ func _ready() -> void:
 		push_error("WaveManager: Could not find UnitSpawner!")
 	if not enemy_area:
 		push_error("WaveManager: Could not find EnemyArea!")
-	print("[WAVE] WaveManager._ready() complete!\n")
 
 
 ## Helper: Find PlayerStats node with multiple fallback strategies
 func _get_player_stats_node() -> Variant:
 	var parent = get_parent()
 	if not parent:
-		print("[WAVE] Warning: No parent node for WaveManager")
 		return null
 	
 	# Try parent's player_stats export first
 	if "player_stats" in parent and parent.player_stats:
-		print("[WAVE] Found PlayerStats via parent.player_stats")
 		return parent.player_stats
 	
 	# Try alternate path
 	var alt_stats = parent.get_node_or_null("UI/PlayerStats")
 	if alt_stats:
-		print("[WAVE] Found PlayerStats via UI/PlayerStats")
 		return alt_stats
 	
 	# Try searching in tree
 	var candidates = get_tree().get_nodes_in_group("player_stats")
 	if candidates.size() > 0:
-		print("[WAVE] Found PlayerStats in group 'player_stats'")
 		return candidates[0]
 	
 	# Last resort: search Arena children
 	if "player_stats" in parent:
-		print("[WAVE] Found PlayerStats as direct property of parent")
 		return parent.player_stats
 	
-	print("[WAVE] WARNING: Could not find PlayerStats node! Rewards will not be distributed.")
+	push_warning("[WAVE] Could not find PlayerStats node! Rewards will not be distributed.")
 	return null
 
 
@@ -153,7 +143,6 @@ func _on_battle_started() -> void:
 	if current_wave_index >= 0:
 		return
 	
-	print("\n[WAVE] >>> BATTLE STARTED <<<")
 	current_wave_index = -1
 	current_wave_number = 0
 	difficulty_multiplier = 1.0
@@ -165,7 +154,6 @@ func _on_battle_started() -> void:
 	
 	# Start first wave
 	await get_tree().process_frame
-	print("[WAVE] Starting first wave...")
 	start_next_wave()
 
 
@@ -192,19 +180,15 @@ func start_next_wave() -> void:
 		return
 	
 	var wave_config: WaveConfig = waves[current_wave_index]
-	print("[WAVE] Wave name: %s" % wave_config.wave_name)
-	print("[WAVE] Total enemies in wave: %d" % wave_config.get_total_enemies())
 	
 	# Apply scaling difficulty
 	difficulty_multiplier = 1.0 + (difficulty_scaling_per_wave * current_wave_index)
 	wave_difficulty_changed.emit(difficulty_multiplier)
-	print("[WAVE] Difficulty multiplier: %.2fx" % difficulty_multiplier)
 	
 	# Spawn the wave
 	is_wave_active = true
 	spawned_enemies.clear()
 	wave_started.emit(current_wave_number, wave_config)
-	print("[WAVE] Wave started signal emitted")
 	
 	await _spawn_wave(wave_config)
 
@@ -217,7 +201,6 @@ func _spawn_wave(wave_config: WaveConfig) -> void:
 		return
 
 	remaining_enemies = wave_config.get_total_enemies()
-	print("[WAVE] Spawning %d enemies across %d groups (streaming)" % [remaining_enemies, wave_config.enemy_groups.size()])
 
 	# Enable AI for existing player units first
 	if battle_manager:
@@ -263,7 +246,6 @@ func _spawn_wave(wave_config: WaveConfig) -> void:
 		if idx < spawn_queue.size() - 1:
 			await get_tree().create_timer(spawn_interval).timeout
 
-	print("[WAVE] All %d enemies deployed\n" % spawned_enemies.size())
 
 
 const DEBUG_SPAWNS := true
@@ -396,7 +378,6 @@ func _complete_wave() -> void:
 	is_waiting_for_next_wave = true
 	prep_timer = preparation_between_waves
 	preparation_phase_started.emit(prep_timer)
-	print("[WAVE] ⏳ Preparation phase: %.0f seconds (press Start Battle to skip)" % prep_timer)
 	
 	# Enable dragging for unit repositioning
 	if battle_manager:
@@ -429,7 +410,6 @@ func is_boss_wave() -> bool:
 func skip_preparation() -> void:
 	if not is_waiting_for_next_wave:
 		return
-	print("[WAVE] Preparation skipped by player!")
 	prep_timer = 0.0
 	_start_next_wave_battle()
 
@@ -445,7 +425,6 @@ func _start_next_wave_battle() -> void:
 	if battle_manager:
 		battle_manager.start_battle()
 	
-	print("[WAVE] Starting next wave...\n")
 	start_next_wave()
 
 
@@ -473,7 +452,6 @@ func _save_ally_positions() -> void:
 			"global_pos": unit.global_position
 		}
 	
-	print("[WAVE] 📍 Saved positions for %d ally units" % saved_ally_positions.size())
 
 
 ## Restores all ally units to their saved positions.
@@ -507,7 +485,6 @@ func _restore_ally_positions() -> void:
 		
 		restored_count += 1
 	
-	print("[WAVE] 📍 Restored positions for %d ally units" % restored_count)
 
 
 ## Resets HP, mana, and cooldowns for all surviving ally units.
@@ -566,4 +543,3 @@ func _reset_ally_stats() -> void:
 		
 		reset_count += 1
 	
-	print("[WAVE] ♻ Reset stats for %d ally units" % reset_count)

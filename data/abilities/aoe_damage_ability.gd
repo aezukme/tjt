@@ -8,10 +8,7 @@ class_name AOEDamageAbility
 
 func execute(caster: Unit, targets: Array) -> void:
 	if targets.is_empty():
-		print("[AOE] No valid targets!")
 		return
-	
-	print("[AOE] %s casts AOE attack, hitting %d enemies!" % [caster.stats.name, targets.size()])
 	
 	# Spawn VFX at caster position
 	var vfx_spawner = caster.get_tree().get_first_node_in_group("vfx_spawner")

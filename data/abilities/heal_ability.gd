@@ -8,15 +8,12 @@ class_name HealAbility
 
 func execute(caster: Unit, targets: Array) -> void:
 	if targets.is_empty():
-		print("[Heal] No valid targets!")
 		return
 	
 	# Heal each target (usually self or single ally)
 	for target in targets:
 		var actual_heal = min(heal_amount, target.stats.max_health - target.current_health)
 		target.current_health += actual_heal
-		
-		print("[Heal] %s heals %s for %d HP!" % [caster.stats.name, target.stats.name, actual_heal])
 		
 		# Visual effect
 		target.flash_skin(Color.GREEN)

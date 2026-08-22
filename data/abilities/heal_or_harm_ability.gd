@@ -14,21 +14,17 @@ func get_valid_targets(caster: Unit) -> Array:
 	# First: check for wounded allies
 	var wounded_allies := _get_wounded_allies(caster)
 	if not wounded_allies.is_empty():
-		print("[HealOrHarm] %s: found %d wounded allies" % [caster.stats.name, wounded_allies.size()])
 		return wounded_allies
 
 	# No wounded allies — target enemies instead
 	var enemies := _get_enemy_units(caster)
 	if cast_range > 0:
 		enemies = _filter_by_range(caster, enemies, cast_range)
-	if not enemies.is_empty():
-		print("[HealOrHarm] %s: no wounded allies, switching to damage mode (%d enemies)" % [caster.stats.name, enemies.size()])
 	return enemies
 
 
 func execute(caster: Unit, targets: Array) -> void:
 	if targets.is_empty():
-		print("[HealOrHarm] No valid targets!")
 		return
 
 	var first_target = targets[0]
@@ -90,10 +86,6 @@ func _execute_heal(caster: Unit, targets: Array) -> void:
 		if "incoming_healing" in most_wounded:
 			most_wounded.incoming_healing = maxf(most_wounded.incoming_healing - actual_heal, 0.0)
 
-	print("[HealOrHarm] %s heals %s for %d HP! (was %d/%d)" % [
-		caster.stats.name, most_wounded.stats.name, int(actual_heal), int(current_hp), int(max_hp)
-	])
-
 	# Green flash on healed target
 	if most_wounded.has_method("flash_skin"):
 		most_wounded.flash_skin(Color.GREEN)
@@ -125,10 +117,6 @@ func _execute_damage(caster: Unit, targets: Array) -> void:
 			if dist < closest_dist:
 				closest_dist = dist
 				target = t
-
-	print("[HealOrHarm] %s blasts %s for %d dmg! (no allies wounded)" % [
-		caster.stats.name, target.stats.name, int(damage)
-	])
 
 	# Register incoming damage so other units don't overkill
 	if "incoming_damage" in target:

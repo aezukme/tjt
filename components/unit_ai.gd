@@ -679,9 +679,79 @@ func _perform_attack(target) -> void:
 	if "incoming_damage" in target:
 		target.incoming_damage += damage
 
-	# Apply damage using a common method if available, otherwise fallback to stats
+	# Ranged units spawn a projectile; melee units apply damage instantly
+	if unit.stats and not unit.stats.is_melee():
+		_spawn_basic_attack_projectile(target, damage)
+	else:
+		_apply_attack_damage(target, damage)
+
+	attack_performed.emit(target)
+
+	# Retaliation — notify the target's AI that it was attacked
+	var target_ai = target.get_node_or_null("UnitAI")
+	if target_ai and target_ai.has_method("notify_attacked_by"):
+		target_ai.notify_attacked_by(unit)
+
+	# Flash attacker
+	_flash_unit(unit)
+	# Flash target only for melee (ranged flashes on projectile hit)
+	if unit.stats and unit.stats.is_melee():
+		_flash_unit(target, Color.RED)
+
+	# Spawn physical hit VFX on target (only for melee — ranged uses projectiles)
+	if unit.stats and unit.stats.is_melee():
+		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
+		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+			vfx_spawner.spawn_vfx_on_unit("hit_physical", target)
+
+
+## Spawns a basic attack projectile for ranged units.
+func _spawn_basic_attack_projectile(target, damage: int) -> void:
+	var ProjectileScene = load("res://scenes/projectile/projectile.tscn")
+	if not ProjectileScene:
+		push_warning("[AI] Could not load projectile scene — applying direct damage")
+		_apply_attack_damage(target, damage)
+		return
+
+	# Use object pool if available
+	var pool_nodes = unit.get_tree().get_nodes_in_group("projectile_pool")
+	var projectile: Node
+	if not pool_nodes.is_empty() and is_instance_valid(pool_nodes[0]):
+		projectile = pool_nodes[0].acquire(ProjectileScene)
+	else:
+		projectile = ProjectileScene.instantiate()
+		unit.get_tree().current_scene.add_child(projectile)
+
+	projectile.global_position = unit.global_position
+
+	# Ensure the runtime script is attached
+	var proj_script = load("res://scenes/projectile/projectile.gd")
+	if not projectile.has_method("setup") and proj_script:
+		projectile.set_script(proj_script)
+
+	# Determine projectile color based on unit faction
+	var proj_color: Color = Color(1.0, 0.9, 0.6)  # Default golden
+	if unit.stats and "faction" in unit.stats:
+		match unit.stats.faction:
+			UnitStats.Faction.WARRIOR:
+				proj_color = Color(1.0, 0.7, 0.3)  # Orange
+			UnitStats.Faction.MYSTIC:
+				proj_color = Color(0.4, 0.6, 1.0)  # Blue
+			UnitStats.Faction.WARDEN:
+				proj_color = Color(0.3, 0.9, 0.4)  # Green
+
+	if projectile.has_method("setup"):
+		projectile.setup(unit, target, float(damage), proj_color, true)
+	else:
+		push_warning("[AI] Projectile missing setup() — applying direct damage")
+		_apply_attack_damage(target, damage)
+		if is_instance_valid(projectile):
+			projectile.queue_free()
+
+
+## Applies attack damage directly (melee or projectile fallback).
+func _apply_attack_damage(target, damage: int) -> void:
 	if UnitUtils.is_unit_node(target):
-		# Auto-attacks are physical damage (abilities use their own type)
 		target.apply_damage(damage, UnitStats.DamageType.PHYSICAL)
 
 		# Notify arena aggregated damage readout
@@ -696,24 +766,6 @@ func _perform_attack(target) -> void:
 		# Fallback: adjust resource health which will emit signals
 		if target.stats:
 			target.stats.health = max(target.stats.health - damage, 0)
-
-	attack_performed.emit(target)
-
-	# Retaliation — notify the target's AI that it was attacked
-	var target_ai = target.get_node_or_null("UnitAI")
-	if target_ai and target_ai.has_method("notify_attacked_by"):
-		target_ai.notify_attacked_by(unit)
-
-	# Flash attacker
-	_flash_unit(unit)
-	# Flash target (will be red from health bar flash already)
-	_flash_unit(target, Color.RED)
-
-	# Spawn physical hit VFX on target (only for melee — ranged uses projectiles)
-	if unit.stats and unit.stats.is_melee():
-		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
-		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
-			vfx_spawner.spawn_vfx_on_unit("hit_physical", target)
 
 
 ## A* pathfinding on the unit grid.
@@ -815,7 +867,6 @@ func _find_play_areas() -> void:
 	# Get arena node
 	var arena: Node = get_tree().get_first_node_in_group("arena")
 	if not arena:
-		print("ERROR: Could not find Arena node in group 'arena'!")
 		return
 	
 	# Find play areas based on unit's team
@@ -962,5 +1013,8 @@ func _check_leak_to_king() -> void:
 		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
 		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
 			vfx_spawner.spawn_vfx_on_unit("death_effect", unit)
-		# Despawn the enemy (leaked through)
-		UnitVisuals.handle_unit_death(unit)
+		# Disable AI to prevent further processing
+		enabled = false
+		# Set health to 0 — this triggers health_reached_zero signal which
+		# WaveManager listens to for remaining_enemies counter
+		unit.stats.health = 0

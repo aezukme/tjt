@@ -10,7 +10,6 @@ const ProjectileScene = preload("res://scenes/projectile/projectile.tscn")
 
 func execute(caster: Unit, targets: Array) -> void:
 	if targets.is_empty():
-		print("[Fireball] No valid targets!")
 		return
 	
 	# Pick best target — prefer enemies not already overkilled on paper
@@ -21,10 +20,6 @@ func execute(caster: Unit, targets: Array) -> void:
 	# Register incoming damage BEFORE projectile spawns so other casters see it
 	if target.has_method("get_effective_health"):
 		target.incoming_damage += damage
-	
-	print("[Fireball] %s casts Fireball on %s for %d damage! (effective HP: %.0f)" % [
-		caster.stats.name, target.stats.name, damage,
-		target.get_effective_health() if target.has_method("get_effective_health") else -1.0])
 	
 	# Spawn projectile
 	_spawn_projectile(caster, target)

@@ -94,7 +94,6 @@ func _ready() -> void:
 		# Load deck from DeckManager (saved/default — always available)
 		if not DeckManager.selected_deck.is_empty():
 			unit_selection_panel.set_available_units(DeckManager.selected_deck.duplicate())
-			print("[Arena] Loaded deck with %d units from DeckManager" % DeckManager.selected_deck.size())
 		else:
 			push_warning("[Arena] Deck is empty! Using default available_units from scene.")
 		# Count pre-placed player units
@@ -139,7 +138,7 @@ func _spawn_king() -> void:
 		king_tile = game_area.unit_grid.get_first_available_tile()
 	var king_node := unit_spawner.spawn_unit(king_stats, king_tile)
 	if king_node:
-		print("[Arena] 👑 King spawned at tile %s" % str(king_tile))
+
 		# Add to king group for easy lookup
 		king_node.add_to_group("king")
 
@@ -470,7 +469,6 @@ func _unhandled_input(event: InputEvent) -> void:
 					unit_selection_panel.cancel_selection()
 			return
 		if game_area.unit_grid.is_tile_occupied(tile):
-			print("[Arena] ⚠ Tile %s is occupied!" % str(tile))
 			if _drag_placing:
 				_exit_placement_mode()
 				if unit_selection_panel:
@@ -480,7 +478,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Spawn the unit at the chosen tile
 		var spawned := unit_spawner.spawn_unit(_placement_stats, tile)
 		if spawned:
-			print("[Arena] 🟢 Placed %s at tile %s" % [_placement_stats.name, str(tile)])
 			if unit_selection_panel:
 				unit_selection_panel.on_unit_placed(_placement_stats)
 			# Shift held → stay in placement mode for multi-place
@@ -521,14 +518,14 @@ func _remove_placed_unit(tile: Vector2i) -> void:
 		return
 	# King cannot be removed
 	if unit.stats.is_king:
-		print("[Arena] ⚠ Cannot remove the King!")
+
 		return
 
 	# Refund gold
 	var refund: int = unit.stats.gold_cost
 	if player_stats:
 		player_stats.gold += refund
-		print("[Arena] 🗑 Removed %s from tile %s (refunded %d 💰)" % [unit.stats.name, str(tile), refund])
+
 
 	# Remove from grid
 	game_area.unit_grid.remove_unit(tile)

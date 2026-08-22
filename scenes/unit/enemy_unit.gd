@@ -139,7 +139,6 @@ func _on_health_reached_zero() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
-	print("%s died!" % stats.name)
 	# Disable AI so dead units stop attacking
 	var ai = get_node_or_null("UnitAI")
 	if ai:

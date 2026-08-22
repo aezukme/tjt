@@ -24,7 +24,6 @@ func _ready() -> void:
 	# Try to find the arena/game area as container
 	_container = get_parent()
 	_setup_vfx_defs()
-	print("[VFX] VFXSpawner ready with %d VFX types" % _vfx_defs.size())
 
 
 ## Sets up all VFX definitions from the spritesheets in asset/sprites/vfx/.
@@ -74,8 +73,6 @@ func _setup_vfx_defs() -> void:
 		"cols": 8, "rows": 1, "frames": 7, "fps": 10,
 		"scale": 1.0, "color": Color(1.0, 0.8, 0.4, 0.8), "loop": false,
 	}
-
-	print("[VFX] VFX definitions loaded: %s" % str(_vfx_defs.keys()))
 
 
 ## Spawns a VFX at the given world position.
