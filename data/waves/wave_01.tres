@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveConfig" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="WaveConfig" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://data/waves/wave_config.gd" id="1_wave"]
 [ext_resource type="Resource" path="res://data/waves/group_goblins_10.tres" id="2_group"]

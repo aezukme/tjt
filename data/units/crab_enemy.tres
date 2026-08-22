@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://data/units/sprite_frames/crab_frames.tres" id="2_frames"]
+
+[resource]
+script = ExtResource("1_script")
+name = "Crab"
+team = 1
+visual_scale = 1.5
+max_health = 120
+health_regen = 1.0
+max_mana = 100
+mana_regen = 2.0
+attack_damage = 12
+attack_speed = 1.0
+armor = 8
+magic_resist = 10
+attack_range = 1
+aggro_range = 6
+sprite_frames = ExtResource("2_frames")
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

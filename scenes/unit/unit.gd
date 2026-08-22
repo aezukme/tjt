@@ -209,6 +209,14 @@ func _on_health_reached_zero() -> void:
 		var toast_mgr := get_tree().get_first_node_in_group("toast_manager")
 		if toast_mgr and toast_mgr.has_method("show_toast"):
 			toast_mgr.show_toast("%s has fallen permanently" % stats.name, 2.5, Color(1.0, 0.35, 0.35))
+	# Disable AI so dead units stop attacking
+	var ai = get_node_or_null("UnitAI")
+	if ai:
+		ai.enabled = false
+	# Spawn death VFX
+	var vfx_spawner = get_tree().get_first_node_in_group("vfx_spawner")
+	if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+		vfx_spawner.spawn_vfx_on_unit("death_effect", self)
 	if animator and not animator.is_dead():
 		animator.play(UnitAnimator.AnimState.DEATH)
 		animator.death_animation_finished.connect(func(): UnitVisuals.handle_unit_death(self), CONNECT_ONE_SHOT)

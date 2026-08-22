@@ -701,6 +701,12 @@ func _perform_attack(target) -> void:
 	# Flash target (will be red from health bar flash already)
 	_flash_unit(target, Color.RED)
 
+	# Spawn physical hit VFX on target (only for melee — ranged uses projectiles)
+	if unit.stats and unit.stats.is_melee():
+		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
+		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+			vfx_spawner.spawn_vfx_on_unit("hit_physical", target)
+
 
 ## A* pathfinding on the unit grid.
 ## Returns an ordered list of tiles from start to goal, avoiding occupied tiles.

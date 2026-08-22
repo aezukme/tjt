@@ -75,7 +75,12 @@ func _hit_target() -> void:
 	# Visual feedback if supported
 	if target.has_method("flash_skin"):
 		target.flash_skin(hit_color)
-	
+
+	# Spawn VFX explosion on hit
+	var vfx_spawner = get_tree().get_first_node_in_group("vfx_spawner")
+	if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+		vfx_spawner.spawn_vfx_on_unit("explosion_fire", target)
+
 	# Return to pool instead of freeing
 	_return_to_pool()
 

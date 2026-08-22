@@ -13,6 +13,11 @@ func execute(caster: Unit, targets: Array) -> void:
 	
 	print("[AOE] %s casts AOE attack, hitting %d enemies!" % [caster.stats.name, targets.size()])
 	
+	# Spawn VFX at caster position
+	var vfx_spawner = caster.get_tree().get_first_node_in_group("vfx_spawner")
+	if vfx_spawner and vfx_spawner.has_method("spawn_vfx"):
+		vfx_spawner.spawn_vfx("explosion_magic", caster.global_position)
+	
 	# Damage all targets
 	for target in targets:
 		if not is_instance_valid(target):
@@ -25,6 +30,8 @@ func execute(caster: Unit, targets: Array) -> void:
 			target.stats.health = maxi(target.stats.health - int(damage), 0)
 		if target.has_method("flash_skin"):
 			target.flash_skin(Color.PURPLE)
+		# Spawn hit VFX on each target
+		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+			vfx_spawner.spawn_vfx_on_unit("explosion_magic", target)
 	
-	# Visual effect (TODO: spawn area particle effect)
 	caster.flash_skin(Color.PURPLE)

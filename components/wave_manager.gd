@@ -278,9 +278,13 @@ func _spawn_enemy_at_top(stats: UnitStats) -> Node:
 
 	var new_unit: Node = unit_scene.instantiate()
 
-	# Give independent stats copy
+	# Give independent stats copy (shallow-dup sprite_frames to avoid breaking AtlasTextures)
 	if stats is Resource:
-		new_unit.stats = stats.duplicate(true)
+		var duped_stats = stats.duplicate(true)
+		# sprite_frames should NOT be deep-duplicated — share the original reference
+		if stats.sprite_frames:
+			duped_stats.sprite_frames = stats.sprite_frames
+		new_unit.stats = duped_stats
 	else:
 		new_unit.stats = stats
 

@@ -180,11 +180,14 @@
 - [x] Each unit has: .tres stats, unique ability/passive, balanced gold cost
 
 ### More Enemy Types ✅
-- [x] Need 5–8 enemy types for wave variety (now 6: Orc, Necro, Goblin, Wolf, Troll, Skeleton Archer)
+- [x] Need 5–8 enemy types for wave variety (now 9: Orc, Necro, Goblin, Wolf, Troll, Skeleton Archer, Crab, Jumper, Octopus)
 - [x] **Fast:** Goblin — low HP (50), high attack speed (1.2), swarms
 - [x] **Fast Flanker:** Wolf — low HP (60), high aggro range (9), flanks backline
 - [x] **Tank:** Troll — high HP (250), slow (0.4 AS), heavy armor (15)
 - [x] **Ranged DPS:** Skeleton Archer — ranged (3), medium HP (70), high aggro (8)
+- [x] **Armored Melee:** Crab — HP 120, armor 8, animated sprite (warped-files)
+- [x] **Fast Assassin:** Jumper — HP 60, ATK 18, speed 1.5, animated sprite
+- [x] **Magic Ranged:** Octopus — HP 80, range 3, MR 30, large unit, animated sprite
 - [ ] **Healer:** Shaman — heals other enemies
 - [ ] **Boss:** Dragon / Demon Lord — very high HP, special ability, appears on boss waves
 
@@ -202,6 +205,14 @@
 - [x] Enemies stream in from top of lane, walk toward King
 - [ ] Player units are static defenders (no movement during battle)
 - [ ] Multiple lanes? (future — multiplayer prep)
+
+### Multi-Tile Units & Unit Stacking
+- [ ] Some units occupy 2, 4, or 8 tiles (large enemies like Octopus, bosses)
+- [ ] Area2D collision shape scales with unit size (unit_size: Vector2i in UnitStats)
+- [ ] Grid placement logic: prevent overlapping large units, show occupied tiles
+- [ ] Unit stacking on single tile: visual offset (front/back layering) for 2D perspective
+- [ ] Z-index sorting: lower Y = further back = drawn behind (pseudo-depth)
+- [ ] Visual "row" stagger: units on same tile are offset vertically to show depth
 
 ---
 
@@ -244,6 +255,13 @@
 
 ### Visual Polish
 - [x] Unit death animations (fade out, particles) — procedural death (jump+spin+fade)
+- [x] VFX system — VFXSpawner component with spritesheet-based animated effects
+- [x] Fireball explosion VFX (explosion_fire on projectile hit)
+- [x] AOE ability VFX (explosion_magic on caster + targets)
+- [x] Heal VFX (explosion_heal on healed ally)
+- [x] Death VFX (death_effect on unit death)
+- [x] Physical hit VFX (hit_physical on melee attack)
+- [x] Animated enemy sprites (Crab, Jumper, Octopus with SpriteFrames)
 - [ ] Melee hit effects (slash sprite)
 - [x] Ability cast animations — attack squash+lunge procedural
 - [ ] Screen shake on boss spawn / big hits

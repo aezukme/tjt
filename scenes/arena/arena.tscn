@@ -25,6 +25,7 @@
 [ext_resource type="Resource" path="res://data/units/priest_ally.tres" id="28_priest"]
 [ext_resource type="Resource" path="res://data/units/druid_ally.tres" id="29_druid"]
 [ext_resource type="Script" uid="uid://l34ftjtcydik" path="res://components/synergy_manager.gd" id="30_syn_mgr"]
+[ext_resource type="Script" path="res://components/vfx_spawner.gd" id="31_vfx"]
 [ext_resource type="PackedScene" path="res://scenes/hud/hud_bar.tscn" id="32_hud_bar"]
 [ext_resource type="PackedScene" uid="uid://c8gofmyeaafsm" path="res://scenes/hud/right_sidebar.tscn" id="33_right_sidebar"]
 [ext_resource type="PackedScene" path="res://scenes/hud/time_panel.tscn" id="34_time_panel"]
@@ -248,6 +249,9 @@ game_area = NodePath("../GameArea")
 [node name="WaveManager" type="Node" parent="." unique_id=2098087286 groups=["wave_manager"]]
 script = ExtResource("16_wave_mgr")
 waves = Array[ExtResource("18_gy0qm")]([ExtResource("w01"), ExtResource("w02"), ExtResource("w03"), ExtResource("w04"), ExtResource("w05"), ExtResource("w06"), ExtResource("w07"), ExtResource("w08"), ExtResource("w09"), ExtResource("w10"), ExtResource("w11"), ExtResource("w12"), ExtResource("w13"), ExtResource("w14"), ExtResource("w15")])
+
+[node name="VFXSpawner" type="Node" parent="."]
+script = ExtResource("31_vfx")
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1563741833]
 visible = false

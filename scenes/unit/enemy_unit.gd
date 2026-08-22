@@ -125,6 +125,14 @@ func _on_health_reached_zero() -> void:
 		return
 	_is_dead = true
 	print("%s died!" % stats.name)
+	# Disable AI so dead units stop attacking
+	var ai = get_node_or_null("UnitAI")
+	if ai:
+		ai.enabled = false
+	# Spawn death VFX
+	var vfx_spawner = get_tree().get_first_node_in_group("vfx_spawner")
+	if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+		vfx_spawner.spawn_vfx_on_unit("death_effect", self)
 	if animator and not animator.is_dead():
 		animator.play(UnitAnimator.AnimState.DEATH)
 		animator.death_animation_finished.connect(func(): UnitVisuals.handle_unit_death(self), CONNECT_ONE_SHOT)
@@ -177,6 +185,12 @@ func set_stats(value: UnitStats) -> void:
 		skin.texture = value.TEAM_SPRITESHEET[value.team]
 		skin.region_rect.position = Vector2(stats.skin_coordinates) * CELL_SIZE
 
+	# Apply visual scale (e.g. larger enemies)
+	if value.visual_scale != 1.0:
+		$Visuals.scale = Vector2(value.visual_scale, value.visual_scale)
+		if animator:
+			animator._base_scale = $Visuals.scale
+
 	# Connect stats signals if not in editor
 	if not Engine.is_editor_hint():
 		_connect_stats_signals()
@@ -198,6 +212,11 @@ func _swap_to_animated_sprite(value: UnitStats) -> void:
 	# Update velocity_based_rotation target
 	if velocity_based_rotation:
 		velocity_based_rotation.target = skin
-	# Re-setup animator with new skin
+	# Re-setup animator with new skin and play idle
 	if animator:
 		animator.setup(skin, $Visuals)
+		animator.play(UnitAnimator.AnimState.IDLE)
+	# Play "idle" directly on the sprite as well (in case animator doesn't handle it)
+	var anims = value.sprite_frames.get_animation_names()
+	if "idle" in anims:
+		anim_sprite.play("idle")
