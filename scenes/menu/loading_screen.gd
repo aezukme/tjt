@@ -6,12 +6,12 @@ extends CanvasLayer
 
 const TIPS: Array[String] = [
 	"Place melee units at the front to absorb damage for your ranged allies.",
-	"Sages heal nearby allies — keep them safe behind your frontline.",
-	"Mages deal AoE damage with fireballs. Protect them from flanking enemies.",
+	"Clerics heal nearby allies — keep them safe behind your frontline.",
+	"Acolytes deal AoE damage with ember bolts. Protect them from flanking enemies.",
 	"Units won't target enemies far above or below them — position wisely.",
 	"Sell units you don't need to earn gold for stronger replacements.",
 	"Enemies get stronger each wave — upgrade your army between rounds.",
-	"Bjorn is a tough frontliner with high HP. Great for holding chokepoints.",
+	"Grunt is a tough frontliner that gets faster as HP drops. Great for holding chokepoints.",
 	"Watch for overkill — your units avoid wasting damage on dying enemies.",
 	"Use the prep phase to reposition your units before the next wave.",
 	"Ranged units attack from a distance but have less health. Guard them.",

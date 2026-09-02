@@ -1,23 +1,23 @@
-[gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="UnitStats" load_steps=5 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
-[ext_resource type="Resource" path="res://data/abilities/power_shot.tres" id="2_ability"]
-[ext_resource type="Resource" path="res://data/abilities/precision.tres" id="3_passive"]
+[ext_resource type="Resource" path="res://data/abilities/piercing_shot.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://data/abilities/eagle_eye.tres" id="3_passive"]
+[ext_resource type="Resource" path="res://data/units/hawkeye_ally.tres" id="4_upgrade"]
 
 [resource]
 script = ExtResource("1_stats")
-name = "Ranger"
-rarity = 0
+name = "Scout"
 gold_cost = 2
 tier = 2
 skin_coordinates = Vector2i(2, 0)
-max_health = 300
+max_health = 110
 health_regen = 1.0
 max_mana = 100
 starting_mana = 70
 mana_regen = 5.0
-attack_damage = 30
-attack_speed = 1.2
+attack_damage = 17
+attack_speed = 0.9
 armor = 2
 magic_resist = 15
 attack_range = 4
@@ -25,4 +25,5 @@ aggro_range = 6
 ability_resource = ExtResource("2_ability")
 passive_ability = ExtResource("3_passive")
 faction = 3
+upgrades = Array[ExtResource("1_stats")]([ExtResource("4_upgrade")])
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

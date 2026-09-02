@@ -1,27 +1,27 @@
 [gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
-[ext_resource type="Resource" path="res://data/abilities/holy_light.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://data/abilities/divine_light.tres" id="2_ability"]
 
 [resource]
 script = ExtResource("1_stats")
-name = "Priest"
-rarity = 1
-gold_cost = 4
+name = "Hierophant"
+gold_cost = 8
 tier = 4
 skin_coordinates = Vector2i(1, 2)
-max_health = 350
-health_regen = 2.0
+max_health = 840
+health_regen = 3.0
 max_mana = 100
 starting_mana = 40
-mana_regen = 6.0
-attack_damage = 15
-ability_power = 80
-attack_speed = 0.5
-armor = 2
-magic_resist = 40
+mana_regen = 8.0
+attack_damage = 127
+ability_power = 120
+attack_speed = 1.0
+armor = 3
+magic_resist = 45
 attack_range = 3
 aggro_range = 5
 ability_resource = ExtResource("2_ability")
 faction = 3
+unit_line = "Cleric"
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

@@ -252,16 +252,16 @@ Open questions (to resolve during design):
 # 11. Unit Classes
 
 ### Tank
-Examples: Bjorn, Knight
+Examples: Grunt, Sentinel
 
 ### DPS
-Examples: Ranger, Rogue, Mage
+Examples: Scout, Slayer, Acolyte
 
 ### Support
-Examples: Sage, Priest
+Examples: Cleric, Shaman
 
 ### Specialist
-Examples: Druid
+Examples: Shaman
 
 ---
 
@@ -285,7 +285,7 @@ Implemented (foundation):
   difference, and selling refunds everything invested
 - A base unit and its upgrade share a `unit_line`, so they count as one
   unique unit for faction synergies (no synergy farming via upgrades)
-- First path: **Knight → Cavalier** (Harden Armor: flat -6 damage per hit,
+- First path: **Sentinel → Vanguard** (Iron Skin: flat -6 damage per hit,
   deterministic — no chance rolls, per Pillar 6)
 
 Planned:
@@ -405,7 +405,7 @@ Status: 0%
 ## Milestone 6 — Unit Upgrades
 Status: ~25% (system foundation + first path)
 
-- Per-unit upgrade paths (Knight → Cavalier done)
+- Per-unit upgrade paths (Sentinel → Vanguard done)
 - Tier progression
 
 ## Milestone 7 — Multiplayer Foundation

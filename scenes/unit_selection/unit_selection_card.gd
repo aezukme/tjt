@@ -72,7 +72,6 @@ func set_can_afford(affordable: bool) -> void:
 func _update_style() -> void:
 	if not unit_stats:
 		return
-	var rarity_color: Color = UnitStats.RARITY_COLORS.get(unit_stats.rarity, Color.WHITE)
 	var style := StyleBoxFlat.new()
 	if not can_afford:
 		style.bg_color = Color(0.12, 0.12, 0.12, 0.95)
@@ -82,7 +81,7 @@ func _update_style() -> void:
 		style.border_color = Color(1.0, 1.0, 0.4)
 	else:
 		style.bg_color = Color(0.15, 0.18, 0.22, 0.95)
-		style.border_color = rarity_color
+		style.border_color = Color(0.5, 0.5, 0.5)
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2
@@ -140,7 +139,6 @@ func _build_tooltip() -> String:
 	lines.append(unit_stats.name)
 	lines.append("Tier %d | Cost: %d gold" % [unit_stats.tier, unit_stats.gold_cost])
 	lines.append("Team: %s" % _team_name(unit_stats.team))
-	lines.append("Rarity: %s" % _rarity_name(unit_stats.rarity))
 	lines.append("HP: %d | ATK: %d | Range: %d" % [unit_stats.max_health, unit_stats.attack_damage, unit_stats.attack_range])
 	lines.append("Armor: %d | MR: %d | SPD: %.1f" % [unit_stats.armor, unit_stats.magic_resist, unit_stats.attack_speed])
 	if unit_stats.ability_resource:
@@ -159,15 +157,6 @@ func _team_name(team: UnitStats.Team) -> String:
 	match team:
 		UnitStats.Team.PLAYER: return "Player"
 		UnitStats.Team.ENEMY: return "Enemy"
-	return "Unknown"
-
-
-func _rarity_name(rarity: UnitStats.Rarity) -> String:
-	match rarity:
-		UnitStats.Rarity.COMMON: return "Common"
-		UnitStats.Rarity.UNCOMMON: return "Uncommon"
-		UnitStats.Rarity.RARE: return "Rare"
-		UnitStats.Rarity.LEGENDARY: return "Legendary"
 	return "Unknown"
 
 

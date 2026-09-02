@@ -26,7 +26,7 @@ enum PassiveType {
 	ARMOR_SHRED,           # every hit permanently removes value armor (min 0)   (Corruption / Faerie Fire)
 	SPLASH,                # every hit deals value× damage to enemies within `radius` of target (Circle Splash)
 	MULTISHOT,             # every hit also strikes `extra_targets` nearest other enemies for value× (Burst Shot)
-	BERSERK,               # +value% attack speed per HP threshold crossed (60/40/20%) (Wolverine's Berserk)
+	BERSERK,               # +value% attack speed per HP threshold crossed (60/40/20%) (Ravager's Bloodrage)
 }
 
 ## Floor for DAMAGE_REDUCTION — a hit can never be reduced to zero so no unit is fully immune.

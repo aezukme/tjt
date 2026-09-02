@@ -4,7 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-passive_name = "Harden Armor"
-description = "Every incoming hit deals 6 less damage (after armor / magic resist). A hit always deals at least 1 damage."
-passive_type = 6
-value = 6.0
+passive_name = "Eagle Eye"
+description = "Every 3rd attack deals 1.6x damage."
+passive_type = 2
+value = 3.0
+multiplier = 1.6

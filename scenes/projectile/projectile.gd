@@ -66,8 +66,9 @@ func _hit_target() -> void:
 		return
 	# Deal damage via interface if available
 	if target.has_method("apply_damage"):
-		if _is_basic_attack:
-			# Basic-attack arrows go through CombatResolver so on-hit passives trigger
+		if _is_basic_attack and caster and is_instance_valid(caster):
+			# Basic-attack arrows go through CombatResolver so on-hit passives trigger.
+			# Guard against caster dying before projectile lands — fall back to direct damage.
 			CombatResolver.resolve_basic_attack(caster, target, int(damage))
 		else:
 			target.apply_damage(int(damage))
@@ -77,7 +78,7 @@ func _hit_target() -> void:
 				arena.call_deferred("register_damage_output", damage)
 
 			# Notify caster about damage dealt (per-unit damage counters)
-			if caster and caster.has_method("register_damage_dealt"):
+			if caster and is_instance_valid(caster) and caster.has_method("register_damage_dealt"):
 				caster.register_damage_dealt(damage)
 	elif target is Unit:
 		# Unit-style direct health damage.

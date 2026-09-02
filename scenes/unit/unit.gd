@@ -363,9 +363,9 @@ func cast_ability() -> bool:
 	
 	if targets.is_empty():
 		if DEBUG_AI_VERBOSE:
-			var range_msg = ""
+			var _range_msg = ""
 			if ability.cast_range > 0:
-				range_msg = " (range: %.0f)" % ability.cast_range
+				_range_msg = " (range: %.0f)" % ability.cast_range
 		# Don't consume mana if no targets
 		return false
 	
@@ -390,7 +390,7 @@ func apply_damage(damage: int, damage_type: UnitStats.DamageType = UnitStats.Dam
 		float(damage), damage_type, stats.armor if stats else 0, stats.magic_resist if stats else 0
 	)
 	var final_damage: int = roundi(reduced)
-	# Per-hit passives (e.g. Cavalier's Harden Armor) apply after armor/MR
+	# Per-hit passives (e.g. Vanguard's Iron Skin) apply after armor/MR
 	if stats and stats.passive_ability:
 		final_damage = stats.passive_ability.modify_incoming_damage(final_damage)
 	current_health = max(current_health - final_damage, 0)

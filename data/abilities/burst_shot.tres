@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 passive_name = "Burst Shot"
-description = "Every attack also strikes the 2 nearest other enemies for 50% damage. (Legion TD: Machine Turret's Burst Shot / Elite Archer's Multishot)"
+description = "Every attack also strikes the 2 nearest other enemies for 50% damage. (Multishot passive)"
 passive_type = 12
 value = 0.5
 extra_targets = 2

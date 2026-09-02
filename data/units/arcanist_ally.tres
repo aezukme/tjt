@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
+[ext_resource type="Resource" uid="uid://bk4bd824lx8fi" path="res://data/abilities/ember_bolt.tres" id="2_fireball"]
+[ext_resource type="Resource" path="res://data/abilities/arcane_bolt.tres" id="3_passive"]
+
+[resource]
+script = ExtResource("1_stats")
+name = "Arcanist"
+gold_cost = 6
+tier = 3
+skin_coordinates = Vector2i(2, 2)
+max_health = 850
+max_mana = 100
+starting_mana = 90
+mana_regen = 5.0
+attack_damage = 52
+ability_power = 50
+attack_speed = 0.8
+armor = 4
+magic_resist = 35
+attack_range = 3
+aggro_range = 5
+ability_resource = ExtResource("2_fireball")
+passive_ability = ExtResource("3_passive")
+faction = 2
+unit_line = "Acolyte"
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

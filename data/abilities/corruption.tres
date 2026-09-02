@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 passive_name = "Corruption"
-description = "Every attack permanently strips 4 armor from the target (cannot go below 0). Helps every ally that hits the same enemy. (Legion TD: Blood Orc Warlock / Soul of Villain)"
+description = "Every attack permanently strips 4 armor from the target (cannot go below 0). Helps every ally that hits the same enemy. (Armor shred passive)"
 passive_type = 10
 value = 4.0

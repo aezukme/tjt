@@ -6,8 +6,8 @@
 script = ExtResource("1")
 heal_amount = 50.0
 max_targets = 4
-ability_name = "Holy Light"
-description = "Bathes the 4 most wounded allies in holy light, healing each for 50 HP. (Legion TD: Yggdrasil's Sacred Blessing)"
+ability_name = "Divine Light"
+description = "Bathes the 4 most wounded allies in divine light, healing each for 50 HP. (AoE heal targeting most wounded allies)"
 target_type = 4
 mana_cost = 100.0
 cooldown = 5.0

@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-passive_name = "Iron Bastion"
+passive_name = "Fortitude"
 description = "Increases armor by 5."
 passive_type = 3
 value = 5.0

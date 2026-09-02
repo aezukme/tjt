@@ -4,9 +4,9 @@ extends Node
 ## Tracks faction counts of placed ally units and applies/removes stat bonuses.
 ##
 ## Factions:
-##   WARRIOR (3×): Knight, Bjorn, Rogue  → +20% ATK damage
-##   MYSTIC  (3×): Mage, Sage, Druid     → +20% ability power
-##   WARDEN  (2×): Ranger, Priest        → +15% ATK speed
+##   WARRIOR (3×): Sentinel, Grunt, Slayer  → +20% ATK damage
+##   MYSTIC  (3×): Acolyte, Sage, Shaman     → +20% ability power
+##   WARDEN  (2×): Scout, Cleric             → +15% ATK speed
 
 signal synergies_updated
 
@@ -69,7 +69,7 @@ func get_faction_count(faction: UnitStats.Faction) -> int:
 
 ## Returns Dictionary[Faction, int] of all tracked faction counts.
 ## Only unique unit types are counted per faction. Identity is stats.get_unit_line(), so a
-## base unit and its upgrade (e.g. Knight / Cavalier) count as one.
+## base unit and its upgrade (e.g. Sentinel / Vanguard) count as one.
 func get_all_counts() -> Dictionary:
 	var counts := {}
 	var seen: Dictionary = {}  # faction → { name: true }

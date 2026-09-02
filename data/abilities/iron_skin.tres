@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-passive_name = "Berserk"
-description = "Attack speed rises as health falls: +20% below 60% HP, +40% below 40% HP, +60% below 20% HP. (Legion TD: Wolverine's Berserk)"
-passive_type = 13
-value = 0.2
+passive_name = "Iron Skin"
+description = "Every incoming hit deals 6 less damage (after armor / magic resist). A hit always deals at least 1 damage."
+passive_type = 6
+value = 6.0

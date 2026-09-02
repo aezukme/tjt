@@ -23,7 +23,7 @@ var current_health: float :
 		return float(stats.health) if stats else 0.0
 	set(value):
 		if stats:
-			stats.health = int(maxi(value, 0))
+			stats.health = int(maxi(value, 0.0))
 
 ## Current mana — synced with stats.mana for interface compatibility with Unit.
 var current_mana: float :
@@ -31,7 +31,7 @@ var current_mana: float :
 		return float(stats.mana) if stats else 0.0
 	set(value):
 		if stats:
-			stats.mana = int(clampi(value, 0, stats.max_mana))
+			stats.mana = int(clampi(value, 0.0, float(stats.max_mana)))
 
 signal damage_dealt_changed(new_damage: float)
 

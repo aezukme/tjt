@@ -154,8 +154,7 @@ func _mark_selected(stats: UnitStats, selected: bool) -> void:
 		_apply_card_style(card, stats, selected)
 
 
-func _apply_card_style(card: PanelContainer, stats: UnitStats, selected: bool) -> void:
-	var rarity_color: Color = UnitStats.RARITY_COLORS.get(stats.rarity, Color.WHITE)
+func _apply_card_style(card: PanelContainer, _stats: UnitStats, selected: bool) -> void:
 	var style := StyleBoxFlat.new()
 	if selected:
 		style.bg_color = Color(0.2, 0.3, 0.2, 0.95)
@@ -167,7 +166,7 @@ func _apply_card_style(card: PanelContainer, stats: UnitStats, selected: bool) -
 		card.modulate = Color.WHITE
 	else:
 		style.bg_color = Color(0.15, 0.18, 0.22, 0.95)
-		style.border_color = rarity_color
+		style.border_color = Color(0.5, 0.5, 0.5)
 		style.border_width_left = 2
 		style.border_width_top = 2
 		style.border_width_right = 2

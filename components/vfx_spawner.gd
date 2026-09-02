@@ -103,7 +103,7 @@ func spawn_vfx(vfx_type: String, world_pos: Vector2) -> AnimatedSprite2D:
 	var cols: int = def["cols"]
 	var rows: int = def["rows"]
 	var total_frames: int = def["frames"]
-	var frame_size: Vector2i = Vector2i(CELL_SIZE, CELL_SIZE)
+	var _frame_size: Vector2i = Vector2i(CELL_SIZE, CELL_SIZE)
 
 	var frame_idx := 0
 	for r in range(rows):

@@ -1,23 +1,22 @@
 [gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
-[ext_resource type="Resource" path="res://data/abilities/iron_bastion.tres" id="2_passive"]
-[ext_resource type="Resource" path="res://data/units/cavalier_ally.tres" id="3_upgrade"]
+[ext_resource type="Resource" path="res://data/abilities/fortitude.tres" id="2_passive"]
+[ext_resource type="Resource" path="res://data/units/vanguard_ally.tres" id="3_upgrade"]
 
 [resource]
 script = ExtResource("1_stats")
-name = "Knight"
-rarity = 1
-gold_cost = 3
-tier = 3
+name = "Sentinel"
+gold_cost = 5
+tier = 5
 skin_coordinates = Vector2i(0, 1)
-max_health = 600
+max_health = 880
 health_regen = 2.0
 max_mana = 100
 starting_mana = 0
 mana_regen = 2.0
-attack_damage = 35
-attack_speed = 0.6
+attack_damage = 75
+attack_speed = 0.9
 armor = 10
 magic_resist = 15
 attack_range = 1

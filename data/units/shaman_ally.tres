@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
+[ext_resource type="Resource" path="res://data/abilities/natures_fury.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://data/units/avatar_ally.tres" id="3_upgrade"]
+
+[resource]
+script = ExtResource("1_stats")
+name = "Shaman"
+gold_cost = 10
+tier = 7
+skin_coordinates = Vector2i(2, 4)
+max_health = 1800
+health_regen = 3.0
+max_mana = 100
+starting_mana = 50
+mana_regen = 5.0
+attack_damage = 120
+ability_power = 80
+attack_speed = 1.0
+armor = 5
+magic_resist = 35
+attack_range = 3
+aggro_range = 5
+ability_resource = ExtResource("2_ability")
+faction = 2
+upgrades = Array[ExtResource("1_stats")]([ExtResource("3_upgrade")])
+metadata/_custom_type_script = "uid://xf3ubegfusxx"

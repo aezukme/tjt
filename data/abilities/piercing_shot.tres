@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 damage = 120.0
-ability_name = "Power Shot"
+ability_name = "Piercing Shot"
 description = "Fires a precise arrow at the nearest enemy, dealing 120 damage."
 cooldown = 2.5
 cast_range = 250.0

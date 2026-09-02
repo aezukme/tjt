@@ -7,21 +7,13 @@ signal mana_bar_filled
 
 @export var name: String
 
-enum Rarity {COMMON, UNCOMMON, RARE, LEGENDARY}
 enum Team {PLAYER, ENEMY}
 enum DamageType {PHYSICAL, MAGICAL, PURE}
 enum Faction {
 	NONE,
-	WARRIOR,  ## Knight, Bjorn, Rogue — 3× bonus: +20% ATK damage
-	MYSTIC,   ## Mage, Sage, Druid   — 3× bonus: +20% ability power
-	WARDEN,   ## Ranger, Priest      — 2× bonus: +15% ATK speed
-}
-
-const RARITY_COLORS := {
-	Rarity.COMMON: Color("124a2e"),
-	Rarity.UNCOMMON: Color("1c527c"),
-	Rarity.RARE: Color("ab0979"),
-	Rarity.LEGENDARY: Color("ea940b"),
+	WARRIOR,  ## Sentinel, Grunt, Slayer — 3× bonus: +20% ATK damage
+	MYSTIC,   ## Acolyte, Sage, Shaman  — 3× bonus: +20% ability power
+	WARDEN,   ## Scout, Cleric          — 2× bonus: +15% ATK speed
 }
 
 const TARGET := {
@@ -40,7 +32,6 @@ const MOVE_ONE_TILE_SPEED := 1.0
 const MAX_TIER := 7
 
 @export_category("Data")
-@export var rarity: Rarity
 @export var gold_cost := 1
 ## Unit tier (Legion TD-style "level" of the unit: 1 = cheapest / weakest, 7 = champion).
 ## Upgrades keep the tier of their base unit.
@@ -56,7 +47,7 @@ const MAX_TIER := 7
 ## Only the base unit lists its upgrades — upgraded units do NOT reference their base
 ## (avoids cyclic .tres references).
 @export var upgrades: Array[UnitStats] = []
-## Name of the base unit this unit belongs to (e.g. "Knight" for Cavalier). Used so a base
+## Name of the base unit this unit belongs to (e.g. "Sentinel" for Vanguard). Used so a base
 ## unit and its upgrade count as ONE unique unit for faction synergies. Empty = this unit's name.
 @export var unit_line: String = ""
 
@@ -140,13 +131,13 @@ func get_attack_damage() -> int:
 ## Armor and magic_resist are treated as direct percentages: 15 armor = 15% reduction.
 ## Capped at 90% to prevent full immunity (max 90 armor/MR effective).
 ## Pure: no reduction.
-static func calculate_reduced_damage(damage: float, type: DamageType, armor: int, magic_resist: int) -> float:
+static func calculate_reduced_damage(damage: float, type: DamageType, armor_param: int, magic_resist_param: int) -> float:
 	match type:
 		DamageType.PHYSICAL:
-			var reduction: float = clampf(float(armor), 0.0, 90.0) / 100.0
+			var reduction: float = clampf(float(armor_param), 0.0, 90.0) / 100.0
 			return damage * (1.0 - reduction)
 		DamageType.MAGICAL:
-			var reduction: float = clampf(float(magic_resist), 0.0, 90.0) / 100.0
+			var reduction: float = clampf(float(magic_resist_param), 0.0, 90.0) / 100.0
 			return damage * (1.0 - reduction)
 		DamageType.PURE:
 			return damage

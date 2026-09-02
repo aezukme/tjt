@@ -9,27 +9,27 @@ signal deck_changed
 const DECK_SIZE: int = 7
 const SAVE_PATH: String = "user://deck.cfg"
 
-## All ally unit resources available for deck building.
+## All ally unit resources available for deck building (one per tier 1-7).
 const ALLY_UNIT_PATHS: Array[String] = [
-	"res://data/units/bjorn_ally.tres",
-	"res://data/units/mage_ally.tres",
-	"res://data/units/sage_ally.tres",
-	"res://data/units/knight_ally.tres",
-	"res://data/units/ranger_ally.tres",
-	"res://data/units/rogue_ally.tres",
-	"res://data/units/priest_ally.tres",
-	"res://data/units/druid_ally.tres",
+	"res://data/units/grunt_ally.tres",
+	"res://data/units/scout_ally.tres",
+	"res://data/units/acolyte_ally.tres",
+	"res://data/units/cleric_ally.tres",
+	"res://data/units/sentinel_ally.tres",
+	"res://data/units/slayer_ally.tres",
+	"res://data/units/shaman_ally.tres",
 ]
 
 ## Default deck used on first launch (before player picks their own).
+## With 7 units and DECK_SIZE=7, the default deck is all available units.
 const DEFAULT_DECK_PATHS: Array[String] = [
-	"res://data/units/bjorn_ally.tres",
-	"res://data/units/mage_ally.tres",
-	"res://data/units/sage_ally.tres",
-	"res://data/units/knight_ally.tres",
-	"res://data/units/ranger_ally.tres",
-	"res://data/units/rogue_ally.tres",
-	"res://data/units/priest_ally.tres",
+	"res://data/units/grunt_ally.tres",
+	"res://data/units/scout_ally.tres",
+	"res://data/units/acolyte_ally.tres",
+	"res://data/units/cleric_ally.tres",
+	"res://data/units/sentinel_ally.tres",
+	"res://data/units/slayer_ally.tres",
+	"res://data/units/shaman_ally.tres",
 ]
 
 ## The currently selected deck (array of UnitStats resources).
@@ -93,7 +93,7 @@ func save_deck() -> void:
 	config.save(SAVE_PATH)
 
 
-## Loads the deck from disk. Falls back to default deck if no save exists.
+## Loads the deck from disk. Falls back to default deck if no save exists or deck is incomplete.
 func _load_deck() -> void:
 	var config := ConfigFile.new()
 	var err := config.load(SAVE_PATH)
@@ -104,6 +104,14 @@ func _load_deck() -> void:
 			var stats: UnitStats = load(path)
 			if stats:
 				selected_deck.append(stats)
+		# If deck is incomplete (old save with fewer units), reset to default
+		if selected_deck.size() < DECK_SIZE:
+			selected_deck.clear()
+			for path in DEFAULT_DECK_PATHS:
+				var stats: UnitStats = load(path)
+				if stats:
+					selected_deck.append(stats)
+			save_deck()
 	else:
 		# First launch — use default deck
 		selected_deck.clear()

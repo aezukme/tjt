@@ -463,7 +463,7 @@ func _restore_ally_positions() -> void:
 	for tile in game_area.unit_grid.units.keys():
 		game_area.unit_grid.units[tile] = null
 	
-	var restored_count: int = 0
+	var _restored_count: int = 0
 	for unit in saved_ally_positions.keys():
 		if not is_instance_valid(unit):
 			continue
@@ -483,14 +483,14 @@ func _restore_ally_positions() -> void:
 		unit.rotation = 0
 		unit.scale = Vector2.ONE
 		
-		restored_count += 1
+		_restored_count += 1
 	
 
 
 ## Resets HP, mana, and cooldowns for all surviving ally units.
 func _reset_ally_stats() -> void:
 	var ally_units = get_tree().get_nodes_in_group("player_units")
-	var reset_count: int = 0
+	var _reset_count: int = 0
 	
 	for unit in ally_units:
 		if not is_instance_valid(unit):
@@ -541,5 +541,5 @@ func _reset_ally_stats() -> void:
 			if animator and animator.has_method("play"):
 				animator.play(UnitAnimator.AnimState.IDLE)
 		
-		reset_count += 1
+		_reset_count += 1
 	

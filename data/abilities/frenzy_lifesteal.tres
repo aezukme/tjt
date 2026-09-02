@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 passive_name = "Life Steal"
-description = "Heals for 15% of the damage dealt by each attack (after reductions). (Legion TD: Frenzy Ghoul)"
+description = "Heals for 15% of the damage dealt by each attack (after reductions). (Lifesteal passive)"
 passive_type = 9
 value = 0.15

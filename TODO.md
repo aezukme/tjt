@@ -14,7 +14,7 @@
 - [x] Deck-building sistem — pre-match unit set selekcija (OCG stil).
 - [ ] King selekcija — biranje tipa Kinga pre partije.
 - [ ] King aura — pasivni efekti Kinga na defendere.
-- [~] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7. **Prvi upgrade gotov: Knight → Cavalier.** Ostaje: upgrade za ostale unite, UI dugme/popup za izbor kada unit ima 2+ upgrade-a.
+- [~] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7. **Svaki unit ima upgrade.** Ostaje: UI dugme/popup za izbor kada unit ima 2+ upgrade-a.
 - [ ] PvP slanje unita — iz ličnog deck-a, bez posebnog barracks-a.
 - [ ] Multiplayer — 1v1, 2v2, 3v3, 4v4, coop (server authoritative).
 - [ ] Map / lane dizajn — više arena layout-a.
@@ -110,9 +110,9 @@
 - [x] `UnitStats.unit_line` — base + upgrade count as ONE unique unit for synergies
 - [x] Hover placed unit + **U** during prep → in-place upgrade (position preserved, toast + VFX)
 - [x] `PassiveAbility.DAMAGE_REDUCTION` implemented — flat per-hit reduction (deterministic, min 1 dmg)
-- [x] **Knight → Cavalier** (1100 HP / 65 ATK / 0.7 AS / 15 AR / 20 MR, cost 2 → 5) with *Harden Armor* (-6 dmg per hit)
+- [x] **Sentinel → Vanguard** (1770 HP / 186 ATK / 1.0 AS / 15 AR / 20 MR, cost 5 → 10) with *Iron Skin* (-6 dmg per hit)
 - [x] Upgrade info shown in card tooltip and unit stats panel tooltip
-- [ ] Upgrade paths for remaining units (Bjorn, Mage, Sage, Ranger, Rogue, Priest, Druid) — designed in `UNIT_BLUEPRINTS.md` §4
+- [x] Upgrade paths for all units (Grunt, Scout, Acolyte, Cleric, Sentinel, Slayer, Shaman) — see `UNIT_BLUEPRINTS.md` §4
 - [ ] Branching upgrades (2 options) → choice popup instead of hotkey
 - [ ] Upgrade button in unit info UI (currently hotkey only)
 
@@ -197,7 +197,7 @@
 - [x] Leak mechanic — enemies reaching King deal leak damage (= attack_damage) and despawn
 
 ### 4. Faction / Synergy System ✅
-- [x] Units belong to factions: Warrior (Knight, Bjorn, Rogue), Mystic (Mage, Sage, Druid), Warden (Ranger, Priest)
+- [x] Units belong to factions: Warrior (Sentinel, Grunt, Slayer), Mystic (Acolyte, Shaman), Warden (Scout, Cleric)
 - [x] Placing 3+ Warriors → +20% ATK damage; 3+ Mystics → +20% AP; 2+ Wardens → +15% ATK speed
 - [x] SynergyManager component tracks placed units, applies/removes stat bonuses live
 - [x] SynergyPanel HUD shows active/pending synergies (dots ●●○ style)
@@ -225,12 +225,11 @@
 - [ ] Ally back-row engagement (Y aggro multiplier increased 1.0→2.0, needs testing)
 
 ### More Defender Units ✅
-- [x] Need 8–12 ally unit types for build variety (currently 8)
-- [x] **Tank line:** Bjorn (done), Knight (high armor, Iron Bastion passive)
-- [x] **DPS line:** Mage (done), Ranger (fast ranged, Power Shot), Rogue (high melee burst, Deadly Focus)
-- [x] **Support line:** Sage (done), Priest (AoE Holy Light heal)
-- [x] **Specialist:** Druid (Nature's Wrath AoE damage)
-- [x] Each unit has: .tres stats, unique ability/passive, balanced gold cost
+- [x] 7 ally unit types (one per tier 1-7) + King
+- [x] **Tank line:** Grunt (Bloodrage), Sentinel (Fortitude, upgrades to Vanguard)
+- [x] **DPS line:** Acolyte (Ember Bolt + Arcane Bolt), Scout (Piercing Shot + Eagle Eye), Slayer (Executioner's Strike)
+- [x] **Support line:** Cleric (Divine Light), Shaman (Nature's Fury, T7 Champion)
+- [x] Each unit has: .tres stats, unique ability/passive, balanced gold cost, upgrade path
 
 ### More Enemy Types ✅
 - [x] Need 5–8 enemy types for wave variety (now 9: Orc, Necro, Goblin, Wolf, Troll, Skeleton Archer, Crab, Jumper, Octopus)
@@ -354,9 +353,9 @@
 - [ ] `[WAVE] WARNING: Could not find PlayerStats node!` on startup (harmless, timing issue)
 - [x] ~~`[dummy] → [dummy]` target change spam~~ (dummy target reused instead of recreated)
 - [x] ~~`[Ability] No valid targets` fireball spam~~ (moved to verbose logging)
-- [ ] `target changed Sage → Sage` log noise (same-name different instances)
-- [ ] `[Ability] Sage ability ready!` × 5 spam when multiple units ready simultaneously
-- [ ] Fix sage_ally.tres UID warning (uid://dh3al0rharm01)
+- [ ] `target changed [unit] → [unit]` log noise (same-name different instances)
+- [ ] `[Ability] [unit] ability ready!` × 5 spam when multiple units ready simultaneously
+- [ ] ~~Fix sage_ally.tres UID warning~~ (Sage removed from roster)
 - [ ] Consistent naming conventions (snake_case vs PascalCase)
 - [x] Warrior's Endurance passive stacking on each unit placement — FIXED (guard flag + stats order)
 - [ ] **Unit/EnemyUnit code duplication** — set_stats, _swap_to_animated_sprite, _on_health_reached_zero, _connect_stats_signals, apply_damage are duplicated. Future refactor: introduce UnitBase class or shared component.
@@ -365,21 +364,25 @@
 
 ## 📊 Current Content
 
-### Ally Units (8 + King) — tiers 1-7, Legion TD-derived kits (see `UNIT_BLUEPRINTS.md`)
+### Ally Units (7 + King) — one per tier 1-7, original names inspired by Legion TD (see `UNIT_BLUEPRINTS.md`)
 | Unit | Tier | HP | ATK | AS | Range | Cost | Active | Passive |
 |------|------|----|-----|------|-------|------|--------|---------|
-| Bjorn (Warrior) | 1 | 500 | 50 | 0.7 | 1 (melee) | 1💰 | — | Berserk (+20/40/60% AS below 60/40/20% HP) |
-| Ranger (Warden) | 2 | 300 | 30 | 1.2 | 4 (ranged) | 2💰 | Power Shot (120 dmg) | Precision (every 3rd shot ×1.6) |
-| Mage (Mystic) | 2 | 400 | 40 | 0.8 | 3 (ranged) | 2💰 | Fireball (100 dmg) | Magic Missile (+15 magical per attack) |
-| Knight (Warrior) | 3 | 600 | 35 | 0.6 | 1 (melee) | 3💰 | — | Iron Bastion (+5 armor) — **upgrades to Cavalier** |
-| ↳ Cavalier (upgrade) | 3 | 1100 | 65 | 0.7 | 1 (melee) | 6💰 (3+3) | — | Harden Armor (-6 dmg per hit, min 1) |
-| Rogue (Warrior) | 3 | 250 | 70 | 1.0 | 1 (melee) | 3💰 | — | Vital Slice (every 4th hit ×2) |
-| Sage (Mystic) | 3 | 350 | 25 | 0.6 | 3 (ranged) | 3💰 | Healing Wave (90, bounces 4×, -25%) | — |
-| Priest (Warden) | 4 | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (50 HP to 4 most wounded) | — |
-| Druid (Mystic) | 5 | 520 | 45 | 0.7 | 3 (ranged) | 5💰 | Wrath of Nature (100 magical, bounces 5×, -25%) | — |
-| **King** 👑 | — | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* | — |
-
-Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
+| Grunt (Warrior) | 1 | 100 | 10 | 1.0 | 1 (melee) | 1💰 | — | Bloodrage (+20/40/60% AS below 60/40/20% HP) |
+| ↳ Bloodfang (upgrade) | 1 | 500 | 50 | 1.0 | 1 (melee) | 2💰 (1+1) | — | Bloodrage |
+| ↳ Ravager (upgrade) | 1 | 1050 | 60 | 0.6 | 1 (melee) | 4💰 (1+3) | — | Bloodrage (stronger) |
+| Scout (Warden) | 2 | 110 | 17 | 0.9 | 4 (ranged) | 2💰 | Piercing Shot (120 dmg) | Eagle Eye (every 3rd shot ×1.6) |
+| ↳ Hawkeye (upgrade) | 2 | 335 | 42 | 0.9 | 4 (ranged) | 4💰 (2+2) | Piercing Shot | Eagle Eye |
+| Acolyte (Mystic) | 3 | 350 | 20 | 1.0 | 3 (ranged) | 3💰 | Ember Bolt (100 dmg) | Arcane Bolt (+15 magical per attack) |
+| ↳ Arcanist (upgrade) | 3 | 850 | 52 | 0.8 | 3 (ranged) | 6💰 (3+3) | Ember Bolt | Arcane Bolt |
+| Cleric (Warden) | 4 | 420 | 58 | 1.0 | 3 (ranged) | 4💰 | Divine Light (50 HP to 4 most wounded) | — |
+| ↳ Hierophant (upgrade) | 4 | 840 | 127 | 1.0 | 3 (ranged) | 8💰 (4+4) | Divine Light | — |
+| Sentinel (Warrior) | 5 | 880 | 75 | 0.9 | 1 (melee) | 5💰 | — | Fortitude (+5 armor) |
+| ↳ Vanguard (upgrade) | 5 | 1770 | 186 | 1.0 | 1 (melee) | 10💰 (5+5) | — | Iron Skin (-6 dmg per hit, min 1) |
+| Slayer (Warrior) | 6 | 1035 | 128 | 1.3 | 1 (melee) | 7💰 | — | Executioner's Strike (every 4th hit ×2) |
+| ↳ Juggernaut (upgrade) | 6 | 2200 | 160 | 0.9 | 1 (melee) | 14💰 (7+7) | — | Executioner's Strike |
+| Shaman (Mystic) | 7 | 1800 | 120 | 1.0 | 3 (ranged) | 10💰 | Nature's Fury (100 magical, bounces 5×, -25%) | — |
+| ↳ Avatar (upgrade) | 7 | 2500 | 180 | 0.8 | 3 (ranged) | 20💰 (10+10) | Nature's Fury | — |
+| **King** 👑 | — | **2500** | 80 | 0.7 | 1 (melee) | — | *(none yet — auras/abilities TBD)* | — |
 
 ### Enemy Units (9)
 | Unit | HP | ATK | AS | Armor | MR | Range | Role |
@@ -422,8 +425,8 @@ Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
 - ✅ `PassiveAbility` combat framework: `modify_outgoing_damage`, `on_attack_hit`, `on_health_changed` hooks
 - ✅ New passive types: NTH_ATTACK_MULTIPLIER, MAGIC_MISSILE, LIFESTEAL, ARMOR_SHRED, SPLASH, MULTISHOT, BERSERK (+ SPEED_BONUS implemented)
 - ✅ `CombatResolver` — single entry for basic-attack hits (melee + basic arrows); abilities bypass it
-- ✅ New actives: `ChainDamageAbility` (Wrath of Nature), `ChainHealAbility` (Healing Wave); `max_targets` on AoE dmg/heal
-- ✅ Roster rework: Bjorn→Berserk, Ranger+Precision, Mage+Magic Missile, Rogue→Vital Slice, Sage→Healing Wave, Priest Holy Light (4 targets), Druid→Wrath of Nature (T5)
+- ✅ New actives: `ChainDamageAbility` (Nature's Fury), `ChainHealAbility` (Mending Wave); `max_targets` on AoE dmg/heal
+- ✅ Roster rework: Grunt→Bloodrage, Scout+Eagle Eye, Acolyte+Arcane Bolt, Slayer→Executioner's Strike, Cleric Divine Light (4 targets), Shaman→Nature's Fury (T7)
 - ✅ Data-only passives ready for blueprints: Life Steal, Corruption, Circle Splash, Burst Shot
 - ✅ `UNIT_BLUEPRINTS.md` — tier system, ability catalog (implemented / data-only / needs engine), upgrade trees, T1-T7 unit blueprints, roadmap
 - ✅ Tooltips show Tier, Ability, Passive
@@ -431,9 +434,9 @@ Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
 ### September 2026 (Session 9) — Unit Upgrade System
 - ✅ Upgrade data model on UnitStats (`upgrades`, `unit_line`, `has_upgrades()`, `get_upgrade_cost()`)
 - ✅ Arena upgrade flow: U hotkey on hovered ally during prep, pays difference, respawns at same tile
-- ✅ SynergyManager counts unique units by `unit_line` (Knight + Cavalier = 1 Warrior)
+- ✅ SynergyManager counts unique units by `unit_line` (Sentinel + Vanguard = 1 Warrior)
 - ✅ `PassiveAbility.DAMAGE_REDUCTION` implemented and hooked into `Unit.apply_damage`
-- ✅ First upgrade: Knight → Cavalier (Harden Armor), sprite (4,1) on rogues.png
+- ✅ First upgrade: Sentinel → Vanguard (Iron Skin), sprite (4,1) on rogues.png
 - ✅ Stats panel rebuilds when a unit node is replaced in place
 - ✅ New input action `upgrade_unit` (U) in project.godot
 
@@ -497,13 +500,13 @@ Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
 
 ### February 2026 (Session 4) — New Units, Resolution, Animation Prep
 - ✅ Resolution increase: 640×360 → 960×540 viewport, 1920×1080 window
-- ✅ 5 new ally units: Knight, Ranger, Rogue, Priest, Druid
-- ✅ 5 new abilities: Iron Bastion, Power Shot, Deadly Focus, Holy Light, Nature's Wrath
+- ✅ 5 new ally units: Sentinel, Scout, Slayer, Cleric, Shaman (originally Knight, Ranger, Rogue, Priest, Druid)
+- ✅ 5 new abilities: Fortitude, Piercing Shot, Executioner's Strike, Divine Light, Nature's Fury
 - ✅ AoEHealAbility class (area heal with green flash)
 - ✅ AnimatedSprite2D preparation (sprite_frames property in UnitStats)
 - ✅ Warrior's Endurance passive stacking fix (guard flag + stats order)
 - ✅ Retaliation targeting (units fight back when attacked)
-- ✅ Aggro range fixes (Bjorn 3→5, Y multiplier 0.75→1.0)
+- ✅ Aggro range fixes (Grunt 3→5, Y multiplier 0.75→1.0)
 
 ### February 2026 (Session 3) — Gold, Overkill Fix, Polish
 - ✅ Gold cost system: card display, affordability check, auto-deduct on placement
@@ -517,7 +520,7 @@ Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
 - ✅ Main Menu, Victory Screen, Game Over Screen
 - ✅ Unit selection panel with click-to-place + ghost sprite
 - ✅ Wave system: 4 waves, prep timer, position save/restore, stat reset
-- ✅ Sage healer unit with Mending Bolt (heal/harm dual mode)
+- ✅ Early healer unit with Mending Bolt (heal/harm dual mode) — later removed (Sage), support now covered by Cleric + Shaman
 - ✅ HealOrHarmAbility class
 - ✅ Lambda capture fixes (WeakRef pattern)
 - ✅ UI: Arial system font, compact panels, wave display

@@ -16,7 +16,7 @@ expensive. Every tower can be upgraded once or twice, and the upgrade **keeps th
 its base**. TJT follows the same rule and adds **tier 7 — Champions**: one-per-deck
 signature units (Legion has no equivalent; think of them as our "hero towers").
 
-| Tier | Role in TJT | Gold (current) | Rarity band | HP band (base) | Legion analog |
+| Tier | Role in TJT | Gold (current) | HP band (base) | Legion analog |
 |------|-------------|----------------|-------------|----------------|---------------|
 | 1 | Cheap frontline filler, early waves | 1 | Common | 300–500 | Orc Warrior, Peasant, Ent |
 | 2 | Early DPS / utility | 2 | Common | 300–450 | Ranger, Archer, Orc Warlock |
@@ -35,23 +35,32 @@ The upgraded unit's `gold_cost` is its **total** value. Upgrade price = differen
 refunds the full total (see `UnitStats.get_upgrade_cost()`).
 
 ### Synergy rule
-Base + upgrade share a `unit_line`, so Knight and Cavalier count as **one** unique Warrior.
+Base + upgrade share a `unit_line`, so Sentinel and Vanguard count as **one** unique Warrior.
 
 ---
 
 ## 2. Current Roster (after rework)
 
-| Unit | Tier | Cost | Faction | Role | Active | Passive | Legion source |
-|------|------|------|---------|------|--------|---------|---------------|
-| **Bjorn** | 1 | 1 | Warrior | Melee bruiser | — | ✅ **Berserk** (+20/40/60% AS below 60/40/20% HP) | Wolverine's Berserk |
-| **Ranger** | 2 | 2 | Warden | Long-range DPS | ✅ Power Shot (120 dmg projectile) | ✅ **Precision** (every 3rd shot ×1.6) | Ranger → Meliai |
-| **Mage** | 2 | 2 | Mystic | Ranged caster | ✅ Fireball (100 dmg projectile) | ✅ **Magic Missile** (+15 magical per attack) | Sentry's Magic Missile |
-| **Knight** | 3 | 3 | Warrior | Tank | — | ✅ Iron Bastion (+5 armor) | Footman / Knight |
-| ↳ **Cavalier** | 3 | 6 (3+3) | Warrior | Heavy tank | — | ✅ Harden Armor (−6 dmg per hit, min 1) | Cavalier |
-| **Rogue** | 3 | 3 | Warrior | Melee burst | — | ✅ **Vital Slice** (every 4th hit ×2) | Krogoth's Vital Slice |
-| **Sage** | 3 | 3 | Mystic | Healer | ✅ **Healing Wave** (90, bounces 4×, −25%) | — | Medicine Man |
-| **Priest** | 4 | 4 | Warden | Group healer | ✅ Holy Light (50 HP to 4 most wounded, 5 s CD) | — | Yggdrasil's Sacred Blessing |
-| **Druid** | 5 | 5 | Mystic | AoE caster | ✅ **Wrath of Nature** (100 magical, bounces 5×, −25%) | — | Druid (exact) |
+Each unit occupies exactly one tier (1-7). The old Sage unit was removed (Cleric and Shaman cover support).
+Names are original, inspired by — but not copied from — the Legion TD Mega Book reference.
+
+| Unit | Tier | Cost | Faction | Role | Active | Passive | Inspiration |
+|------|------|------|---------|------|--------|---------|-------------|
+| **Grunt** | 1 | 1 | Warrior | Melee bruiser | — | ✅ **Bloodrage** (+20/40/60% AS below 60/40/20% HP) | Orc Warrior line |
+| ↳ **Bloodfang** | 1 | 2 (1+1) | Warrior | Melee bruiser | — | ✅ **Bloodrage** | Blood Orc Warrior |
+| ↳ **Ravager** | 1 | 4 (1+3) | Warrior | Heavy melee | — | ✅ **Bloodrage** (stronger) | Wolverine |
+| **Scout** | 2 | 2 | Warden | Long-range DPS | ✅ Piercing Shot (120 dmg projectile) | ✅ **Eagle Eye** (every 3rd shot ×1.6) | Ranger → Meliai |
+| ↳ **Hawkeye** | 2 | 4 (2+2) | Warden | Long-range DPS | ✅ Piercing Shot | ✅ **Eagle Eye** | Meliai |
+| **Acolyte** | 3 | 3 | Mystic | Ranged caster | ✅ Ember Bolt (100 dmg projectile) | ✅ **Arcane Bolt** (+15 magical per attack) | Sentry → Nightsaber |
+| ↳ **Arcanist** | 3 | 6 (3+3) | Mystic | Ranged caster | ✅ Ember Bolt | ✅ **Arcane Bolt** | Nightsaber |
+| **Cleric** | 4 | 4 | Warden | Group healer | ✅ Divine Light (50 HP to 4 most wounded, 5 s CD) | — | Priest → High Priest |
+| ↳ **Hierophant** | 4 | 8 (4+4) | Warden | Group healer + DPS | ✅ Divine Light | — | High Priest |
+| **Sentinel** | 5 | 5 | Warrior | Tank | — | ✅ Fortitude (+5 armor) | Knight → Cavalier |
+| ↳ **Vanguard** | 5 | 10 (5+5) | Warrior | Heavy tank | — | ✅ Iron Skin (−6 dmg per hit, min 1) | Cavalier |
+| **Slayer** | 6 | 7 | Warrior | Melee burst | — | ✅ **Executioner's Strike** (every 4th hit ×2) | Cyborg → Krogoth |
+| ↳ **Juggernaut** | 6 | 14 (7+7) | Warrior | Heavy melee tank | — | ✅ **Executioner's Strike** | Krogoth |
+| **Shaman** | 7 | 10 | Mystic | AoE caster (Champion) | ✅ **Nature's Fury** (100 magical, bounces 5×, −25%) | — | Druid (T7 extrapolated) |
+| ↳ **Avatar** | 7 | 20 (10+10) | Mystic | AoE caster (Champion) | ✅ **Nature's Fury** | — | Ascendant (T7 extrapolated) |
 | **King** | — | — | — | Player's life | — | — | The King |
 
 Chance-based Legion effects were converted to deterministic counters
@@ -68,42 +77,42 @@ Hooks called by the engine:
 
 | Hook | Called from | Used by |
 |------|-------------|---------|
-| `apply(unit)` | `Unit._connect_stats_signals` | stat passives, Berserk base capture |
+| `apply(unit)` | `Unit._connect_stats_signals` | stat passives, Bloodrage base capture |
 | `modify_outgoing_damage(unit, dmg)` | `CombatResolver` (before hit) | NTH_ATTACK_MULTIPLIER |
 | `modify_incoming_damage(dmg)` | `Unit.apply_damage` (after armor) | DAMAGE_REDUCTION |
-| `on_attack_hit(unit, target, dealt)` | `CombatResolver` (after hit) | MAGIC_MISSILE, LIFESTEAL, ARMOR_SHRED, SPLASH, MULTISHOT |
+| `on_attack_hit(unit, target, dealt)` | `CombatResolver` (after hit) | ARCANE_BOLT, LIFESTEAL, ARMOR_SHRED, SPLASH, MULTISHOT |
 | `on_health_changed(unit)` | `Unit.health_changed` signal | BERSERK |
 
 Only **basic attacks** (melee strike or basic-attack arrow) run through `CombatResolver`;
 ability damage never triggers on-hit passives.
 
-| PassiveType | .tres | Status | Description | Legion source |
-|-------------|-------|--------|-------------|---------------|
-| HEALTH_REGEN_BONUS | `warriors_endurance.tres` | ✅ (unused now) | +20% HP regen | Bone Warrior's Frenzy |
-| DAMAGE_BONUS | `deadly_focus.tres` | ✅ (unused now) | +25% ATK | Greymane's Battle Cry (permanent half) |
-| ARMOR_BONUS | `iron_bastion.tres` | ✅ Knight | +5 armor | Azure Armor / Reassurance (self) |
-| SPEED_BONUS | — | ✅ engine | +X% attack speed | Chemical Rage (permanent variant) |
-| MAX_HEALTH_BONUS | — | ✅ engine | +X% max HP | Inject Steroids (+20% HP) |
-| DAMAGE_REDUCTION | `harden_armor.tres` | ✅ Cavalier | −6 flat per hit, min 1 | Harden Armor / Natural Armor |
-| NTH_ATTACK_MULTIPLIER | `precision.tres`, `vital_slice.tres` | ✅ Ranger, Rogue | every Nth attack ×value | Precision, Vital Slice, Coup de Grace |
-| MAGIC_MISSILE | `magic_missile.tres` | ✅ Mage | +15 magical per attack | Sentry, Flaming Arrows |
-| LIFESTEAL | `frenzy_lifesteal.tres` | 🧩 | heal 15% of damage dealt | Frenzy Ghoul, The Butcher |
-| ARMOR_SHRED | `corruption.tres` | 🧩 | −4 armor per hit, permanent, floor 0 | Corruption, Faerie Fire |
-| SPLASH | `circle_splash.tres` | 🧩 | 50% dmg to enemies within 48 px of target | Circle Splash, Meat Wagon |
-| MULTISHOT | `burst_shot.tres` | 🧩 | 50% dmg to 2 nearest other enemies | Burst Shot, Multishot, Moon Glaive |
-| BERSERK | `berserk.tres` | ✅ Bjorn | AS scales with missing HP | Wolverine's Berserk |
+| PassiveType | .tres | Status | Description | Used by |
+|-------------|-------|--------|-------------|---------|
+| HEALTH_REGEN_BONUS | `warriors_endurance.tres` | ✅ (unused now) | +20% HP regen | — |
+| DAMAGE_BONUS | `deadly_focus.tres` | ✅ (unused now) | +25% ATK | — |
+| ARMOR_BONUS | `fortitude.tres` | ✅ Sentinel | +5 armor | Sentinel |
+| SPEED_BONUS | — | ✅ engine | +X% attack speed | — |
+| MAX_HEALTH_BONUS | — | ✅ engine | +X% max HP | — |
+| DAMAGE_REDUCTION | `iron_skin.tres` | ✅ Vanguard | −6 flat per hit, min 1 | Vanguard |
+| NTH_ATTACK_MULTIPLIER | `eagle_eye.tres`, `executioners_strike.tres` | ✅ Scout, Slayer | every Nth attack ×value | Scout, Slayer |
+| MAGIC_MISSILE | `arcane_bolt.tres` | ✅ Acolyte | +15 magical per attack | Acolyte, Arcanist |
+| LIFESTEAL | `frenzy_lifesteal.tres` | 🧩 | heal 15% of damage dealt | — |
+| ARMOR_SHRED | `corruption.tres` | 🧩 | −4 armor per hit, permanent, floor 0 | — |
+| SPLASH | `circle_splash.tres` | 🧩 | 50% dmg to enemies within 48 px of target | — |
+| MULTISHOT | `burst_shot.tres` | 🧩 | 50% dmg to 2 nearest other enemies | — |
+| BERSERK | `bloodrage.tres` | ✅ Grunt | AS scales with missing HP | Grunt, Bloodfang, Ravager |
 
 ### 3.2 Active abilities (`Ability` subclasses) — ✅ implemented
 
-| Script | .tres | Description | Legion source |
-|--------|-------|-------------|---------------|
-| `FireballAbility` | `fireball.tres`, `power_shot.tres` | single-target projectile | Zeus' Power Surge (as a nuke) |
+| Script | .tres | Description | Used by |
+|--------|-------|-------------|---------|
+| `FireballAbility` | `ember_bolt.tres`, `piercing_shot.tres` | single-target projectile | Acolyte, Scout |
 | `HealOrHarmAbility` | `mending_bolt.tres` (unused now) | heal lowest ally or damage nearest enemy | — |
-| `HealAbility` | `heal.tres` | self / single heal | Priest's Heal |
-| `AOEDamageAbility` (+`max_targets`) | `arcane_explosion.tres`, `natures_wrath.tres` (unused now) | damage all / N nearest enemies | Silent Scream (3), Fan of Knives (5), Tremor |
-| `AoEHealAbility` (+`max_targets`) | `holy_light.tres` | heal all / N most wounded | Sacred Blessing (4), Water of Life (6) |
-| `ChainDamageAbility` | `wrath_of_nature.tres` | bounce damage with falloff | Wrath of Nature, Storm Hammers |
-| `ChainHealAbility` | `healing_wave.tres` | bounce heal with falloff | Healing Wave |
+| `HealAbility` | `heal.tres` | self / single heal | — |
+| `AOEDamageAbility` (+`max_targets`) | `arcane_explosion.tres`, `natures_wrath.tres` (unused now) | damage all / N nearest enemies | — |
+| `AoEHealAbility` (+`max_targets`) | `divine_light.tres` | heal all / N most wounded | Cleric, Hierophant |
+| `ChainDamageAbility` | `natures_fury.tres` | bounce damage with falloff | Shaman, Avatar |
+| `ChainHealAbility` | `mending_wave.tres` | bounce heal with falloff | (unused) |
 
 ### 3.3 Abilities that need new engine systems — 📐 blueprints
 
@@ -131,40 +140,36 @@ ability damage never triggers on-hit passives.
 
 ## 4. Upgrade Trees for the Current Roster
 
-Format: **Base (T) → Upgrade** · stats (HP / ATK / AS / AR / MR) · ability · Legion source.
+Format: **Base (T) → Upgrade** · stats (HP / ATK / AS / AR / MR) · ability · inspiration.
 All upgrades keep the base tier and `unit_line`.
 
-### Bjorn (T1, Warrior)
-- **→ Bjorn Blood-Axe** · 900 / 80 / 0.8 / 8 / 20 · cost 1+2 · passive *Berserk* (stronger: +30/60/90%) + *Life Steal* 15% 🧩 → needs a second passive slot **or** a combined `BERSERK_LIFESTEAL` type. · *Wolverine + Frenzy Ghoul*
-- **→ Bjorn Slavemaster** *(alt, economy)* · 770 / 65 / 0.7 / 6 / 20 · +3 gold at wave end if alive 📐 (needs wave-end hook) · *Slavemaster*
+### Grunt (T1, Warrior)
+- **→ Bloodfang** ✅ · 500 / 50 / 1.0 / 5 / 20 · cost 1+1 · passive *Bloodrage* · inspired by Blood Orc Warrior
+- **→ Ravager** ✅ · 1050 / 60 / 0.6 / 8 / 25 · cost 1+3 · passive *Bloodrage* (stronger) · inspired by Wolverine
 
-### Ranger (T2, Warden)
-- **→ Meliai** · 335 / 42 / 1.0 / 2 / 15 · range 5 · *Precision* + **Mark Target** (ARMOR_SHRED −3) 🧩 needs second passive slot · *Meliai*
-- **→ Elite Archer** *(alt)* · 650 / 30 / 1.1 / 3 / 15 · **Multishot** (`burst_shot.tres`: 2 extra targets 50%) 🧩 ready · *Elite Archer — "best single unit in game"*
+### Scout (T2, Warden)
+- **→ Hawkeye** ✅ · 335 / 42 / 0.9 / 2 / 15 · cost 2+2 · *Eagle Eye* + **Piercing Shot** · inspired by Meliai
+- **→ Elite Archer** *(alt, future)* · 650 / 30 / 1.1 / 3 / 15 · **Multishot** (`burst_shot.tres`: 2 extra targets 50%) 🧩 ready · inspired by Elite Archer
 
-### Mage (T2, Mystic)
-- **→ Blood Warlock** · 660 / 60 / 0.8 / 2 / 35 · Fireball 150 + **Corruption** (`corruption.tres`) 🧩 ready · *Blood Orc Warlock*
-- **→ Pyromancer** *(alt)* · 500 / 45 / 0.9 / 3 / 30 · **Breath of Fire**: AoE 60 + burn 5/s for 6 s 📐 needs DoT · *Young Frost Dragon (fire flavor)*
+### Acolyte (T3, Mystic)
+- **→ Arcanist** ✅ · 850 / 52 / 0.8 / 4 / 35 · cost 3+3 · *Arcane Bolt* + **Ember Bolt** · inspired by Nightsaber
+- **→ Blood Warlock** *(alt, future)* · 660 / 60 / 0.8 / 2 / 35 · Ember Bolt 150 + **Corruption** (`corruption.tres`) 🧩 ready · inspired by Blood Orc Warlock
 
-### Knight (T3, Warrior) — ✅ Cavalier implemented
-- **→ Cavalier** ✅ · 1100 / 65 / 0.7 / 15 / 20 · *Harden Armor*
-- **→ Guard** *(alt)* · 1150 / 50 / 0.9 / 12 / 15 · **Defend**: −15% damage from ranged attackers 📐 needs attacker-range check in `modify_incoming_damage` · *Guard*
+### Cleric (T4, Warden)
+- **→ Hierophant** ✅ · 840 / 127 / 1.0 / 3 / 45 · cost 4+4 · **Divine Light** · inspired by High Priest
+- **→ Highborne** *(alt, future)* · 930 / 60 / 0.8 / 4 / 40 · **Sphere**: +5 armor to the most-attacked ally 📐 aura-lite · inspired by Highbourne
 
-### Rogue (T3, Warrior)
-- **→ Nightblade** · 520 / 90 / 1.1 / 4 / 15 · **Fatality**: every 5th hit ×3 (NTH, value 3, interval 5) ✅ engine-ready · *Nightmare / Doppelganger*
-- **→ Shadow Assassin** *(alt)* · 450 / 80 / 1.0 / 4 / 20 · **Execute**: hits vs enemies below 15% HP deal ×4 📐 needs HP-threshold multiplier · *Finishing Blow (deterministic)*
+### Sentinel (T5, Warrior)
+- **→ Vanguard** ✅ · 1770 / 186 / 1.0 / 15 / 20 · cost 5+5 · *Iron Skin* · inspired by Cavalier
+- **→ Guard** *(alt, future)* · 1150 / 50 / 0.9 / 12 / 15 · **Defend**: −15% damage from ranged attackers 📐 needs attacker-range check in `modify_incoming_damage` · inspired by Guard
 
-### Sage (T3, Mystic)
-- **→ Oracle** · 600 / 40 / 0.6 / 3 / 40 · Healing Wave 120 + **Guardian Spirit** (adjacent allies −33% dmg) 📐 aura · *Oracle*
-- **→ Witch Doctor** *(alt)* · 550 / 35 / 0.7 / 3 / 35 · **Healing Aura**: +5 HP/s to all allies 📐 aura · *Young Witch Doctor*
+### Slayer (T6, Warrior)
+- **→ Juggernaut** ✅ · 2200 / 160 / 0.9 / 12 / 20 · cost 7+7 · *Executioner's Strike* · inspired by Krogoth
+- **→ Nightblade** *(alt, future)* · 520 / 90 / 1.1 / 4 / 15 · **Fatality**: every 5th hit ×3 (NTH, value 3, interval 5) ✅ engine-ready · inspired by Nightmare / Doppelganger
 
-### Priest (T4, Warden)
-- **→ High Priest** · 700 / 30 / 0.6 / 3 / 45 · Holy Light 80 to 6 targets + **Greater Heal** 300 single (second active) 📐 needs 2nd ability slot **or** merge into one smart heal · *High Priest*
-- **→ Highborne** *(alt)* · 930 / 60 / 0.8 / 4 / 40 · **Sphere**: +5 armor to the most-attacked ally 📐 aura-lite · *Highbourne*
-
-### Druid (T5, Mystic)
-- **→ Ascendant** · 1450 / 80 / 0.8 / 4 / 35 · Wrath of Nature 150, bounces 6× + **Faerie Fire** (ARMOR_SHRED −6) 🧩 · *Ascendant — "insane tower, strong on every wave"*
-- **→ Sword Mage** *(alt, melee)* · 1850 / 90 / 0.9 / 10 / 30 · range 1 · **Enchant Fire**: +60 magical per attack (MAGIC_MISSILE value 60) ✅ engine-ready · *Sword Mage*
+### Shaman (T7, Mystic — Champion)
+- **→ Avatar** ✅ · 2500 / 180 / 0.8 / 8 / 40 · cost 10+10 · **Nature's Fury** · inspired by Ascendant (T7 extrapolated)
+- **→ Archdruid** *(alt, future, melee)* · 1850 / 90 / 0.9 / 10 / 30 · range 1 · **Enchant Fire**: +60 magical per attack (ARCANE_BOLT value 60) ✅ engine-ready · inspired by Sword Mage
 
 ---
 
@@ -239,7 +244,7 @@ cannot be sent to the opponent in PvP, King aura interacts with them.
    → unlocks Cripple, Tremor, Envenom, Storm Bolt, Fissure, Frost Nova, Battle Cry, Chemical Rage.
 2. **AuraManager** (SynergyManager pattern: register/unregister, radius or global, stack rules)
    → unlocks Leadership, Healing Aura, Reassurance, Telescope, Adrenaline Rush, Sickness, Blood Thirst, Guardian Spirit, Amplify Magic.
-3. **Second passive slot** (`passive_abilities: Array[PassiveAbility]`) → Meliai, Blood-Axe, Ascendant.
+3. **Second passive slot** (`passive_abilities: Array[PassiveAbility]`) → Hawkeye, Bloodfang, Avatar.
 4. **Temporary summons** (spawner flag `is_summon`, freed at wave end, excluded from permadeath toasts and deployed count) → Raise Dead, Invoke Inferno, Mitosis, Goblin Driver, Storm Geyser.
 5. **On-death triggers** (`PassiveAbility.on_death`) → Tree of Life / Knowledge, Mitosis.
 6. **Upgrade choice popup** for branching upgrades (currently hotkey U takes `upgrades[0]`).

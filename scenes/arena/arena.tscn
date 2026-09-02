@@ -6,9 +6,9 @@
 [ext_resource type="Script" uid="uid://dyicost2uqd27" path="res://components/unit_grid.gd" id="4_asdgj"]
 [ext_resource type="Script" uid="uid://ge0wp0b1fuvc" path="res://components/play_area.gd" id="4_jx0ua"]
 [ext_resource type="Script" uid="uid://4ws5xrynj7ig" path="res://components/tile_highlighter.gd" id="6_u52cf"]
-[ext_resource type="Resource" uid="uid://cks8r0jxncpqo" path="res://data/units/mage_ally.tres" id="8_6w4xk"]
+[ext_resource type="Resource" uid="uid://cks8r0jxncpqo" path="res://data/units/acolyte_ally.tres" id="8_6w4xk"]
 [ext_resource type="Script" uid="uid://xpff4so18v45" path="res://components/unit_mover.gd" id="8_ii07k"]
-[ext_resource type="Resource" uid="uid://diup6kc6ts5aa" path="res://data/units/sage_ally.tres" id="8_sage"]
+[ext_resource type="Resource" uid="uid://diup6kc6ts5aa" path="res://data/units/cleric_ally.tres" id="8_sage"]
 [ext_resource type="Script" uid="uid://b6rjlsb7nqmne" path="res://components/unit_spawner.gd" id="10_2ml6w"]
 [ext_resource type="Resource" uid="uid://dfl6uw6hkhahh" path="res://data/player/player_stats.tres" id="12_vmsrg"]
 [ext_resource type="Script" uid="uid://lcff67541wbq" path="res://components/battle_manager.gd" id="13_battle"]
@@ -17,13 +17,14 @@
 [ext_resource type="Script" uid="uid://de3i018dnetpo" path="res://components/wave_manager.gd" id="16_wave_mgr"]
 [ext_resource type="Script" uid="uid://b6nyk11ct2wbt" path="res://data/waves/wave_config.gd" id="18_gy0qm"]
 [ext_resource type="PackedScene" path="res://scenes/unit_selection/unit_selection_panel.tscn" id="22_unit_sel"]
-[ext_resource type="Resource" uid="uid://dk4rxstn86o22" path="res://data/units/bjorn_ally.tres" id="23_bjorn"]
+[ext_resource type="Resource" uid="uid://dk4rxstn86o22" path="res://data/units/grunt_ally.tres" id="23_bjorn"]
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="24_unit_stats"]
-[ext_resource type="Resource" path="res://data/units/knight_ally.tres" id="25_knight"]
-[ext_resource type="Resource" path="res://data/units/ranger_ally.tres" id="26_ranger"]
-[ext_resource type="Resource" path="res://data/units/rogue_ally.tres" id="27_rogue"]
-[ext_resource type="Resource" path="res://data/units/priest_ally.tres" id="28_priest"]
-[ext_resource type="Resource" path="res://data/units/druid_ally.tres" id="29_druid"]
+[ext_resource type="Resource" path="res://data/units/scout_ally.tres" id="25_knight"]
+[ext_resource type="Resource" path="res://data/units/acolyte_ally.tres" id="26_ranger"]
+[ext_resource type="Resource" path="res://data/units/cleric_ally.tres" id="27_rogue"]
+[ext_resource type="Resource" path="res://data/units/sentinel_ally.tres" id="28_priest"]
+[ext_resource type="Resource" path="res://data/units/slayer_ally.tres" id="29_slayer"]
+[ext_resource type="Resource" path="res://data/units/shaman_ally.tres" id="29_druid"]
 [ext_resource type="Script" uid="uid://l34ftjtcydik" path="res://components/synergy_manager.gd" id="30_syn_mgr"]
 [ext_resource type="Script" path="res://components/vfx_spawner.gd" id="31_vfx"]
 [ext_resource type="PackedScene" path="res://scenes/hud/hud_bar.tscn" id="32_hud_bar"]
@@ -129,7 +130,7 @@ grow_horizontal = 0
 grow_vertical = 2
 
 [node name="UnitSelectionPanel" parent="UI" unique_id=630095761 instance=ExtResource("22_unit_sel")]
-available_units = Array[ExtResource("24_unit_stats")]([ExtResource("23_bjorn"), ExtResource("8_6w4xk"), ExtResource("8_sage"), ExtResource("25_knight"), ExtResource("26_ranger"), ExtResource("27_rogue"), ExtResource("28_priest"), ExtResource("29_druid")])
+available_units = Array[ExtResource("24_unit_stats")]([ExtResource("23_bjorn"), ExtResource("25_knight"), ExtResource("26_ranger"), ExtResource("8_6w4xk"), ExtResource("8_sage"), ExtResource("27_rogue"), ExtResource("29_slayer"), ExtResource("29_druid")])
 
 [node name="SynergyManager" type="Node" parent="." unique_id=2092391747]
 script = ExtResource("30_syn_mgr")

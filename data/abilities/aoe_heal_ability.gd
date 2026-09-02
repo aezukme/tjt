@@ -18,7 +18,7 @@ func execute(caster: Unit, targets: Array) -> void:
 		)
 		targets = targets.slice(0, max_targets)
 
-	var healed_count: int = 0
+	var _healed_count: int = 0
 	for target in targets:
 		if not is_instance_valid(target):
 			continue
@@ -40,7 +40,7 @@ func execute(caster: Unit, targets: Array) -> void:
 
 		if target.has_method("flash_skin"):
 			target.flash_skin(Color.GREEN)
-		healed_count += 1
+		_healed_count += 1
 
 	caster.flash_skin(Color.GREEN)
 

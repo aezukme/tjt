@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 damage = 100.0
-ability_name = "Fireball"
-description = "Launches a fireball at the nearest enemy within range, dealing 100 damage."
+ability_name = "Ember Bolt"
+description = "Launches an ember bolt at the nearest enemy within range, dealing 100 damage."
 cooldown = 3.0
 cast_range = 200.0

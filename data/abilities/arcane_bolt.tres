@@ -4,8 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-passive_name = "Precision"
-description = "Every 3rd attack deals 160% damage. (Legion TD: Meliai's Precision — 33% chance, made deterministic)"
-passive_type = 7
-value = 1.6
-interval = 3
+passive_name = "Arcane Bolt"
+description = "Every attack adds 15 magical damage (reduced by magic resist, not armor). (Bonus magical damage per attack)"
+passive_type = 8
+value = 15.0

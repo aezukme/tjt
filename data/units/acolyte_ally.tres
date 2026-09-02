@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=5 format=3 uid="uid://cks8r0jxncpqo"]
+
+[ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_85r4g"]
+[ext_resource type="Resource" uid="uid://bk4bd824lx8fi" path="res://data/abilities/ember_bolt.tres" id="2_fireball"]
+[ext_resource type="Resource" path="res://data/abilities/arcane_bolt.tres" id="3_passive"]
+[ext_resource type="Resource" path="res://data/units/arcanist_ally.tres" id="4_upgrade"]
+
+[resource]
+script = ExtResource("1_85r4g")
+name = "Acolyte"
+gold_cost = 3
+tier = 3
+skin_coordinates = Vector2i(2, 2)
+max_health = 350
+max_mana = 100
+starting_mana = 90
+mana_regen = 5.0
+attack_damage = 20
+ability_power = 50
+attack_speed = 1.0
+armor = 2
+magic_resist = 30
+attack_range = 3
+aggro_range = 5
+ability_resource = ExtResource("2_fireball")
+passive_ability = ExtResource("3_passive")
+faction = 2
+upgrades = Array[ExtResource("1_85r4g")]([ExtResource("4_upgrade")])
+metadata/_custom_type_script = "uid://xf3ubegfusxx"
