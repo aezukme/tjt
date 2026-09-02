@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PassiveAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+passive_name = "Precision"
+description = "Every 3rd attack deals 160% damage. (Legion TD: Meliai's Precision — 33% chance, made deterministic)"
+passive_type = 7
+value = 1.6
+interval = 3

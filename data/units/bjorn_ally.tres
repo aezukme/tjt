@@ -1,11 +1,14 @@
 [gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3 uid="uid://dk4rxstn86o22"]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_d6p4t"]
-[ext_resource type="Resource" path="res://data/abilities/warriors_endurance.tres" id="2_passive"]
+[ext_resource type="Resource" path="res://data/abilities/berserk.tres" id="2_passive"]
 
 [resource]
 script = ExtResource("1_d6p4t")
 name = "Bjorn"
+rarity = 0
+gold_cost = 1
+tier = 1
 skin_coordinates = Vector2i(1, 3)
 max_health = 500
 health_regen = 3.0

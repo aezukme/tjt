@@ -1,13 +1,14 @@
 [gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
-[ext_resource type="Resource" path="res://data/abilities/deadly_focus.tres" id="2_passive"]
+[ext_resource type="Resource" path="res://data/abilities/vital_slice.tres" id="2_passive"]
 
 [resource]
 script = ExtResource("1_stats")
 name = "Rogue"
 rarity = 1
 gold_cost = 3
+tier = 3
 skin_coordinates = Vector2i(3, 0)
 max_health = 250
 health_regen = 1.5

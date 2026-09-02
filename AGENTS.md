@@ -46,6 +46,9 @@ See `Game Design Document.md` for full design spec.
 - **Damage types**: `UnitStats.DamageType.PHYSICAL`, `MAGICAL`, `PURE`
 - **Armor/MR**: percentage-based reduction (15 armor = 15% less physical damage), capped at 90%
 - **Mana**: per-unit `mana_regen` (no mana per attack)
+- **Tiers**: `UnitStats.tier` 1-7 (Legion TD style; upgrades keep base tier). Design reference: `UNIT_BLUEPRINTS.md`
+- **Basic attacks** go through `CombatResolver.resolve_basic_attack()` — this is where `PassiveAbility` on-hit hooks fire. Ability damage calls `apply_damage` directly and must NOT trigger on-hit passives.
+- **No RNG in combat**: chance-based effects from Legion TD are converted to deterministic counters (every Nth attack) or thresholds
 
 ### Key design rules
 - **King HP = 0** is the only defeat condition. King fights alone if all other allies die.
@@ -73,9 +76,11 @@ asset/       # Sprites, tilesets, fonts, audio, shaders
 
 ## Required Reading
 
-Before working on any design, balance, unit, wave, or ability task, every agent **must** read:
+Before working on any **unit** design, balance, or ability task, every agent **must** read:
 
-- `reference/legion_td_mega_book.md` — full extracted text of the *Legion TD Mega Book (Overall Strategical Guide) 3.41* forum thread. It covers builders, towers, upgrades, armor/damage types, income, king, placement, focus, mid-builds, creeps, summons, arena fights, anti-stuck, and game modes. This is the primary external reference for TJT's Legion TD heritage and should inform unit design, wave composition, and balance decisions.
+- `reference/legion_td_mega_book.md` — full extracted text of the *Legion TD Mega Book (Overall Strategical Guide) 3.41* forum thread. This is the **primary and exclusive external reference for unit design** — tower stats, abilities, tiers, armor/damage types, upgrades, and balance. Use it to inform unit stats, abilities, and upgrade paths.
+
+> **Note:** The Mega Book also covers King mechanics, income, placement, and other systems. Those parts are **reference only** — TJT's King, economy, and meta-systems follow `Game Design Document.md`, not the Mega Book. Use the reference exclusively for **units** (towers/defenders).
 
 ## Current Priorities
 

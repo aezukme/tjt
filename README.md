@@ -72,18 +72,21 @@ systems, and progressive difficulty. Key features:
 ## Current Units
 
 ### Allies (8 + King)
-| Unit | Role | HP | ATK | Range | Cost | Ability |
-|------|------|-----|-----|-------|------|---------|
-| **Bjorn** | Warrior/Tank | 500 | 50 | Melee | 1 | Warrior's Endurance (+20% HP regen) |
-| **Mage** | Ranged DPS | 400 | 40 | 3 tiles | 2 | Fireball (100 dmg, projectile) |
-| **Sage** | Healer/Support | 350 | 25 | 3 tiles | 3 | Mending Bolt (heal 60 / dmg 50) |
-| **Knight** | Tank | 600 | 35 | Melee | 2 | Iron Bastion (+5 armor) — upgrades to Cavalier |
-| ↳ **Cavalier** | Tank (upgrade) | 1100 | 65 | Melee | 5 (2+3) | Harden Armor (-6 damage per hit, min 1) |
-| **Ranger** | DPS | 300 | 30 | 4 tiles | 3 | Power Shot (120 dmg projectile) |
-| **Rogue** | DPS | 250 | 70 | Melee | 3 | Deadly Focus (+25% ATK) |
-| **Priest** | Support | 350 | 15 | 3 tiles | 4 | Holy Light (AoE heal 40) |
-| **Druid** | Specialist | 380 | 30 | 3 tiles | 3 | Nature's Wrath (AoE 40 dmg) |
-| **King** | Core | 2500 | 40 | Melee | — | *(aura effects planned)* |
+| Unit | Tier | Role | HP | ATK | Range | Cost | Kit (Legion TD-derived, deterministic) |
+|------|------|------|-----|-----|-------|------|-----------------------------------------|
+| **Bjorn** | 1 | Warrior bruiser | 500 | 50 | Melee | 1 | Berserk: +20/40/60% attack speed below 60/40/20% HP |
+| **Ranger** | 2 | Ranged DPS | 300 | 30 | 4 tiles | 2 | Power Shot (120 dmg) · Precision: every 3rd shot ×1.6 |
+| **Mage** | 2 | Ranged caster | 400 | 40 | 3 tiles | 2 | Fireball (100 dmg) · Magic Missile: +15 magical per attack |
+| **Knight** | 3 | Tank | 600 | 35 | Melee | 3 | Iron Bastion (+5 armor) — upgrades to Cavalier |
+| ↳ **Cavalier** | 3 | Heavy tank | 1100 | 65 | Melee | 6 (3+3) | Harden Armor: -6 damage per hit (min 1) |
+| **Rogue** | 3 | Melee burst | 250 | 70 | Melee | 3 | Vital Slice: every 4th hit ×2 |
+| **Sage** | 3 | Healer | 350 | 25 | 3 tiles | 3 | Healing Wave: 90 HP, bounces 4× (-25% each) |
+| **Priest** | 4 | Group healer | 350 | 15 | 3 tiles | 4 | Holy Light: 50 HP to the 4 most wounded allies |
+| **Druid** | 5 | AoE caster | 520 | 45 | 3 tiles | 5 | Wrath of Nature: 100 magical, bounces 5× (-25% each) |
+| **King** | — | Core | 2500 | 40 | Melee | — | *(aura effects planned)* |
+
+Tiers follow Legion TD (1 = cheapest, 6 = strongest) plus a TJT-only **tier 7 "Champion"**
+band. Full ability catalog, upgrade trees and T6/T7 blueprints: `UNIT_BLUEPRINTS.md`.
 
 ### Enemies (6)
 | Unit | HP | ATK | AS | Armor | MR | Range | Role |
@@ -126,6 +129,7 @@ components/
   synergy_manager.gd  # Faction synergy tracking and bonuses
   projectile_pool.gd  # Object pool for projectiles
   unit_utils.gd       # Shared unit-interface helpers
+  combat_resolver.gd  # Basic-attack hit pipeline (outgoing mods → damage → on-hit passives)
 
 data/
   units/        # UnitStats resources (.tres) — HP, mana, attack, abilities
@@ -194,7 +198,7 @@ Each unit has the following stats (configured in .tres files):
 - `attack_speed`: attacks per second
 - `armor`, `magic_resist`: damage reduction
 - `attack_range`, `aggro_range`: combat ranges
-- `tier`: unit tier (1-7)
+- `tier`: unit tier (1-7, Legion TD-style; upgrades keep their base tier)
 - `faction`: Warrior / Mystic / Warden (for synergies)
 - `is_king`: marks the King unit
 - `visual_scale`: render scale (King is 1.5x)

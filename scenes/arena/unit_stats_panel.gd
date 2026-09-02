@@ -73,6 +73,7 @@ func _build_tooltip() -> String:
 	if unit.stats.is_king:
 		title += " (King)"
 	lines.append(title)
+	lines.append("Tier %d" % unit.stats.tier)
 	lines.append("Team: %s" % _team_name(unit.stats.team))
 	if unit.stats.is_king:
 		lines.append("King unit: if it dies, the run ends.")
@@ -85,6 +86,8 @@ func _build_tooltip() -> String:
 	lines.append("Attack Speed: %.1f" % unit.stats.attack_speed)
 	if unit.stats.faction != UnitStats.Faction.NONE:
 		lines.append("Faction: %s" % _faction_name(unit.stats.faction))
+	if unit.stats.ability_resource:
+		lines.append("Ability: %s" % unit.stats.ability_resource.ability_name)
 	if unit.stats.passive_ability:
 		lines.append("Passive: %s" % unit.stats.passive_ability.passive_name)
 	for upgrade in unit.stats.upgrades:

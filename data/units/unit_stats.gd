@@ -36,11 +36,15 @@ const TEAM_SPRITESHEET := {
 
 const MAX_ATTACK_RANGE := 5
 const MOVE_ONE_TILE_SPEED := 1.0
+## Legion TD has tiers 1-6; TJT adds tier 7 as the "champion" tier (see UNIT_BLUEPRINTS.md).
+const MAX_TIER := 7
 
 @export_category("Data")
 @export var rarity: Rarity
 @export var gold_cost := 1
-@export_range(1, 3) var tier := 1 : set = _set_tier
+## Unit tier (Legion TD-style "level" of the unit: 1 = cheapest / weakest, 7 = champion).
+## Upgrades keep the tier of their base unit.
+@export_range(1, MAX_TIER) var tier := 1 : set = _set_tier
 @export var pool_count := 5
 @export var is_king: bool = false  ## When true, this is the King unit — death = Game Over
 @export var faction: Faction = Faction.NONE  ## Faction for synergy system

@@ -112,9 +112,20 @@
 - [x] `PassiveAbility.DAMAGE_REDUCTION` implemented — flat per-hit reduction (deterministic, min 1 dmg)
 - [x] **Knight → Cavalier** (1100 HP / 65 ATK / 0.7 AS / 15 AR / 20 MR, cost 2 → 5) with *Harden Armor* (-6 dmg per hit)
 - [x] Upgrade info shown in card tooltip and unit stats panel tooltip
-- [ ] Upgrade paths for remaining units (Bjorn, Mage, Sage, Ranger, Rogue, Priest, Druid)
+- [ ] Upgrade paths for remaining units (Bjorn, Mage, Sage, Ranger, Rogue, Priest, Druid) — designed in `UNIT_BLUEPRINTS.md` §4
 - [ ] Branching upgrades (2 options) → choice popup instead of hotkey
 - [ ] Upgrade button in unit info UI (currently hotkey only)
+
+### Tier & Ability Framework ✅ (foundation) — see `UNIT_BLUEPRINTS.md`
+- [x] Tiers 1-7 on UnitStats; roster assigned T1-T5
+- [x] Deterministic passive framework via `CombatResolver` (no RNG — Pillar 6)
+- [ ] StatusEffect component (stun / AS slow / move slow / DoT) → unlocks Storm Bolt, Tremor, Envenom, Cripple
+- [ ] AuraManager (Leadership, Healing Aura, Reassurance, Telescope, Sickness, Blood Thirst)
+- [ ] Second passive slot (`passive_abilities: Array`)
+- [ ] Temporary summons (Raise Dead, Invoke Inferno, Mitosis)
+- [ ] On-death triggers (Tree of Life / Knowledge)
+- [ ] T6 units (Moon Guard, Minotaur, Sea Giant, Dragon Hawk, Yggdrasil, Lord of Death)
+- [ ] T7 Champions (Thrall, Fenix, Doomsday Machine, Messiah, Goliath) — one per deck rule
 
 ### Deck Manager System ✅
 - [x] DeckManager autoload singleton for persistent deck storage
@@ -354,19 +365,21 @@
 
 ## 📊 Current Content
 
-### Ally Units (8 + King)
-| Unit | HP | ATK | AS | Range | Cost | Ability |
-|------|----|-----|------|-------|------|------|
-| Bjorn (Warrior) | 500 | 50 | 0.7 | 1 (melee) | 1💰 | Warrior's Endurance (+20% regen) |
-| Mage | 400 | 40 | 0.8 | 3 (ranged) | 2💰 | Fireball (100 dmg projectile) |
-| Sage (Healer) | 350 | 25 | 0.6 | 3 (ranged) | 3💰 | Mending Bolt (heal 60 / dmg 50) |
-| Knight (Tank) | 600 | 35 | 0.6 | 1 (melee) | 2💰 | Iron Bastion (+5 armor) — **upgrades to Cavalier** |
-| ↳ Cavalier (Tank, upgrade) | 1100 | 65 | 0.7 | 1 (melee) | 5💰 (2+3) | Harden Armor (-6 dmg per hit, min 1) |
-| Ranger (DPS) | 300 | 30 | 1.2 | 4 (ranged) | 3💰 | Power Shot (120 dmg projectile) |
-| Rogue (DPS) | 250 | 70 | 1.0 | 1 (melee) | 3💰 | Deadly Focus (+25% ATK) |
-| Priest (Support) | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (AoE heal 40) |
-| Druid (Specialist) | 380 | 30 | 0.7 | 3 (ranged) | 3💰 | Nature's Wrath (AoE 40 dmg) |
-| **King** 👑 | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* |
+### Ally Units (8 + King) — tiers 1-7, Legion TD-derived kits (see `UNIT_BLUEPRINTS.md`)
+| Unit | Tier | HP | ATK | AS | Range | Cost | Active | Passive |
+|------|------|----|-----|------|-------|------|--------|---------|
+| Bjorn (Warrior) | 1 | 500 | 50 | 0.7 | 1 (melee) | 1💰 | — | Berserk (+20/40/60% AS below 60/40/20% HP) |
+| Ranger (Warden) | 2 | 300 | 30 | 1.2 | 4 (ranged) | 2💰 | Power Shot (120 dmg) | Precision (every 3rd shot ×1.6) |
+| Mage (Mystic) | 2 | 400 | 40 | 0.8 | 3 (ranged) | 2💰 | Fireball (100 dmg) | Magic Missile (+15 magical per attack) |
+| Knight (Warrior) | 3 | 600 | 35 | 0.6 | 1 (melee) | 3💰 | — | Iron Bastion (+5 armor) — **upgrades to Cavalier** |
+| ↳ Cavalier (upgrade) | 3 | 1100 | 65 | 0.7 | 1 (melee) | 6💰 (3+3) | — | Harden Armor (-6 dmg per hit, min 1) |
+| Rogue (Warrior) | 3 | 250 | 70 | 1.0 | 1 (melee) | 3💰 | — | Vital Slice (every 4th hit ×2) |
+| Sage (Mystic) | 3 | 350 | 25 | 0.6 | 3 (ranged) | 3💰 | Healing Wave (90, bounces 4×, -25%) | — |
+| Priest (Warden) | 4 | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (50 HP to 4 most wounded) | — |
+| Druid (Mystic) | 5 | 520 | 45 | 0.7 | 3 (ranged) | 5💰 | Wrath of Nature (100 magical, bounces 5×, -25%) | — |
+| **King** 👑 | — | **2500** | 40 | 0.5 | 1 (melee) | — | *(none yet — auras/abilities TBD)* | — |
+
+Tiers 6-7 have no units yet — blueprints in `UNIT_BLUEPRINTS.md` §5.
 
 ### Enemy Units (9)
 | Unit | HP | ATK | AS | Armor | MR | Range | Role |
@@ -403,6 +416,17 @@
 ---
 
 ## Session Log
+
+### September 2026 (Session 10) — Tier Rework & Legion TD Ability Catalog
+- ✅ `UnitStats.tier` range 1-7 (`MAX_TIER`), all allies assigned tier / cost / rarity by Legion TD logic
+- ✅ `PassiveAbility` combat framework: `modify_outgoing_damage`, `on_attack_hit`, `on_health_changed` hooks
+- ✅ New passive types: NTH_ATTACK_MULTIPLIER, MAGIC_MISSILE, LIFESTEAL, ARMOR_SHRED, SPLASH, MULTISHOT, BERSERK (+ SPEED_BONUS implemented)
+- ✅ `CombatResolver` — single entry for basic-attack hits (melee + basic arrows); abilities bypass it
+- ✅ New actives: `ChainDamageAbility` (Wrath of Nature), `ChainHealAbility` (Healing Wave); `max_targets` on AoE dmg/heal
+- ✅ Roster rework: Bjorn→Berserk, Ranger+Precision, Mage+Magic Missile, Rogue→Vital Slice, Sage→Healing Wave, Priest Holy Light (4 targets), Druid→Wrath of Nature (T5)
+- ✅ Data-only passives ready for blueprints: Life Steal, Corruption, Circle Splash, Burst Shot
+- ✅ `UNIT_BLUEPRINTS.md` — tier system, ability catalog (implemented / data-only / needs engine), upgrade trees, T1-T7 unit blueprints, roadmap
+- ✅ Tooltips show Tier, Ability, Passive
 
 ### September 2026 (Session 9) — Unit Upgrade System
 - ✅ Upgrade data model on UnitStats (`upgrades`, `unit_line`, `has_upgrades()`, `get_upgrade_cost()`)
@@ -507,4 +531,4 @@
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: September 2026 (Session 9)*
+*Last Updated: September 2026 (Session 10)*

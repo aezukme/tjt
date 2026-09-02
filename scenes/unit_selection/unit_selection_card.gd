@@ -138,11 +138,15 @@ func _build_tooltip() -> String:
 
 	var lines: Array[String] = []
 	lines.append(unit_stats.name)
-	lines.append("Cost: %d gold" % unit_stats.gold_cost)
+	lines.append("Tier %d | Cost: %d gold" % [unit_stats.tier, unit_stats.gold_cost])
 	lines.append("Team: %s" % _team_name(unit_stats.team))
 	lines.append("Rarity: %s" % _rarity_name(unit_stats.rarity))
 	lines.append("HP: %d | ATK: %d | Range: %d" % [unit_stats.max_health, unit_stats.attack_damage, unit_stats.attack_range])
 	lines.append("Armor: %d | MR: %d | SPD: %.1f" % [unit_stats.armor, unit_stats.magic_resist, unit_stats.attack_speed])
+	if unit_stats.ability_resource:
+		lines.append("Ability: %s" % unit_stats.ability_resource.ability_name)
+	if unit_stats.passive_ability:
+		lines.append("Passive: %s" % unit_stats.passive_ability.passive_name)
 	if unit_stats.faction != UnitStats.Faction.NONE:
 		lines.append("Synergy: %s" % _faction_tooltip(unit_stats.faction))
 	for upgrade in unit_stats.upgrades:

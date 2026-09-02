@@ -267,7 +267,15 @@ Examples: Druid
 
 # 12. Unit Tiers & Upgrades (Planned)
 
-Units have tiers (currently up to 7).
+Units have tiers 1-7. Tiers 1-6 mirror Legion TD's tower levels (1 = cheapest
+filler, 6 = late-game anchor); **tier 7 "Champions"** are a TJT addition — one
+per deck, match-defining units. Upgrades keep the tier of their base unit.
+Current roster covers T1-T5; T6/T7 are blueprinted in `UNIT_BLUEPRINTS.md`.
+
+Ability design rule: Legion TD effects that rely on chance ("33% for 160%
+damage", "30% to reduce damage by 50") are converted to **deterministic
+counters or thresholds** (every 3rd attack, flat -6 per hit, HP thresholds) so
+average power is preserved while no fight is decided by a roll (Pillar 6).
 
 Implemented (foundation):
 

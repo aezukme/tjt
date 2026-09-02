@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PassiveAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+passive_name = "Corruption"
+description = "Every attack permanently strips 4 armor from the target (cannot go below 0). Helps every ally that hits the same enemy. (Legion TD: Blood Orc Warlock / Soul of Villain)"
+passive_type = 10
+value = 4.0

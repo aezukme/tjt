@@ -124,6 +124,11 @@ func _connect_stats_signals() -> void:
 	
 	# Connect health_changed signal
 	health_changed.connect(func(_new_health): _update_health_bar())
+	# Health-reactive passives (e.g. Berserk) re-evaluate on every HP change, incl. wave reset
+	health_changed.connect(func(_new_health):
+		if stats and stats.passive_ability:
+			stats.passive_ability.on_health_changed(self)
+	)
 	
 	# Add to team groups via shared helper
 	UnitVisuals.setup_team_groups(self, stats)

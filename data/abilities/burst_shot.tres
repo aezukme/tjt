@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PassiveAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+passive_name = "Burst Shot"
+description = "Every attack also strikes the 2 nearest other enemies for 50% damage. (Legion TD: Machine Turret's Burst Shot / Elite Archer's Multishot)"
+passive_type = 12
+value = 0.5
+extra_targets = 2

@@ -1,13 +1,14 @@
 [gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3 uid="uid://diup6kc6ts5aa"]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_sage"]
-[ext_resource type="Resource" path="res://data/abilities/mending_bolt.tres" id="2_mending"]
+[ext_resource type="Resource" path="res://data/abilities/healing_wave.tres" id="2_ability"]
 
 [resource]
 script = ExtResource("1_sage")
 name = "Sage"
 rarity = 1
 gold_cost = 3
+tier = 3
 skin_coordinates = Vector2i(0, 4)
 max_health = 350
 health_regen = 2.0
@@ -21,6 +22,6 @@ armor = 2
 magic_resist = 35
 attack_range = 3
 aggro_range = 6
-ability_resource = ExtResource("2_mending")
+ability_resource = ExtResource("2_ability")
 faction = 2
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

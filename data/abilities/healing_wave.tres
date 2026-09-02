@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ChainHealAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/chain_heal_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+heal_amount = 90.0
+max_bounces = 4
+bounce_falloff = 0.75
+ability_name = "Healing Wave"
+description = "Heals the most wounded ally for 90 HP, then bounces up to 4 times to the next most wounded ally, each bounce healing 25% less. (Legion TD: Medicine Man)"
+target_type = 3
+mana_cost = 100.0
+cooldown = 3.0
+cast_range = 200.0

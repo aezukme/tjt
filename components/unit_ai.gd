@@ -125,6 +125,11 @@ func _process(delta: float) -> void:
 			if _animator:
 				_animator.play(UnitAnimator.AnimState.IDLE)
 		elif distance_to_target > attack_range_pixels and (not current_target.has_meta("is_dummy_target") or unit.stats.team == UnitStats.Team.ENEMY):
+			# King is stationary — never moves toward targets, just waits for them
+			if unit.stats and unit.stats.is_king:
+				if _animator:
+					_animator.play(UnitAnimator.AnimState.IDLE)
+				return
 			# ── Stuck detection: if not making progress, find an alternate target ──
 			if _last_distance_to_target - distance_to_target >= STUCK_PROGRESS_MIN:
 				# Making progress — reset
@@ -751,17 +756,9 @@ func _spawn_basic_attack_projectile(target, damage: int) -> void:
 
 ## Applies attack damage directly (melee or projectile fallback).
 func _apply_attack_damage(target, damage: int) -> void:
-	if UnitUtils.is_unit_node(target):
-		target.apply_damage(damage, UnitStats.DamageType.PHYSICAL)
-
-		# Notify arena aggregated damage readout
-		var arena: Node = unit.get_tree().get_first_node_in_group("arena")
-		if arena and arena.has_method("register_damage_output"):
-			arena.call_deferred("register_damage_output", damage)
-
-		# Notify attacker about damage dealt for per-unit counters
-		if unit and unit.has_method("register_damage_dealt"):
-			unit.register_damage_dealt(damage)
+	if UnitUtils.is_unit_node(target) and target.has_method("apply_damage"):
+		# CombatResolver applies the hit, damage counters and the attacker's on-hit passives
+		CombatResolver.resolve_basic_attack(unit, target, damage)
 	else:
 		# Fallback: adjust resource health which will emit signals
 		if target.stats:
@@ -987,34 +984,24 @@ func _on_velocity_computed(safe_velocity: Vector2) -> void:
 	unit.global_position += safe_velocity * get_process_delta_time()
 
 
-## Leak mechanic: when an enemy reaches the King, it deals leak damage and despawns.
-## This replaces normal attack-on-King behavior per the GDD.
+## Leak mechanic: when an enemy reaches the King, it stops and fights the King.
+## The King fights back — this is how Legion TD works (King is a powerful defender).
+## The enemy attacks the King, the King attacks the enemy. When the enemy dies,
+## it's counted as killed. If the King dies, game over.
 func _check_leak_to_king() -> void:
 	if not unit or not is_instance_valid(unit):
 		return
 	if not unit.stats or unit.stats.team != UnitStats.Team.ENEMY:
 		return
-	# Only check if we're close to the King's row (bottom of arena)
 	var king = _find_king_unit()
 	if not king or not is_instance_valid(king):
 		return
 	var dist_to_king: float = unit.global_position.distance_to(king.global_position)
-	# Leak triggers when enemy is within 1 tile of the King
-	if dist_to_king <= CELL_SIZE.x:
-		# Calculate leak damage based on enemy's attack damage
-		var leak_damage: int = unit.stats.get_attack_damage()
-		print("[AI] %s: 💥 LEAKED! Reached King, dealing %d leak damage" % [unit.stats.name, leak_damage])
-		# Apply damage to King
-		if king.has_method("apply_damage"):
-			king.apply_damage(leak_damage, UnitStats.DamageType.PHYSICAL)
-		elif "current_health" in king:
-			king.current_health = maxf(king.current_health - leak_damage, 0.0)
-		# Spawn death VFX
-		var vfx_spawner = unit.get_tree().get_first_node_in_group("vfx_spawner")
-		if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
-			vfx_spawner.spawn_vfx_on_unit("death_effect", unit)
-		# Disable AI to prevent further processing
-		enabled = false
-		# Set health to 0 — this triggers health_reached_zero signal which
-		# WaveManager listens to for remaining_enemies counter
-		unit.stats.health = 0
+	# When enemy is within the King's attack range, switch target to the King
+	# so both fight each other through normal combat (no instant leak).
+	if dist_to_king <= CELL_SIZE.x * 2.0:
+		# Switch from dummy target to the actual King node
+		if current_target == null or not is_instance_valid(current_target) or current_target.has_meta("is_dummy_target"):
+			_switch_target(king)
+			if DEBUG_AI:
+				print("[AI] %s: 👑 reached King's pit — engaging King in combat" % unit.stats.name)

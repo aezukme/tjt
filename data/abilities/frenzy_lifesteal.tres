@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PassiveAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+passive_name = "Life Steal"
+description = "Heals for 15% of the damage dealt by each attack (after reductions). (Legion TD: Frenzy Ghoul)"
+passive_type = 9
+value = 0.15

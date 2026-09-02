@@ -66,15 +66,19 @@ func _hit_target() -> void:
 		return
 	# Deal damage via interface if available
 	if target.has_method("apply_damage"):
-		target.apply_damage(int(damage))
-		# Report damage to arena for aggregated output
-		var arena: Node = get_tree().get_first_node_in_group("arena")
-		if arena and arena.has_method("register_damage_output"):
-			arena.call_deferred("register_damage_output", damage)
+		if _is_basic_attack:
+			# Basic-attack arrows go through CombatResolver so on-hit passives trigger
+			CombatResolver.resolve_basic_attack(caster, target, int(damage))
+		else:
+			target.apply_damage(int(damage))
+			# Report damage to arena for aggregated output
+			var arena: Node = get_tree().get_first_node_in_group("arena")
+			if arena and arena.has_method("register_damage_output"):
+				arena.call_deferred("register_damage_output", damage)
 
-		# Notify caster about damage dealt (per-unit damage counters)
-		if caster and caster.has_method("register_damage_dealt"):
-			caster.register_damage_dealt(damage)
+			# Notify caster about damage dealt (per-unit damage counters)
+			if caster and caster.has_method("register_damage_dealt"):
+				caster.register_damage_dealt(damage)
 	elif target is Unit:
 		# Unit-style direct health damage.
 		target.current_health = max(target.current_health - damage, 0)

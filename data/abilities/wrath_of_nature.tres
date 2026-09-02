@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ChainDamageAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/chain_damage_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+damage = 100.0
+max_bounces = 5
+bounce_falloff = 0.75
+bounce_range = 96.0
+damage_type = 1
+ability_name = "Wrath of Nature"
+description = "Deals 100 magical damage to the nearest enemy, then bounces up to 5 times to nearby enemies, each bounce dealing 25% less. (Legion TD: Druid)"
+target_type = 1
+mana_cost = 100.0
+cooldown = 4.0
+cast_range = 200.0

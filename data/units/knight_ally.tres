@@ -7,8 +7,9 @@
 [resource]
 script = ExtResource("1_stats")
 name = "Knight"
-rarity = 0
-gold_cost = 2
+rarity = 1
+gold_cost = 3
+tier = 3
 skin_coordinates = Vector2i(0, 1)
 max_health = 600
 health_regen = 2.0
