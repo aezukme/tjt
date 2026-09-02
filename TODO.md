@@ -14,7 +14,7 @@
 - [x] Deck-building sistem — pre-match unit set selekcija (OCG stil).
 - [ ] King selekcija — biranje tipa Kinga pre partije.
 - [ ] King aura — pasivni efekti Kinga na defendere.
-- [ ] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7.
+- [~] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7. **Prvi upgrade gotov: Knight → Cavalier.** Ostaje: upgrade za ostale unite, UI dugme/popup za izbor kada unit ima 2+ upgrade-a.
 - [ ] PvP slanje unita — iz ličnog deck-a, bez posebnog barracks-a.
 - [ ] Multiplayer — 1v1, 2v2, 3v3, 4v4, coop (server authoritative).
 - [ ] Map / lane dizajn — više arena layout-a.
@@ -103,6 +103,18 @@
 - [x] Death VFX (death_effect on unit death)
 - [x] Physical hit VFX (hit_physical on melee attack)
 - [x] Animated enemy sprites (Crab, Jumper, Octopus with SpriteFrames)
+
+### Unit Upgrade System (Legion TD style) ✅ (foundation)
+- [x] `UnitStats.upgrades: Array[UnitStats]` — base unit lists its upgrade options
+- [x] Upgraded unit's `gold_cost` = total value; upgrade price = difference (full refund on sell)
+- [x] `UnitStats.unit_line` — base + upgrade count as ONE unique unit for synergies
+- [x] Hover placed unit + **U** during prep → in-place upgrade (position preserved, toast + VFX)
+- [x] `PassiveAbility.DAMAGE_REDUCTION` implemented — flat per-hit reduction (deterministic, min 1 dmg)
+- [x] **Knight → Cavalier** (1100 HP / 65 ATK / 0.7 AS / 15 AR / 20 MR, cost 2 → 5) with *Harden Armor* (-6 dmg per hit)
+- [x] Upgrade info shown in card tooltip and unit stats panel tooltip
+- [ ] Upgrade paths for remaining units (Bjorn, Mage, Sage, Ranger, Rogue, Priest, Druid)
+- [ ] Branching upgrades (2 options) → choice popup instead of hotkey
+- [ ] Upgrade button in unit info UI (currently hotkey only)
 
 ### Deck Manager System ✅
 - [x] DeckManager autoload singleton for persistent deck storage
@@ -348,7 +360,8 @@
 | Bjorn (Warrior) | 500 | 50 | 0.7 | 1 (melee) | 1💰 | Warrior's Endurance (+20% regen) |
 | Mage | 400 | 40 | 0.8 | 3 (ranged) | 2💰 | Fireball (100 dmg projectile) |
 | Sage (Healer) | 350 | 25 | 0.6 | 3 (ranged) | 3💰 | Mending Bolt (heal 60 / dmg 50) |
-| Knight (Tank) | 600 | 35 | 0.6 | 1 (melee) | 2💰 | Iron Bastion (+5 armor) |
+| Knight (Tank) | 600 | 35 | 0.6 | 1 (melee) | 2💰 | Iron Bastion (+5 armor) — **upgrades to Cavalier** |
+| ↳ Cavalier (Tank, upgrade) | 1100 | 65 | 0.7 | 1 (melee) | 5💰 (2+3) | Harden Armor (-6 dmg per hit, min 1) |
 | Ranger (DPS) | 300 | 30 | 1.2 | 4 (ranged) | 3💰 | Power Shot (120 dmg projectile) |
 | Rogue (DPS) | 250 | 70 | 1.0 | 1 (melee) | 3💰 | Deadly Focus (+25% ATK) |
 | Priest (Support) | 350 | 15 | 0.5 | 3 (ranged) | 4💰 | Holy Light (AoE heal 40) |
@@ -390,6 +403,15 @@
 ---
 
 ## Session Log
+
+### September 2026 (Session 9) — Unit Upgrade System
+- ✅ Upgrade data model on UnitStats (`upgrades`, `unit_line`, `has_upgrades()`, `get_upgrade_cost()`)
+- ✅ Arena upgrade flow: U hotkey on hovered ally during prep, pays difference, respawns at same tile
+- ✅ SynergyManager counts unique units by `unit_line` (Knight + Cavalier = 1 Warrior)
+- ✅ `PassiveAbility.DAMAGE_REDUCTION` implemented and hooked into `Unit.apply_damage`
+- ✅ First upgrade: Knight → Cavalier (Harden Armor), sprite (4,1) on rogues.png
+- ✅ Stats panel rebuilds when a unit node is replaced in place
+- ✅ New input action `upgrade_unit` (U) in project.godot
 
 ### August 2026 (Session 8) — VFX System, Animated Enemies, Review Fixes
 - ✅ VFX system — VFXSpawner component with 8 VFX types (explosions, hit effects, death)
@@ -485,4 +507,4 @@
 - ✅ Bug fixes (mana regen, BattleManager casting, console spam)
 
 ---
-*Last Updated: August 2026 (Session 8)*
+*Last Updated: September 2026 (Session 9)*

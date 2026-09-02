@@ -45,6 +45,17 @@ const MOVE_ONE_TILE_SPEED := 1.0
 @export var is_king: bool = false  ## When true, this is the King unit — death = Game Over
 @export var faction: Faction = Faction.NONE  ## Faction for synergy system
 
+@export_category("Upgrades")
+## Legion TD-style upgrade options for a placed unit. The upgraded unit's gold_cost is its
+## TOTAL value (base + upgrade), so the price to upgrade is the difference between the two
+## gold_costs and selling an upgraded unit refunds everything invested in it.
+## Only the base unit lists its upgrades — upgraded units do NOT reference their base
+## (avoids cyclic .tres references).
+@export var upgrades: Array[UnitStats] = []
+## Name of the base unit this unit belongs to (e.g. "Knight" for Cavalier). Used so a base
+## unit and its upgrade count as ONE unique unit for faction synergies. Empty = this unit's name.
+@export var unit_line: String = ""
+
 @export_category("Visuals")
 @export var skin_coordinates: Vector2i
 ## Visual scale multiplier (e.g. 1.5 for King). Applied to the Visuals node.
@@ -93,6 +104,24 @@ func get_combined_unit_count() -> int:
 ## Returns the total gold value of this unit (cost × combined count).
 func get_gold_value() -> int:
 	return gold_cost * get_combined_unit_count()
+
+
+## Returns true if this unit has at least one upgrade option.
+func has_upgrades() -> bool:
+	return not upgrades.is_empty()
+
+
+## Returns the gold needed to upgrade this unit into `target` (difference of total values).
+## Never negative — a cheaper "upgrade" is free rather than refunding gold.
+func get_upgrade_cost(target: UnitStats) -> int:
+	if not target:
+		return 0
+	return maxi(target.gold_cost - gold_cost, 0)
+
+
+## Returns the synergy identity of this unit: its unit_line if set, otherwise its name.
+func get_unit_line() -> String:
+	return unit_line if not unit_line.is_empty() else name
 
 
 func get_max_health() -> int:

@@ -10,8 +10,11 @@ enum PassiveType {
 	ARMOR_BONUS,           # Increases armor
 	SPEED_BONUS,           # Increases attack speed
 	MAX_HEALTH_BONUS,      # Increases max health
-	DAMAGE_REDUCTION       # Reduces incoming damage
+	DAMAGE_REDUCTION       # Reduces every incoming hit by a flat amount (after armor/MR), min 1 dmg
 }
+
+## Floor for DAMAGE_REDUCTION — a hit can never be reduced to zero so no unit is fully immune.
+const MIN_DAMAGE_AFTER_REDUCTION: int = 1
 
 @export var passive_name: String = "Unnamed Passive"
 @export_multiline var description: String = ""
@@ -43,6 +46,18 @@ func apply(unit: Unit) -> void:
 			var bonus = int(unit.stats.max_health * value)
 			unit.stats.max_health += bonus
 			unit.current_health += bonus  # Also increase current health
+		
+		PassiveType.DAMAGE_REDUCTION:
+			# Nothing to bake into stats — evaluated per hit via modify_incoming_damage().
+			print("[Passive] %s: %s gains flat -%d damage per hit" % [unit.stats.name, passive_name, int(value)])
+
+
+## Applies per-hit modifiers to damage that has already been reduced by armor/MR.
+## Deterministic on purpose (no chance rolls) — see GDD Pillar 6 "No RNG should decide a match".
+func modify_incoming_damage(damage: int) -> int:
+	if passive_type != PassiveType.DAMAGE_REDUCTION or damage <= 0:
+		return damage
+	return maxi(damage - int(value), MIN_DAMAGE_AFTER_REDUCTION)
 
 
 ## Remove passive effect from unit (for temporary passives)

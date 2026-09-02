@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
 [ext_resource type="Resource" path="res://data/abilities/iron_bastion.tres" id="2_passive"]
+[ext_resource type="Resource" path="res://data/units/cavalier_ally.tres" id="3_upgrade"]
 
 [resource]
 script = ExtResource("1_stats")
@@ -22,4 +23,5 @@ attack_range = 1
 aggro_range = 4
 passive_ability = ExtResource("2_passive")
 faction = 1
+upgrades = Array[ExtResource("1_stats")]([ExtResource("3_upgrade")])
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

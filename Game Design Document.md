@@ -269,11 +269,22 @@ Examples: Druid
 
 Units have tiers (currently up to 7).
 
+Implemented (foundation):
+
+- Legion TD-style **in-place upgrade** during the build phase: a placed unit
+  is replaced by its stronger form on the same tile
+- The upgraded unit's gold cost is its *total* value; the player pays the
+  difference, and selling refunds everything invested
+- A base unit and its upgrade share a `unit_line`, so they count as one
+  unique unit for faction synergies (no synergy farming via upgrades)
+- First path: **Knight → Cavalier** (Harden Armor: flat -6 damage per hit,
+  deterministic — no chance rolls, per Pillar 6)
+
 Planned:
 
-- Per-unit upgrade paths (Legion TD-style)
-- Each unit may have one or more upgrade options
-- Upgrades are chosen during the match (strategic decision)
+- Upgrade paths for every unit
+- Branching upgrades (two options) with a choice popup
+- Upgrade button in the unit info UI (currently hotkey **U**)
 
 ---
 
@@ -384,9 +395,9 @@ Status: 0%
 - Income, interest, workers (TBD)
 
 ## Milestone 6 — Unit Upgrades
-Status: 0%
+Status: ~25% (system foundation + first path)
 
-- Per-unit upgrade paths
+- Per-unit upgrade paths (Knight → Cavalier done)
 - Tier progression
 
 ## Milestone 7 — Multiplayer Foundation

@@ -61,8 +61,9 @@ systems, and progressive difficulty. Key features:
 - **Ability System**: mana-based abilities with auto-cast (Fireball,
   Mending Bolt, AOE), passive abilities (Warrior's Endurance), and
   projectile visuals
-- **Unit Tiers**: units have tiers (up to 7); per-unit upgrade paths
-  planned (Legion TD-style)
+- **Unit Upgrades**: Legion TD-style in-place upgrades during the build
+  phase — hover a placed unit and press **U** to pay the gold difference
+  and replace it with its stronger form (first path: Knight → Cavalier)
 - **Synergy System**: factions (Warrior / Mystic / Warden) grant stat
   bonuses when enough unique units of a faction are placed
 - **Economy**: gold rewards per wave; full economy (income, interest,
@@ -76,7 +77,8 @@ systems, and progressive difficulty. Key features:
 | **Bjorn** | Warrior/Tank | 500 | 50 | Melee | 1 | Warrior's Endurance (+20% HP regen) |
 | **Mage** | Ranged DPS | 400 | 40 | 3 tiles | 2 | Fireball (100 dmg, projectile) |
 | **Sage** | Healer/Support | 350 | 25 | 3 tiles | 3 | Mending Bolt (heal 60 / dmg 50) |
-| **Knight** | Tank | 600 | 35 | Melee | 2 | Iron Bastion (+5 armor) |
+| **Knight** | Tank | 600 | 35 | Melee | 2 | Iron Bastion (+5 armor) — upgrades to Cavalier |
+| ↳ **Cavalier** | Tank (upgrade) | 1100 | 65 | Melee | 5 (2+3) | Harden Armor (-6 damage per hit, min 1) |
 | **Ranger** | DPS | 300 | 30 | 4 tiles | 3 | Power Shot (120 dmg projectile) |
 | **Rogue** | DPS | 250 | 70 | Melee | 3 | Deadly Focus (+25% ATK) |
 | **Priest** | Support | 350 | 15 | 3 tiles | 4 | Holy Light (AoE heal 40) |
@@ -215,6 +217,7 @@ Each unit has the following stats (configured in .tres files):
 - **Left click** — Select / drag units, place from panel
 - **Right click / Escape** — Cancel drag / placement
 - **Right click on placed unit** — Remove (refunds gold)
+- **U on hovered unit** — Upgrade in place (prep phase, if an upgrade exists)
 - **Shift + click** — Multi-place same unit type
 - **Middle click drag** — Pan camera
 - **Mouse wheel** — Zoom camera (0.5x - 2.0x)
@@ -226,7 +229,7 @@ Each unit has the following stats (configured in .tres files):
 - [ ] **King selection** — choose King type with aura effects
 - [ ] **Permadeath** — units do not revive between waves
 - [ ] **Leak mechanic** — enemies damage King on contact, then despawn
-- [ ] **Unit upgrades** — per-unit upgrade paths (Legion TD-style)
+- [~] **Unit upgrades** — per-unit upgrade paths (Legion TD-style); Knight → Cavalier done, more paths to come
 - [ ] **Economy** — income, interest, workers (designed after core gameplay)
 - [ ] **Multiplayer** — 1v1 / 2v2 / 3v3 / 4v4 / coop
 - [ ] **PvP unit sending** — send units from your deck to opponent (no barracks)

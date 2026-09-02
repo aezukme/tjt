@@ -71,6 +71,12 @@ asset/       # Sprites, tilesets, fonts, audio, shaders
 - Test wave 1 (should be challenging: 10 goblins + 6 orcs + 5 skeleton archers)
 - Verify: King death = game over, permadeath toasts appear, Victory/GameOver stats display
 
+## Required Reading
+
+Before working on any design, balance, unit, wave, or ability task, every agent **must** read:
+
+- `reference/legion_td_mega_book.md` — full extracted text of the *Legion TD Mega Book (Overall Strategical Guide) 3.41* forum thread. It covers builders, towers, upgrades, armor/damage types, income, king, placement, focus, mid-builds, creeps, summons, arena fights, anti-stuck, and game modes. This is the primary external reference for TJT's Legion TD heritage and should inform unit design, wave composition, and balance decisions.
+
 ## Current Priorities
 
 See `TODO.md` for current task list. Economy is deferred until PvP work begins.

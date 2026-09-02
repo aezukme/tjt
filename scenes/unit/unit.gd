@@ -385,6 +385,9 @@ func apply_damage(damage: int, damage_type: UnitStats.DamageType = UnitStats.Dam
 		float(damage), damage_type, stats.armor if stats else 0, stats.magic_resist if stats else 0
 	)
 	var final_damage: int = roundi(reduced)
+	# Per-hit passives (e.g. Cavalier's Harden Armor) apply after armor/MR
+	if stats and stats.passive_ability:
+		final_damage = stats.passive_ability.modify_incoming_damage(final_damage)
 	current_health = max(current_health - final_damage, 0)
 	# Reduce incoming_damage since this damage has now landed
 	incoming_damage = maxf(incoming_damage - final_damage, 0.0)

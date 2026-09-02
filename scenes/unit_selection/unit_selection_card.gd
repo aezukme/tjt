@@ -145,6 +145,9 @@ func _build_tooltip() -> String:
 	lines.append("Armor: %d | MR: %d | SPD: %.1f" % [unit_stats.armor, unit_stats.magic_resist, unit_stats.attack_speed])
 	if unit_stats.faction != UnitStats.Faction.NONE:
 		lines.append("Synergy: %s" % _faction_tooltip(unit_stats.faction))
+	for upgrade in unit_stats.upgrades:
+		if upgrade:
+			lines.append("Upgrade [U]: %s (+%d gold)" % [upgrade.name, unit_stats.get_upgrade_cost(upgrade)])
 	return "\n".join(lines)
 
 

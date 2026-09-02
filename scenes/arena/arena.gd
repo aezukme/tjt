@@ -428,6 +428,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 
+	# ── Upgrade: U key upgrades hovered unit in place (Legion TD style, prep phase only) ──
+	if not _placement_stats and event.is_action_pressed("upgrade_unit"):
+		if battle_manager and battle_manager.current_state != BattleManager.State.BATTLE and game_area:
+			var tile := game_area.get_hovered_tile()
+			if game_area.is_tile_within_bounds(tile) and game_area.unit_grid.is_tile_occupied(tile):
+				_upgrade_placed_unit(tile)
+				get_viewport().set_input_as_handled()
+				return
+
 	if not _placement_stats:
 		return
 
@@ -538,6 +547,59 @@ func _remove_placed_unit(tile: Vector2i) -> void:
 	unit.queue_free()
 
 
+## Upgrades the ally on `tile` into its first upgrade option (Legion TD style: the unit is
+## replaced in place, position preserved, player pays the difference in gold).
+## Only the first option is used for now — every current unit has a single upgrade path.
+## When branching upgrades are added, this hotkey should open a choice popup instead.
+func _upgrade_placed_unit(tile: Vector2i) -> void:
+	var unit = game_area.unit_grid.units.get(tile)
+	if not unit or not is_instance_valid(unit) or not unit.stats:
+		return
+	var current: UnitStats = unit.stats
+	if current.is_king:
+		return
+	if not current.has_upgrades():
+		print("[Upgrade] %s has no upgrade path" % current.name)
+		return
+
+	var target: UnitStats = current.upgrades[0]
+	if not target:
+		push_warning("[Upgrade] %s has a null upgrade entry" % current.name)
+		return
+	var cost: int = current.get_upgrade_cost(target)
+	if player_stats and player_stats.gold < cost:
+		print("[Upgrade] Not enough gold to upgrade %s → %s (need %d, have %d)" % [current.name, target.name, cost, player_stats.gold])
+		_show_toast("Not enough gold: %s needs %d" % [target.name, cost], Color(1.0, 0.6, 0.3))
+		return
+
+	# Pay, then swap the unit. The spawner duplicates stats and re-registers the new unit with
+	# UnitMover + SynergyManager via unit_spawned, so nothing else needs manual wiring.
+	if player_stats:
+		player_stats.gold -= cost
+	game_area.unit_grid.remove_unit(tile)
+	unit.queue_free()
+	var upgraded := unit_spawner.spawn_unit(target, tile)
+	if not upgraded:
+		push_warning("[Upgrade] Failed to spawn %s — refunding %d gold" % [target.name, cost])
+		if player_stats:
+			player_stats.gold += cost
+		return
+
+	print("[Upgrade] ⬆ %s → %s at tile %s (-%d gold)" % [current.name, target.name, tile, cost])
+	_show_toast("%s upgraded to %s" % [current.name, target.name], Color(0.5, 0.9, 1.0))
+	var vfx_spawner = get_tree().get_first_node_in_group("vfx_spawner")
+	if vfx_spawner and vfx_spawner.has_method("spawn_vfx_on_unit"):
+		vfx_spawner.spawn_vfx_on_unit("explosion_heal", upgraded)
+	# Deployed count is unchanged (one unit out, one in) — only refresh gold/affordability
+	if unit_selection_panel and player_stats:
+		unit_selection_panel.set_player_stats(player_stats)
+
+
+func _show_toast(message: String, color: Color) -> void:
+	if toast_manager:
+		toast_manager.show_toast(message, 2.5, color)
+
+
 ## Creates a semi-transparent ghost sprite that follows the cursor for placement preview.
 func _create_placement_ghost(unit_stats: UnitStats) -> void:
 	# Remove old ghost if any
@@ -601,8 +663,15 @@ func update_stats_display() -> void:
 	unit_stats_container.visible = not ally_units.is_empty()
 	var current_panels = unit_stats_container.get_children()
 	
-	# Only rebuild panels if unit count changed
-	if current_panels.size() != ally_units.size():
+	# Only rebuild panels if unit count changed or a panel points at a stale unit
+	# (e.g. after an in-place upgrade the count is unchanged but the node was replaced)
+	var needs_rebuild: bool = current_panels.size() != ally_units.size()
+	if not needs_rebuild:
+		for i in current_panels.size():
+			if current_panels[i].unit != ally_units[i]:
+				needs_rebuild = true
+				break
+	if needs_rebuild:
 		for child in current_panels:
 			child.queue_free()
 		

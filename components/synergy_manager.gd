@@ -60,7 +60,7 @@ func get_faction_count(faction: UnitStats.Faction) -> int:
 	var count := 0
 	for u in _tracked_units:
 		if is_instance_valid(u) and u.stats and u.stats.faction == faction:
-			var n: String = u.stats.name
+			var n: String = u.stats.get_unit_line()
 			if n not in seen_names:
 				seen_names[n] = true
 				count += 1
@@ -68,7 +68,8 @@ func get_faction_count(faction: UnitStats.Faction) -> int:
 
 
 ## Returns Dictionary[Faction, int] of all tracked faction counts.
-## Only unique unit types (by stats.name) are counted per faction.
+## Only unique unit types are counted per faction. Identity is stats.get_unit_line(), so a
+## base unit and its upgrade (e.g. Knight / Cavalier) count as one.
 func get_all_counts() -> Dictionary:
 	var counts := {}
 	var seen: Dictionary = {}  # faction → { name: true }
@@ -78,7 +79,7 @@ func get_all_counts() -> Dictionary:
 		var f: int = u.stats.faction
 		if f == UnitStats.Faction.NONE:
 			continue
-		var n: String = u.stats.name
+		var n: String = u.stats.get_unit_line()
 		if f not in seen:
 			seen[f] = {}
 		if n not in seen[f]:

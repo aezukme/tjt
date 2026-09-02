@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PassiveAbility" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+passive_name = "Harden Armor"
+description = "Every incoming hit deals 6 less damage (after armor / magic resist). A hit always deals at least 1 damage."
+passive_type = 6
+value = 6.0
