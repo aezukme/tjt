@@ -2,6 +2,7 @@ class_name SelectedUnitPanel
 extends PanelContainer
 
 signal upgrade_requested(unit: Unit, target: UnitStats)
+signal removal_requested(unit: Unit)
 signal deselection_requested
 
 var unit: Unit = null
@@ -26,7 +27,7 @@ var _upgrade_buttons: Array[Button] = []
 @onready var _upgrade_scroll: ScrollContainer = %UpgradeScroll
 @onready var _upgrade_container: VBoxContainer = %UpgradeButtons
 @onready var _no_upgrades: Label = %NoUpgradesLabel
-@onready var _upgrade_status: Label = %UpgradeStatus
+@onready var _remove_button: Button = %RemoveButton
 
 
 func _ready() -> void:
@@ -98,6 +99,7 @@ func refresh() -> void:
 		stats.passive_ability.description if stats.passive_ability else "No passive ability.")
 	_refresh_live_values()
 	_refresh_upgrades(stats)
+	_refresh_remove_button()
 
 
 func _refresh_live_values() -> void:
@@ -117,7 +119,7 @@ func _refresh_live_values() -> void:
 	if unit._is_dead or unit.current_health <= 0.0:
 		for button: Button in _upgrade_buttons:
 			button.disabled = true
-		_upgrade_status.text = "Unit is no longer alive."
+	_refresh_remove_button()
 
 
 func _has_valid_unit() -> bool:
@@ -201,7 +203,6 @@ func _refresh_upgrades(stats: UnitStats) -> void:
 	_no_upgrades.visible = not has_upgrades
 	_no_upgrades.text = "The King cannot be upgraded." if stats.is_king else "No further upgrades."
 	if not has_upgrades:
-		_upgrade_status.text = ""
 		return
 	var block_reason: String = _upgrade_block_reason()
 	var can_upgrade: bool = false
@@ -218,10 +219,6 @@ func _refresh_upgrades(stats: UnitStats) -> void:
 		if not reason.is_empty():
 			button.tooltip_text += "\n\n%s" % reason
 		can_upgrade = can_upgrade or not button.disabled
-	_upgrade_status.text = block_reason
-	if block_reason.is_empty():
-		_upgrade_status.text = "Choose an upgrade; hover for details." if can_upgrade else "Not enough gold for an upgrade."
-	_upgrade_status.tooltip_text = _upgrade_status.text
 
 
 func _clear_upgrades() -> void:
@@ -295,6 +292,46 @@ func _on_upgrade_pressed(source: WeakRef, target: UnitStats) -> void:
 		return
 	print("[SelectedUnitPanel] Upgrade requested: %s -> %s (+%d gold)" % [unit.stats.name, target.name, cost])
 	upgrade_requested.emit(unit, target)
+
+
+func _on_remove_pressed() -> void:
+	if not _has_valid_unit():
+		return
+	var reason: String = _removal_block_reason()
+	if not reason.is_empty():
+		print("[SelectedUnitPanel] Removal blocked: %s" % reason)
+		refresh()
+		return
+	print("[SelectedUnitPanel] Removal requested: %s" % unit.stats.name)
+	removal_requested.emit(unit)
+
+
+func _refresh_remove_button() -> void:
+	if not is_node_ready() or _remove_button == null:
+		return
+	if not _has_valid_unit():
+		_remove_button.visible = false
+		return
+	_remove_button.visible = true
+	var reason: String = _removal_block_reason()
+	_remove_button.disabled = not reason.is_empty()
+	if reason.is_empty():
+		_remove_button.text = "Remove"
+		_remove_button.tooltip_text = "Remove this unit and refund %d gold." % unit.stats.gold_cost
+	else:
+		_remove_button.tooltip_text = reason
+
+
+func _removal_block_reason() -> String:
+	if not _has_valid_unit() or unit._is_dead or unit.current_health <= 0.0:
+		return "Unit is no longer alive."
+	if unit.stats.is_king:
+		return "The King cannot be removed."
+	if unit.is_in_group("dragging") or (is_instance_valid(unit.drag_and_drop) and unit.drag_and_drop.dragging):
+		return "Finish moving the unit first."
+	if not _upgrades_enabled:
+		return "Removal requires preparation."
+	return ""
 
 
 func _request_deselection() -> void:

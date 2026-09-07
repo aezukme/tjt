@@ -125,7 +125,7 @@ func _process(delta: float) -> void:
 			if _animator:
 				_animator.play(UnitAnimator.AnimState.IDLE)
 		elif distance_to_target > attack_range_pixels and (not current_target.has_meta("is_dummy_target") or unit.stats.team == UnitStats.Team.ENEMY):
-			# King is stationary — never moves toward targets, just waits for them
+			# King is a stationary ranged defender: never move toward targets, just attack when in range
 			if unit.stats and unit.stats.is_king:
 				if _animator:
 					_animator.play(UnitAnimator.AnimState.IDLE)
@@ -193,6 +193,11 @@ func _process(delta: float) -> void:
 
 ## Main AI update logic — runs every update_interval seconds.
 func _update_ai() -> void:
+	# King is a stationary ranged tower: pick a target in attack range, never move.
+	if unit.stats and unit.stats.is_king:
+		_update_king_ai()
+		return
+
 	# ── Step 1: Target stickiness ──
 	# If current target is alive, valid, and in aggro range, keep it.
 	if current_target and is_instance_valid(current_target) and not current_target.has_meta("is_dummy_target"):
@@ -349,7 +354,7 @@ func _switch_target(new_target) -> void:
 
 
 ## ── Helper: find any enemy within attack range (for pre-move intercept) ──
-func _find_enemy_in_attack_range():
+func _find_enemy_in_attack_range() -> Node:
 	if not unit.stats:
 		return null
 	var attack_range_pixels: float = unit.stats.attack_range * CELL_SIZE.x
@@ -614,6 +619,18 @@ func _find_king_unit() -> Node:
 		if is_instance_valid(u) and u.stats and u.stats.is_king:
 			return u
 	return null
+
+
+## King-specific AI update: stationary ranged defender.
+## Picks the closest enemy within the King's attack range and never moves to engage.
+func _update_king_ai() -> void:
+	var new_target := _find_enemy_in_attack_range()
+	if current_target != new_target:
+		if DEBUG_AI or DEBUG_TARGETING:
+			var old_name := _get_target_name(current_target)
+			var new_name := _get_target_name(new_target)
+			print("[AI] %s: King target %s → %s" % [unit.stats.name, old_name, new_name])
+		_switch_target(new_target)
 
 
 ## Moves towards the current target.

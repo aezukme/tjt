@@ -18,6 +18,6 @@ attack_damage = 80
 attack_speed = 0.7
 armor = 8
 magic_resist = 25
-attack_range = 1
+attack_range = 3
 aggro_range = 3
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

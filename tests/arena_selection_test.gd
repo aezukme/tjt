@@ -52,6 +52,7 @@ func _run() -> void:
 		_test_selection_lifetime,
 		_test_bloodrage_thresholds,
 		_test_bloodrage_attack_timing,
+		_test_remove_button,
 	]
 	for test_case: Callable in cases:
 		_case_name = String(test_case.get_method())
@@ -245,8 +246,8 @@ func _panel_text(node_name: String) -> String:
 func _check_panel_bounds() -> void:
 	var panel: SelectedUnitPanel = _arena.selected_unit_panel
 	var minimum: Vector2 = panel.get_combined_minimum_size()
-	_check(minimum.x <= 960.0 and minimum.y <= 98.0, "Selected panel minimum fits 960x98: %s" % minimum)
-	_check(panel.size.x <= 960.0 and panel.size.y <= 98.0, "Selected panel actual size fits 960x98: %s" % panel.size)
+	_check(minimum.x <= 200.0 and minimum.y <= 540.0, "Selected panel minimum fits left vertical bounds: %s" % minimum)
+	_check(panel.size.x <= 200.0 and panel.size.y <= 540.0, "Selected panel actual size fits left vertical bounds: %s" % panel.size)
 	_check(get_tree().root.get_visible_rect().grow(0.5).encloses(panel.get_global_rect()), "Selected panel stays within the viewport")
 	var bounds: Rect2 = panel.get_global_rect().grow(0.5)
 	for node: Node in panel.find_children("*", "Control", true, false):
@@ -268,7 +269,7 @@ func _test_selection_and_panels() -> void:
 	_select(first)
 	await _frames()
 	_check(_arena._selected_unit == first and first.is_selected, "Actual Unit input signal selects the unit")
-	_check(_arena.selected_unit_panel.visible and not _arena.unit_selection_panel.visible, "Selection shows only the info panel")
+	_check(_arena.selected_unit_panel.visible and not _arena.unit_selection_panel.visible, "Selection shows the info panel; deck stays hidden")
 	first.mouse_entered.emit()
 	first.mouse_exited.emit()
 	_check(not first.is_hovered and _outline_thickness(first) > 0.0, "Selected outline survives mouse exit")
@@ -297,12 +298,13 @@ func _test_selection_and_panels() -> void:
 		_send_input(release)
 	_select(first)
 	_arena._on_toggle_units_pressed()
-	_check(_arena.unit_selection_panel.visible and not _arena.selected_unit_panel.visible and _arena._selected_unit == null and not first.is_selected, "Opening the deck deselects and hides info")
+	_check(_arena.unit_selection_panel.visible and _arena.selected_unit_panel.visible and _arena._selected_unit == first and first.is_selected, "Opening the deck while a unit is selected keeps both panels visible and preserves selection")
 	_select(second)
-	_check(not _arena.unit_selection_panel.visible and _arena.selected_unit_panel.visible and second.is_selected, "Selecting while the deck is open switches back to info")
+	_check(_arena.unit_selection_panel.visible and _arena.selected_unit_panel.visible and _arena._selected_unit == second and second.is_selected and not first.is_selected, "Selecting another unit while the deck is open keeps both panels visible and switches selection")
 	_arena._on_toggle_units_pressed()
+	_check(not _arena.unit_selection_panel.visible and _arena.selected_unit_panel.visible and _arena._selected_unit == second and second.is_selected, "Toggling the deck closed keeps the selected unit info visible")
 	_arena._on_toggle_units_pressed()
-	_check(not _arena.unit_selection_panel.visible and not _arena.selected_unit_panel.visible, "Closing the deck leaves both panels hidden")
+	_check(_arena.unit_selection_panel.visible and _arena.selected_unit_panel.visible and _arena._selected_unit == second and second.is_selected, "Toggling the deck open again preserves both panels and selection")
 	_case_completed = true
 
 
@@ -318,7 +320,7 @@ func _click_at(position: Vector2) -> void:
 
 func _test_viewport_clicks() -> void:
 	var unit: Unit = _spawn(GRUNT, FIRST_TILE)
-	var covered: Unit = _spawn(GRUNT, Vector2i(6, 10))
+	var covered: Unit = _spawn(GRUNT, Vector2i(2, 10))
 	if unit == null or covered == null:
 		return
 	var position: Vector2 = _screen_position(unit.global_position + Vector2(16.0, 8.0))
@@ -339,12 +341,12 @@ func _test_viewport_clicks() -> void:
 	space.keycode = KEY_SPACE
 	space.pressed = true
 	_send_input(space)
-	_check(_arena.unit_selection_panel.visible and _arena._selected_unit == null and _arena.player_stats.gold == gold, "Space opens the deck instead of activating a focused upgrade button")
+	_check(_arena.unit_selection_panel.visible and _arena._selected_unit == unit and _arena.player_stats.gold == gold, "Space opens the deck instead of activating a focused upgrade button while keeping the unit selected")
 	var space_release: InputEventKey = space.duplicate() as InputEventKey
 	space_release.pressed = false
 	_send_input(space_release)
 	await _click_at(position)
-	_check(_arena._selected_unit == unit and not _arena.unit_selection_panel.visible, "Real world click switches from deck to selected-unit info")
+	_check(_arena._selected_unit == unit and _arena.unit_selection_panel.visible, "Real world click keeps selection while the deck remains open")
 	button = _upgrade_button(target)
 	if not _check(button != null, "Upgrade button is rebuilt after reopening selection"):
 		return
@@ -687,4 +689,44 @@ func _test_bloodrage_attack_timing() -> void:
 		ai.attack_timer = 0.0
 		ai._try_attack()
 		_check(is_equal_approx(ai.attack_timer, 1.0 / template.attack_speed), "Healing %s to full restores its normal AI attack interval" % template.name)
+	_case_completed = true
+
+
+func _test_remove_button() -> void:
+	var unit: Unit = _spawn(GRUNT, FIRST_TILE)
+	if unit == null:
+		return
+	var starting_gold: int = _arena.player_stats.gold
+	_select(unit)
+	var remove_button: Button = _arena.selected_unit_panel.get_node("%RemoveButton") as Button
+	if not _check(remove_button != null and remove_button.is_visible_in_tree(), "Remove button appears when a unit is selected"):
+		return
+	_check(not remove_button.disabled, "Remove button is enabled during preparation")
+	_check(remove_button.tooltip_text.contains("refund"), "Remove button tooltip explains the refund")
+
+	var deployed: int = _arena.unit_selection_panel.deployed_count
+	remove_button.pressed.emit()
+	await _frames()
+	_check(_unit_at(FIRST_TILE) == null, "Remove button deletes the selected unit from the grid")
+	_check(_arena._selected_unit == null and not _arena.selected_unit_panel.visible, "Remove button clears selection and hides the panel")
+	_check(_arena.player_stats.gold == starting_gold + GRUNT.gold_cost, "Remove button refunds the unit's gold cost")
+	_check(_arena.unit_selection_panel.deployed_count == deployed - 1, "Remove button decrements deployed count")
+
+	var king: Unit = get_tree().get_first_node_in_group("king") as Unit
+	if _check(king != null, "Real arena spawns a King"):
+		_select(king)
+		remove_button = _arena.selected_unit_panel.get_node("%RemoveButton") as Button
+		_check(is_instance_valid(remove_button) and remove_button.is_visible_in_tree() and remove_button.disabled, "Remove button is disabled for the King")
+		_check(remove_button.tooltip_text.contains("King"), "Remove button explains that the King cannot be removed")
+
+	var second: Unit = _spawn(GRUNT, SECOND_TILE)
+	if second == null:
+		_case_completed = true
+		return
+	_select(second)
+	remove_button = _arena.selected_unit_panel.get_node("%RemoveButton") as Button
+	_arena.battle_manager.start_battle()
+	await _frames()
+	_check(remove_button.disabled, "Remove button is disabled during battle")
+	_check(_unit_at(SECOND_TILE) == second and not second.is_queued_for_deletion(), "Disabled remove button does not delete the unit")
 	_case_completed = true

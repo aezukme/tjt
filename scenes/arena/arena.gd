@@ -14,8 +14,6 @@ const END_SCREEN_DELAY := 1.5  ## Seconds before transitioning to end screen
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var unit_spawner: UnitSpawner = $UnitSpawner
 @onready var battle_manager: BattleManager = $BattleManager
-@onready var unit_stats_container: VBoxContainer = $UI/UnitStatsContainer
-@onready var damage_output_value_label: Label = get_node_or_null("UI/UnitStatsContainer/DamageOutputBlock/DamageOutputValue")
 @onready var right_sidebar: RightSidebar = $UI/RightSidebar
 @onready var time_panel: TimePanel = $UI/TimePanel
 @onready var hud_bar: Control = $UI/HudBar
@@ -35,7 +33,6 @@ var wave_manager: Node
 var _placement_stats: UnitStats = null  ## The unit type being placed (null = not in placement mode)
 var _placement_ghost: Sprite2D = null  ## Ghost sprite following the cursor
 var _drag_placing: bool = false  ## True when placing via card drag (release to place)
-var _damage_output_total: int = 0
 var _selected_unit: Unit = null
 var _is_match_over: bool = false
 
@@ -67,6 +64,7 @@ func _ready() -> void:
 	for unit: Node in get_tree().get_nodes_in_group("player_units"):
 		_setup_unit_selection(unit)
 	selected_unit_panel.upgrade_requested.connect(_on_upgrade_requested)
+	selected_unit_panel.removal_requested.connect(_on_unit_removal_requested)
 	selected_unit_panel.deselection_requested.connect(_clear_unit_selection)
 	selected_unit_panel.set_player_stats(player_stats)
 	selected_unit_panel.set_unit(null)
@@ -189,7 +187,6 @@ func _set_selected_unit(unit: Unit) -> void:
 		print("[Selection] Deselected %s" % _selected_unit.stats.name)
 	_selected_unit = unit
 	if is_instance_valid(_selected_unit):
-		_set_deck_panel_visible(false)
 		_selected_unit.set_selected(true)
 		_selected_unit.health_reached_zero.connect(_clear_unit_selection)
 		_selected_unit.tree_exiting.connect(_on_selected_unit_tree_exiting)
@@ -210,7 +207,7 @@ func _refresh_selected_unit_panel() -> void:
 	if _selected_unit != null:
 		if not is_instance_valid(_selected_unit) or not _selected_unit.is_inside_tree() or _selected_unit.current_health <= 0.0:
 			_clear_unit_selection()
-	selected_unit_panel.set_upgrades_enabled(_can_modify_units())
+	selected_unit_panel.set_upgrades_enabled(_can_modify_units() and _placement_stats == null)
 	selected_unit_panel.refresh()
 
 
@@ -219,7 +216,7 @@ func _can_modify_units() -> bool:
 
 
 func _set_deck_panel_visible(show_panel: bool) -> void:
-	unit_selection_panel.visible = show_panel and _can_modify_units() and not is_instance_valid(_selected_unit) and _placement_stats == null
+	unit_selection_panel.visible = show_panel and _can_modify_units()
 	_update_toggle_button_text()
 
 
@@ -229,9 +226,9 @@ func _cancel_unit_drags() -> void:
 			unit.drag_and_drop.cancel()
 
 
-# ── Upgrade choices come from the selected unit panel ──
+# ── Upgrade and removal choices come from the selected unit panel ──
 func _on_upgrade_requested(unit: Unit, target: UnitStats) -> void:
-	if not is_instance_valid(unit) or unit != _selected_unit or not _can_modify_units():
+	if not is_instance_valid(unit) or unit != _selected_unit or not _can_modify_units() or _placement_stats != null:
 		return
 	for tile: Vector2i in game_area.unit_grid.units:
 		if game_area.unit_grid.units[tile] == unit:
@@ -239,10 +236,18 @@ func _on_upgrade_requested(unit: Unit, target: UnitStats) -> void:
 			return
 
 
+func _on_unit_removal_requested(unit: Unit) -> void:
+	if not is_instance_valid(unit) or unit != _selected_unit or not _can_modify_units() or _placement_stats != null:
+		return
+	for tile: Vector2i in game_area.unit_grid.units:
+		if game_area.unit_grid.units[tile] == unit:
+			print("[Arena] Removing %s at tile %s" % [unit.stats.name, tile])
+			_remove_placed_unit(tile)
+			return
+
+
 ## Called when battle starts - disable dragging.
 func _on_battle_started() -> void:
-	_damage_output_total = 0
-	_refresh_damage_output()
 	_set_drag_enabled(false)
 
 	# Reset per-unit damage counters at the start of each battle
@@ -277,20 +282,6 @@ func _on_preparation_started() -> void:
 	# Ensure Start button enabled in preparation
 	if start_battle_button:
 		start_battle_button.disabled = false
-
-
-## Records damage dealt to enemies for the left-side damage output readout.
-func register_damage_output(damage: float) -> void:
-	var applied_damage: int = max(0, int(round(damage)))
-	if applied_damage <= 0:
-		return
-	_damage_output_total += applied_damage
-	_refresh_damage_output()
-
-
-func _refresh_damage_output() -> void:
-	if damage_output_value_label:
-		damage_output_value_label.text = str(_damage_output_total)
 
 
 ## Called when battle ends with a winner.
@@ -391,9 +382,9 @@ func _on_start_battle_pressed() -> void:
 
 
 func _on_battle_state_changed(new_state: int) -> void:
-	var can_interact: bool = _can_modify_units()
+	var can_interact: bool = _can_modify_units() and _placement_stats == null
 	_set_drag_enabled(can_interact)
-	# Disable the start button outside preparation
+	# Disable the start button outside preparation or during placement
 	if start_battle_button:
 		start_battle_button.disabled = not can_interact
 		if new_state == BattleManager.State.PREPARATION:
@@ -423,9 +414,6 @@ func _on_toggle_units_pressed() -> void:
 		return
 	var show_deck: bool = not unit_selection_panel.visible
 	_cancel_unit_drags()
-	if _placement_stats:
-		unit_selection_panel.cancel_selection()
-	_clear_unit_selection()
 	_set_deck_panel_visible(show_deck)
 
 
@@ -440,30 +428,38 @@ func _update_toggle_button_text() -> void:
 
 ## Called when a card is clicked in the panel.
 func _on_panel_unit_selected(unit_stats: UnitStats) -> void:
-	if not _can_modify_units():
+	if not _can_modify_units() or _placement_stats != null:
 		return
-	_clear_unit_selection()
+	print("[Arena] Started placement for %s (%d gold)" % [unit_stats.name, unit_stats.gold_cost])
 	_placement_stats = unit_stats
 	_drag_placing = false
 	# Hide panel while placing
 	if unit_selection_panel:
 		unit_selection_panel.visible = false
 		_update_toggle_button_text()
+	_set_drag_enabled(false)
+	if start_battle_button:
+		start_battle_button.disabled = true
+	_refresh_selected_unit_panel()
 	# Create ghost sprite that follows the cursor
 	_create_placement_ghost(unit_stats)
 
 
 ## Called when a card is dragged in the panel — enters drag-placement mode.
 func _on_panel_unit_drag_started(unit_stats: UnitStats) -> void:
-	if not _can_modify_units():
+	if not _can_modify_units() or _placement_stats != null:
 		return
-	_clear_unit_selection()
+	print("[Arena] Started drag-placement for %s (%d gold)" % [unit_stats.name, unit_stats.gold_cost])
 	_placement_stats = unit_stats
 	_drag_placing = true
 	# Hide panel while dragging
 	if unit_selection_panel:
 		unit_selection_panel.visible = false
 		_update_toggle_button_text()
+	_set_drag_enabled(false)
+	if start_battle_button:
+		start_battle_button.disabled = true
+	_refresh_selected_unit_panel()
 	_create_placement_ghost(unit_stats)
 
 
@@ -521,10 +517,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# ── Click outside panel closes it ──
-	if not _placement_stats and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_set_deck_panel_visible(false)
-
 	# ── Quick sell: E key to delete hovered unit (during prep phase) ──
 	if not _placement_stats and event.is_action_pressed("quick_sell"):
 		if _can_modify_units() and game_area:
@@ -537,6 +529,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _placement_stats:
 		return
 	if not _can_modify_units():
+		print("[Arena] Placement cancelled: no longer in preparation")
 		unit_selection_panel.cancel_selection()
 		return
 
@@ -550,6 +543,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not want_place:
 			return
 		if not game_area:
+			print("[Arena] Placement failed: no game area")
 			if _drag_placing:
 				_exit_placement_mode()
 				if unit_selection_panel:
@@ -557,12 +551,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		var tile := game_area.get_hovered_tile()
 		if not game_area.is_tile_within_bounds(tile):
+			print("[Arena] Placement failed: tile %s is out of bounds" % tile)
 			if _drag_placing:
 				_exit_placement_mode()
 				if unit_selection_panel:
 					unit_selection_panel.cancel_selection()
 			return
 		if game_area.unit_grid.is_tile_occupied(tile):
+			print("[Arena] Placement failed: tile %s is occupied" % tile)
 			if _drag_placing:
 				_exit_placement_mode()
 				if unit_selection_panel:
@@ -570,27 +566,33 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 		# Spawn the unit at the chosen tile
+		print("[Arena] Placing %s at tile %s" % [_placement_stats.name, tile])
 		var spawned := unit_spawner.spawn_unit(_placement_stats, tile)
-		if spawned:
-			if unit_selection_panel:
-				unit_selection_panel.on_unit_placed(_placement_stats)
-			# Shift held → stay in placement mode for multi-place
-			if Input.is_key_pressed(KEY_SHIFT) and _placement_stats:
-				# Check if we can still afford
-				if player_stats and _placement_stats and player_stats.gold < _placement_stats.gold_cost:
-					_exit_placement_mode()
-					if unit_selection_panel:
-						unit_selection_panel.cancel_selection()
-				# else: keep ghost active, stay in placement mode
-			else:
+		if not spawned:
+			print("[Arena] Placement failed: spawn_unit returned null")
+			return
+		print("[Arena] Placed %s at tile %s" % [_placement_stats.name, tile])
+		if unit_selection_panel:
+			unit_selection_panel.on_unit_placed(_placement_stats)
+		# Shift held → stay in placement mode for multi-place
+		if Input.is_key_pressed(KEY_SHIFT) and _placement_stats:
+			# Check if we can still afford
+			if player_stats and _placement_stats and player_stats.gold < _placement_stats.gold_cost:
+				print("[Arena] Exiting placement: cannot afford another %s" % _placement_stats.name)
 				_exit_placement_mode()
 				if unit_selection_panel:
 					unit_selection_panel.cancel_selection()
+			# else: keep ghost active, stay in placement mode
+		else:
+			_exit_placement_mode()
+			if unit_selection_panel:
+				unit_selection_panel.cancel_selection()
 
 		get_viewport().set_input_as_handled()
 
 
 func _exit_placement_mode() -> void:
+	print("[Arena] Exiting placement mode")
 	_placement_stats = null
 	_drag_placing = false
 	# Remove ghost sprite
@@ -599,11 +601,16 @@ func _exit_placement_mode() -> void:
 		_placement_ghost = null
 	# Show panel again
 	_set_deck_panel_visible(true)
+	var can_interact: bool = _can_modify_units()
+	_set_drag_enabled(can_interact)
+	if start_battle_button:
+		start_battle_button.disabled = not can_interact
+	_refresh_selected_unit_panel()
 
 
 ## Removes a placed ally unit from the grid, refunds gold, and frees the node.
 func _remove_placed_unit(tile: Vector2i) -> void:
-	if not _can_modify_units():
+	if not _can_modify_units() or _placement_stats != null:
 		return
 	var unit: Unit = game_area.unit_grid.units.get(tile) as Unit
 	if not is_instance_valid(unit) or not unit.stats or unit.current_health <= 0.0 or unit.is_queued_for_deletion():
@@ -628,6 +635,7 @@ func _remove_placed_unit(tile: Vector2i) -> void:
 		unit_selection_panel.on_unit_removed()
 
 	# Free the unit
+	print("[Arena] Removed %s at tile %s (refunded %d gold)" % [unit.stats.name, tile, refund])
 	unit.queue_free()
 
 
@@ -719,7 +727,6 @@ func _process(delta: float) -> void:
 	_stats_update_timer -= delta
 	if _stats_update_timer <= 0:
 		_stats_update_timer = STATS_UPDATE_INTERVAL
-		update_stats_display()
 		_refresh_selected_unit_panel()
 
 	# Move placement ghost to snap to hovered tile
@@ -735,44 +742,6 @@ func _process(delta: float) -> void:
 				_placement_ghost.modulate = Color(0.3, 1.0, 0.5, 0.6)
 		else:
 			_placement_ghost.visible = false
-
-
-## Updates the unit stats display with current ally units.
-func update_stats_display() -> void:
-	if not unit_stats_container:
-		return
-
-	var ally_units: Array[Unit] = []
-	for unit_node in get_tree().get_nodes_in_group("player_units"):
-		if unit_node is Unit:
-			var unit := unit_node as Unit
-			if unit.stats and not unit.stats.is_king:
-				ally_units.append(unit)
-
-	unit_stats_container.visible = not ally_units.is_empty()
-	var current_panels = unit_stats_container.get_children()
-	
-	# Only rebuild panels if unit count changed or a panel points at a stale unit
-	# (e.g. after an in-place upgrade the count is unchanged but the node was replaced)
-	var needs_rebuild: bool = current_panels.size() != ally_units.size()
-	if not needs_rebuild:
-		for i in current_panels.size():
-			if current_panels[i].unit != ally_units[i]:
-				needs_rebuild = true
-				break
-	if needs_rebuild:
-		for child in current_panels:
-			child.queue_free()
-		
-		for unit_node in ally_units:
-			var panel = preload("res://scenes/arena/unit_stats_panel.tscn").instantiate()
-			unit_stats_container.add_child(panel)
-			panel.set_unit(unit_node)
-	else:
-		# Just update existing panels
-		for i in current_panels.size():
-			if i < ally_units.size():
-				current_panels[i].update_stats()
 
 
 ## Enables or disables dragging for all units.

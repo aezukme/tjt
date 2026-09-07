@@ -1,6 +1,6 @@
-[gd_resource type="SpriteFrames" load_steps=6 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cbn02fqs7iv8x"]
 
-[ext_resource type="Texture2D" path="res://asset/sprites/enemies/octopus/octopus.png" id="1_tex"]
+[ext_resource type="Texture2D" uid="uid://bpoo343ovihtf" path="res://asset/sprites/enemies/octopus/octopus.png" id="1_tex"]
 
 [sub_resource type="AtlasTexture" id="frame_0"]
 atlas = ExtResource("1_tex")
@@ -33,7 +33,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("frame_3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 6.0
 }, {
@@ -50,7 +50,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("frame_3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk",
 "speed": 8.0
 }]

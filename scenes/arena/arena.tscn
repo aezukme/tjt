@@ -106,18 +106,6 @@ offset_bottom = 200.0
 grow_horizontal = 2
 alignment = 1
 
-[node name="UnitStatsContainer" type="VBoxContainer" parent="UI" unique_id=1270896939]
-anchors_preset = -1
-anchor_left = 0.001
-anchor_top = 0.5
-anchor_right = 0.001
-anchor_bottom = 0.5
-offset_left = 9.04
-offset_top = -150.0
-offset_right = 79.04
-offset_bottom = 150.0
-grow_vertical = 2
-
 [node name="RightSidebar" parent="UI" unique_id=702302058 instance=ExtResource("33_right_sidebar")]
 custom_minimum_size = Vector2(120, 0)
 anchors_preset = 11
