@@ -100,8 +100,8 @@ func _process(delta: float) -> void:
 	_apply_separation(delta)
 
 	# Y-sort: units lower on screen render on top for depth illusion
-	# Only update when position changes AND unit is not hovered (hover sets z_index=4096)
-	if not ("is_hovered" in unit and unit.is_hovered):
+	# Only update when position changes AND unit is not highlighted (highlight sets z_index=4096)
+	if not ("is_hovered" in unit and unit.is_hovered) and not ("is_selected" in unit and unit.is_selected):
 		var y_z: int = int(unit.global_position.y)
 		if y_z != unit.z_index:
 			unit.z_index = y_z

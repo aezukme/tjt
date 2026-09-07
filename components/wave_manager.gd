@@ -439,6 +439,8 @@ func _save_ally_positions() -> void:
 	for unit in ally_units:
 		if not is_instance_valid(unit):
 			continue
+		if unit is Unit:
+			unit.drag_and_drop.cancel()
 		
 		# Find which tile this unit is on
 		var tile: Vector2i = Vector2i(-1, -1)

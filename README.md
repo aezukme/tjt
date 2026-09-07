@@ -61,9 +61,10 @@ systems, and progressive difficulty. Key features:
 - **Ability System**: mana-based abilities with auto-cast (Fireball,
   Mending Bolt, AOE), passive abilities (Warrior's Endurance), and
   projectile visuals
-- **Unit Upgrades**: Legion TD-style in-place upgrades during the build
-  phase — hover a placed unit and press **U** to pay the gold difference
-  and replace it with its stronger form (first path: Knight → Cavalier)
+- **Unit Selection & Upgrades**: select a placed ally to keep its outline
+  highlighted and inspect live stats and abilities in the bottom panel.
+  Choose an upgrade during preparation and pay only the gold difference;
+  Grunt can become Bloodfang or Ravager. The info panel and deck never overlap.
 - **Synergy System**: factions (Warrior / Mystic / Warden) grant stat
   bonuses when enough unique units of a faction are placed
 - **Economy**: gold rewards per wave; full economy (income, interest,
@@ -218,10 +219,11 @@ Each unit has the following stats (configured in .tres files):
 
 ## Controls
 
-- **Left click** — Select / drag units, place from panel
-- **Right click / Escape** — Cancel drag / placement
-- **Right click on placed unit** — Remove (refunds gold)
-- **U on hovered unit** — Upgrade in place (prep phase, if an upgrade exists)
+- **Left click on an ally** — Select and inspect; drag to reposition during preparation
+- **Right click / Escape** — Deselect or cancel drag / placement (never sells)
+- **E on hovered unit** — Sell during preparation (refunds the full invested gold)
+- **Upgrade buttons** — Choose an in-place upgrade in the selected-unit panel during preparation
+- **Space / Units button** — Toggle the deck panel and clear unit selection
 - **Shift + click** — Multi-place same unit type
 - **Middle click drag** — Pan camera
 - **Mouse wheel** — Zoom camera (0.5x - 2.0x)

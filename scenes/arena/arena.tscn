@@ -17,6 +17,7 @@
 [ext_resource type="Script" uid="uid://de3i018dnetpo" path="res://components/wave_manager.gd" id="16_wave_mgr"]
 [ext_resource type="Script" uid="uid://b6nyk11ct2wbt" path="res://data/waves/wave_config.gd" id="18_gy0qm"]
 [ext_resource type="PackedScene" path="res://scenes/unit_selection/unit_selection_panel.tscn" id="22_unit_sel"]
+[ext_resource type="PackedScene" path="res://scenes/unit_selection/selected_unit_panel.tscn" id="22_selected_unit"]
 [ext_resource type="Resource" uid="uid://dk4rxstn86o22" path="res://data/units/grunt_ally.tres" id="23_bjorn"]
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="24_unit_stats"]
 [ext_resource type="Resource" path="res://data/units/scout_ally.tres" id="25_knight"]
@@ -131,6 +132,8 @@ grow_vertical = 2
 
 [node name="UnitSelectionPanel" parent="UI" unique_id=630095761 instance=ExtResource("22_unit_sel")]
 available_units = Array[ExtResource("24_unit_stats")]([ExtResource("23_bjorn"), ExtResource("25_knight"), ExtResource("26_ranger"), ExtResource("8_6w4xk"), ExtResource("8_sage"), ExtResource("27_rogue"), ExtResource("29_slayer"), ExtResource("29_druid")])
+
+[node name="SelectedUnitPanel" parent="UI" instance=ExtResource("22_selected_unit")]
 
 [node name="SynergyManager" type="Node" parent="." unique_id=2092391747]
 script = ExtResource("30_syn_mgr")

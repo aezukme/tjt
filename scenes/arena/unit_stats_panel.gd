@@ -92,7 +92,7 @@ func _build_tooltip() -> String:
 		lines.append("Passive: %s" % unit.stats.passive_ability.passive_name)
 	for upgrade in unit.stats.upgrades:
 		if upgrade:
-			lines.append("Upgrade [U]: %s (%d gold)" % [upgrade.name, unit.stats.get_upgrade_cost(upgrade)])
+			lines.append("Select unit to upgrade: %s (%d gold)" % [upgrade.name, unit.stats.get_upgrade_cost(upgrade)])
 	return "\n".join(lines)
 
 

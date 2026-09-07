@@ -14,7 +14,7 @@
 - [x] Deck-building sistem — pre-match unit set selekcija (OCG stil).
 - [ ] King selekcija — biranje tipa Kinga pre partije.
 - [ ] King aura — pasivni efekti Kinga na defendere.
-- [~] Unit upgrade path-ovi — per-unit upgrade (Legion TD stil), tier 1-7. **Svaki unit ima upgrade.** Ostaje: UI dugme/popup za izbor kada unit ima 2+ upgrade-a.
+- [x] Unit upgrade paths — tiers 1-7, every current defender has an upgrade, with branch choices in the selected-unit info panel.
 - [ ] PvP slanje unita — iz ličnog deck-a, bez posebnog barracks-a.
 - [ ] Multiplayer — 1v1, 2v2, 3v3, 4v4, coop (server authoritative).
 - [ ] Map / lane dizajn — više arena layout-a.
@@ -108,13 +108,18 @@
 - [x] `UnitStats.upgrades: Array[UnitStats]` — base unit lists its upgrade options
 - [x] Upgraded unit's `gold_cost` = total value; upgrade price = difference (full refund on sell)
 - [x] `UnitStats.unit_line` — base + upgrade count as ONE unique unit for synergies
-- [x] Hover placed unit + **U** during prep → in-place upgrade (position preserved, toast + VFX)
+- [x] Select a placed ally and choose an upgrade button during prep (position and selection preserved, toast + VFX)
 - [x] `PassiveAbility.DAMAGE_REDUCTION` implemented — flat per-hit reduction (deterministic, min 1 dmg)
 - [x] **Sentinel → Vanguard** (1770 HP / 186 ATK / 1.0 AS / 15 AR / 20 MR, cost 5 → 10) with *Iron Skin* (-6 dmg per hit)
 - [x] Upgrade info shown in card tooltip and unit stats panel tooltip
 - [x] Upgrade paths for all units (Grunt, Scout, Acolyte, Cleric, Sentinel, Slayer, Shaman) — see `UNIT_BLUEPRINTS.md` §4
-- [ ] Branching upgrades (2 options) → choice popup instead of hotkey
-- [ ] Upgrade button in unit info UI (currently hotkey only)
+- [x] Branching upgrades: Grunt chooses Bloodfang (+1 gold) or Ravager (+3 gold)
+- [x] Selected-unit bottom panel shows live stats, abilities, and upgrade buttons instead of the U hotkey
+- [x] Selected outline persists after hover exit and during combat; right-click / Escape deselects
+- [x] Info and deck panels are mutually exclusive; opening the deck clears selection
+- [x] Upgrades require preparation and sufficient gold; a failed replacement restores the original unit and payment
+- [x] Bloodrage data uses BERSERK with fractional bonuses; threshold, healing, wave reset, live UI, and AI attack interval regressions are covered
+- [x] Native Godot regression scene: `tests/arena_selection_test.tscn` (includes actual viewport picking and GUI upgrade clicks)
 
 ### Tier & Ability Framework ✅ (foundation) — see `UNIT_BLUEPRINTS.md`
 - [x] Tiers 1-7 on UnitStats; roster assigned T1-T5
@@ -289,9 +294,9 @@
 - [ ] Balance gold costs vs wave rewards curve
 
 ### Build Phase UX
-- [x] Right-click to remove placed units (refunds full gold cost)
-- [x] Quick sell hotkey (E key removes hovered unit during prep phase)
-- [ ] Drag units to reposition during build phase
+- [x] Right-click / Escape clears selection or cancels placement / drag, without selling
+- [x] Quick sell hotkey (E key removes hovered unit during prep phase and refunds the full invested gold)
+- [x] Drag placed units to reposition during build phase; an 8-pixel threshold keeps ordinary clicks from moving them
 - [ ] Unit tooltip on hover (full stats, ability description)
 - [ ] Undo last placement button
 - [ ] Quick-buy hotkeys (1-9 for unit types)
@@ -354,6 +359,8 @@
 - [x] ~~`[dummy] → [dummy]` target change spam~~ (dummy target reused instead of recreated)
 - [x] ~~`[Ability] No valid targets` fireball spam~~ (moved to verbose logging)
 - [ ] `target changed [unit] → [unit]` log noise (same-name different instances)
+- [ ] Audit Executioner's Strike data: it currently serializes DAMAGE_BONUS (`passive_type = 2`, `value = 4.0`) instead of the documented every-fourth-hit multiplier. Bloodrage's separate resource mismatch is fixed.
+- [ ] Investigate headless shutdown diagnostics: two ObjectDB instances and the UnitStats script resource remain in use. Reproduced in Main Menu and Arena launches as well as the regression scene; regression assertions pass.
 - [ ] `[Ability] [unit] ability ready!` × 5 spam when multiple units ready simultaneously
 - [ ] ~~Fix sage_ally.tres UID warning~~ (Sage removed from roster)
 - [ ] Consistent naming conventions (snake_case vs PascalCase)
@@ -369,7 +376,7 @@
 |------|------|----|-----|------|-------|------|--------|---------|
 | Grunt (Warrior) | 1 | 100 | 10 | 1.0 | 1 (melee) | 1💰 | — | Bloodrage (+20/40/60% AS below 60/40/20% HP) |
 | ↳ Bloodfang (upgrade) | 1 | 500 | 50 | 1.0 | 1 (melee) | 2💰 (1+1) | — | Bloodrage |
-| ↳ Ravager (upgrade) | 1 | 1050 | 60 | 0.6 | 1 (melee) | 4💰 (1+3) | — | Bloodrage (stronger) |
+| ↳ Ravager (upgrade) | 1 | 1050 | 60 | 0.6 | 1 (melee) | 4💰 (1+3) | — | Greater Bloodrage (+30/60/90% AS below 60/40/20% HP) |
 | Scout (Warden) | 2 | 110 | 17 | 0.9 | 4 (ranged) | 2💰 | Piercing Shot (120 dmg) | Eagle Eye (every 3rd shot ×1.6) |
 | ↳ Hawkeye (upgrade) | 2 | 335 | 42 | 0.9 | 4 (ranged) | 4💰 (2+2) | Piercing Shot | Eagle Eye |
 | Acolyte (Mystic) | 3 | 350 | 20 | 1.0 | 3 (ranged) | 3💰 | Ember Bolt (100 dmg) | Arcane Bolt (+15 magical per attack) |

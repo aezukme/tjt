@@ -288,11 +288,12 @@ Implemented (foundation):
 - First path: **Sentinel → Vanguard** (Iron Skin: flat -6 damage per hit,
   deterministic — no chance rolls, per Pillar 6)
 
-Planned:
-
-- Upgrade paths for every unit
-- Branching upgrades (two options) with a choice popup
-- Upgrade button in the unit info UI (currently hotkey **U**)
+- Upgrade paths for every current defender
+- Selected-unit bottom panel with live stats, ability descriptions, and upgrade buttons
+- Branching upgrades: Grunt chooses Bloodfang or Ravager; only the chosen price difference is paid
+- Left-click selects a placed ally; right-click or Escape deselects without selling
+- Selection remains available during combat, but upgrading requires preparation
+- The selected-unit panel and the deck panel are mutually exclusive; opening the deck clears selection
 
 ---
 

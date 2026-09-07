@@ -61,7 +61,7 @@ func start_battle() -> void:
 	# Disable tile highlighters during battle
 	_enable_tile_highlighters(false)
 	
-	# Clear any unit highlights
+	# Clear hover highlights while preserving the selected unit's outline
 	_clear_all_unit_highlights()
 
 
@@ -107,12 +107,15 @@ func _enable_tile_highlighters(enabled: bool) -> void:
 		enemy_area.tile_highlighter.enabled = enabled
 
 
-## Clears highlights on all units.
+## Clears hover highlights on all units without losing persistent selection.
 func _clear_all_unit_highlights() -> void:
 	var all_units := get_tree().get_nodes_in_group("units")
 	
 	for unit in all_units:
-		if unit.has_node("OutlineHighlighter"):
+		if unit is Unit:
+			unit.is_hovered = false
+			unit.refresh_highlight()
+		elif unit.has_node("OutlineHighlighter"):
 			var highlighter = unit.get_node("OutlineHighlighter")
 			highlighter.clear_highlight()
 

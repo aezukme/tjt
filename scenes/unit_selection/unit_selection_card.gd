@@ -149,7 +149,7 @@ func _build_tooltip() -> String:
 		lines.append("Synergy: %s" % _faction_tooltip(unit_stats.faction))
 	for upgrade in unit_stats.upgrades:
 		if upgrade:
-			lines.append("Upgrade [U]: %s (+%d gold)" % [upgrade.name, unit_stats.get_upgrade_cost(upgrade)])
+			lines.append("Select placed unit to upgrade: %s (+%d gold)" % [upgrade.name, unit_stats.get_upgrade_cost(upgrade)])
 	return "\n".join(lines)
 
 

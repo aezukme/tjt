@@ -8,6 +8,7 @@ signal health_changed(new_health: int)
 signal mana_bar_filled
 signal mana_changed(new_mana: int)  # Receives int for UI display
 signal damage_dealt_changed(new_damage: float)
+signal selection_requested(unit: Unit)
 
 const CELL_SIZE := Vector2(32, 32)
 
@@ -24,7 +25,8 @@ const DEBUG_AI_VERBOSE: bool = false
 @onready var outline_highlighter: OutlineHighlighter = $OutlineHighlighter
 @onready var animator: UnitAnimator = $UnitAnimator
 
-var is_hovered := false
+var is_hovered: bool = false
+var is_selected: bool = false
 var _health_flash_id: int = 0
 var _skin_flash_id: int = 0
 var _is_dead: bool = false  ## Guard: prevents multiple death signal emissions
@@ -55,6 +57,8 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		drag_and_drop.drag_started.connect(_on_drag_started)
 		drag_and_drop.drag_canceled.connect(_on_drag_canceled)
+		drag_and_drop.dropped.connect(_on_drag_dropped)
+		input_event.connect(_on_selection_input_event)
 		
 		# Connect mana bar filled for ability casting
 		mana_bar_filled.connect(_on_mana_bar_filled)
@@ -208,6 +212,10 @@ func _set_current_mana(value: float) -> void:
 
 ## Called when unit's health reaches zero.
 func _on_health_reached_zero() -> void:
+	input_pickable = false
+	drag_and_drop.enabled = false
+	is_hovered = false
+	set_selected(false)
 	# _is_dead guard in _set_current_health prevents duplicate calls
 	# Permadeath toast — only for player units (not King, not enemies)
 	if stats.team == UnitStats.Team.PLAYER and not stats.is_king:
@@ -296,37 +304,56 @@ func _swap_to_animated_sprite(value: UnitStats) -> void:
 func reset_after_dragging(starting_position: Vector2) -> void:
 	velocity_based_rotation.enabled = false
 	global_position = starting_position
+	refresh_highlight()
 
 ## Called when dragging starts; enables velocity-based rotation.
 func _on_drag_started() -> void:
 	velocity_based_rotation.enabled = true
 	#outline_highlighter.clear_highlight()
+	refresh_highlight()
 
 ## Called when dragging is canceled; resets the unit's state.
 func _on_drag_canceled(starting_position: Vector2) -> void:
 	reset_after_dragging(starting_position)
 
-## Highlights the unit when the mouse enters, unless dragging or during battle.
-func _on_mouse_entered() -> void:
-	if drag_and_drop.dragging:
-		return
-	
-	var battle_manager = get_tree().get_first_node_in_group("battle_manager")
-	if battle_manager and battle_manager.current_state == 1:  # State.BATTLE
-		return
-	
-	is_hovered = true
-	outline_highlighter.highlight()
-	z_index = 4096  # Above any Y-sort value
 
-## Clears highlight when the mouse exits, unless dragging.
-func _on_mouse_exited() -> void:
-	if drag_and_drop.dragging:
+func _on_drag_dropped(_starting_position: Vector2) -> void:
+	velocity_based_rotation.enabled = false
+	refresh_highlight.call_deferred()
+
+
+func _on_selection_input_event(_viewport: Node, event: InputEvent, _shape_index: int) -> void:
+	if not _is_dead and event.is_action_pressed("select"):
+		selection_requested.emit(self)
+
+
+func set_selected(selected: bool) -> void:
+	is_selected = selected and not _is_dead
+	refresh_highlight()
+
+
+func refresh_highlight() -> void:
+	if not is_node_ready():
 		return
-	
+	if not _is_dead and (is_selected or is_hovered or drag_and_drop.dragging):
+		outline_highlighter.highlight()
+		z_index = 4096  # Above any Y-sort value
+	else:
+		outline_highlighter.clear_highlight()
+		z_index = int(global_position.y)  # Restore Y-sort value
+
+
+## Highlights living units on hover in both preparation and battle.
+func _on_mouse_entered() -> void:
+	if _is_dead:  # Dead units cannot be inspected
+		return
+	is_hovered = true
+	refresh_highlight()
+
+## Clears the hover state without removing a selected unit's highlight.
+func _on_mouse_exited() -> void:
 	is_hovered = false
-	outline_highlighter.clear_highlight()
-	z_index = int(global_position.y)  # Restore Y-sort value
+	refresh_highlight()
 
 
 ## Called when mana bar is filled - cast ability if available

@@ -1,14 +1,21 @@
-[gd_resource type="Resource" script_class="UnitStats" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitStats" load_steps=4 format=3]
 
 [ext_resource type="Script" uid="uid://xf3ubegfusxx" path="res://data/units/unit_stats.gd" id="1_stats"]
-[ext_resource type="Resource" path="res://data/abilities/bloodrage.tres" id="2_passive"]
+[ext_resource type="Script" path="res://data/abilities/passive_ability.gd" id="2_passive"]
+
+[sub_resource type="Resource" id="RavagerBloodrage"]
+script = ExtResource("2_passive")
+passive_name = "Greater Bloodrage"
+description = "Increases attack speed by 30% below 60% HP, 60% below 40% HP, and 90% below 20% HP. Healing removes the corresponding bonuses."
+passive_type = 13
+value = 0.3
 
 [resource]
 script = ExtResource("1_stats")
 name = "Ravager"
 gold_cost = 4
 tier = 1
-skin_coordinates = Vector2i(1, 3)
+skin_coordinates = Vector2i(0, 0)
 max_health = 1050
 health_regen = 2.0
 max_mana = 100
@@ -20,7 +27,7 @@ armor = 8
 magic_resist = 25
 attack_range = 1
 aggro_range = 5
-passive_ability = ExtResource("2_passive")
+passive_ability = SubResource("RavagerBloodrage")
 faction = 1
 unit_line = "Grunt"
 metadata/_custom_type_script = "uid://xf3ubegfusxx"

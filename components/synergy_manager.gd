@@ -45,6 +45,8 @@ func register_unit(unit: Node) -> void:
 	if unit in _tracked_units:
 		return
 	_tracked_units.append(unit)
+	if is_synergy_active(unit.stats.faction):
+		_store_and_apply(unit, SYNERGY_DEFS[unit.stats.faction])
 	# Unregister automatically when the unit leaves the tree
 	unit.tree_exited.connect(_on_unit_removed.bind(unit))
 	_recompute()

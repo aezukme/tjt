@@ -48,7 +48,7 @@ Names are original, inspired by — but not copied from — the Legion TD Mega B
 |------|------|------|---------|------|--------|---------|-------------|
 | **Grunt** | 1 | 1 | Warrior | Melee bruiser | — | ✅ **Bloodrage** (+20/40/60% AS below 60/40/20% HP) | Orc Warrior line |
 | ↳ **Bloodfang** | 1 | 2 (1+1) | Warrior | Melee bruiser | — | ✅ **Bloodrage** | Blood Orc Warrior |
-| ↳ **Ravager** | 1 | 4 (1+3) | Warrior | Heavy melee | — | ✅ **Bloodrage** (stronger) | Wolverine |
+| ↳ **Ravager** | 1 | 4 (1+3) | Warrior | Heavy melee | — | ✅ **Greater Bloodrage** (+30/60/90% AS below 60/40/20% HP) | Wolverine |
 | **Scout** | 2 | 2 | Warden | Long-range DPS | ✅ Piercing Shot (120 dmg projectile) | ✅ **Eagle Eye** (every 3rd shot ×1.6) | Ranger → Meliai |
 | ↳ **Hawkeye** | 2 | 4 (2+2) | Warden | Long-range DPS | ✅ Piercing Shot | ✅ **Eagle Eye** | Meliai |
 | **Acolyte** | 3 | 3 | Mystic | Ranged caster | ✅ Ember Bolt (100 dmg projectile) | ✅ **Arcane Bolt** (+15 magical per attack) | Sentry → Nightsaber |
@@ -100,7 +100,7 @@ ability damage never triggers on-hit passives.
 | ARMOR_SHRED | `corruption.tres` | 🧩 | −4 armor per hit, permanent, floor 0 | — |
 | SPLASH | `circle_splash.tres` | 🧩 | 50% dmg to enemies within 48 px of target | — |
 | MULTISHOT | `burst_shot.tres` | 🧩 | 50% dmg to 2 nearest other enemies | — |
-| BERSERK | `bloodrage.tres` | ✅ Grunt | AS scales with missing HP | Grunt, Bloodfang, Ravager |
+| BERSERK | `bloodrage.tres`, Ravager's inline Greater Bloodrage resource | ✅ Grunt | AS scales at strict HP thresholds; healing and wave reset remove bonuses | Grunt, Bloodfang (+20% per threshold), Ravager (+30% per threshold) |
 
 ### 3.2 Active abilities (`Ability` subclasses) — ✅ implemented
 
@@ -145,7 +145,7 @@ All upgrades keep the base tier and `unit_line`.
 
 ### Grunt (T1, Warrior)
 - **→ Bloodfang** ✅ · 500 / 50 / 1.0 / 5 / 20 · cost 1+1 · passive *Bloodrage* · inspired by Blood Orc Warrior
-- **→ Ravager** ✅ · 1050 / 60 / 0.6 / 8 / 25 · cost 1+3 · passive *Bloodrage* (stronger) · inspired by Wolverine
+- **→ Ravager** ✅ · 1050 / 60 / 0.6 / 8 / 25 · cost 1+3 · passive *Greater Bloodrage* (+30/60/90% AS below 60/40/20% HP) · slower, tougher frontline alternative with a distinct axe-warrior sprite · inspired by Wolverine
 
 ### Scout (T2, Warden)
 - **→ Hawkeye** ✅ · 335 / 42 / 0.9 / 2 / 15 · cost 2+2 · *Eagle Eye* + **Piercing Shot** · inspired by Meliai
@@ -175,8 +175,8 @@ All upgrades keep the base tier and `unit_line`.
 
 ## 5. New Unit Blueprints (fill the empty tiers)
 
-Sprite slots still free on `asset/sprites/rogues.png` (5×5 grid, 32 px):
-(0,0) (1,0) (4,0) (1,1) (2,1) (3,1) (0,2) (3,2) (0,3) (2,3) (3,3) (4,3) (1,4) (3,4) (4,4).
+Sprite slots still free on `asset/sprites/rogues.png` (5×5 grid, 32 px; Ravager uses (0,0)):
+(1,0) (4,0) (1,1) (2,1) (3,1) (0,2) (3,2) (0,3) (2,3) (3,3) (4,3) (1,4) (3,4) (4,4).
 
 ### Tier 1
 | Unit | Faction | Stats | Ability | Source | Engine |
@@ -247,4 +247,4 @@ cannot be sent to the opponent in PvP, King aura interacts with them.
 3. **Second passive slot** (`passive_abilities: Array[PassiveAbility]`) → Hawkeye, Bloodfang, Avatar.
 4. **Temporary summons** (spawner flag `is_summon`, freed at wave end, excluded from permadeath toasts and deployed count) → Raise Dead, Invoke Inferno, Mitosis, Goblin Driver, Storm Geyser.
 5. **On-death triggers** (`PassiveAbility.on_death`) → Tree of Life / Knowledge, Mitosis.
-6. **Upgrade choice popup** for branching upgrades (currently hotkey U takes `upgrades[0]`).
+6. **Upgrade choice UI** is implemented in the selected-unit bottom panel: each branch has its own button and incremental price; Grunt exposes Bloodfang and Ravager.

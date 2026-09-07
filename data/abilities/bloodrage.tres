@@ -6,5 +6,5 @@
 script = ExtResource("1")
 passive_name = "Bloodrage"
 description = "Increases attack speed by 20% when below 60% HP, 40% below 40% HP, and 60% below 20% HP."
-passive_type = 1
-value = 20.0
+passive_type = 13
+value = 0.2

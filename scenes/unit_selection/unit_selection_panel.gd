@@ -157,9 +157,22 @@ func _update_affordability() -> void:
 
 ## Sets the player stats resource (called by arena).
 func set_player_stats(stats: PlayerStats) -> void:
+	if player_stats and player_stats.changed.is_connected(_on_player_stats_changed):
+		player_stats.changed.disconnect(_on_player_stats_changed)
 	player_stats = stats
+	if player_stats:
+		player_stats.changed.connect(_on_player_stats_changed)
+	_on_player_stats_changed()
+
+
+func _on_player_stats_changed() -> void:
 	_update_affordability()
 	_update_info()
+
+
+func _exit_tree() -> void:
+	if player_stats and player_stats.changed.is_connected(_on_player_stats_changed):
+		player_stats.changed.disconnect(_on_player_stats_changed)
 
 
 ## Disables interaction during battle.

@@ -73,6 +73,8 @@ asset/       # Sprites, tilesets, fonts, audio, shaders
 - Check for parse errors in Output panel
 - Test wave 1 (should be challenging: 10 goblins + 6 orcs + 5 skeleton archers)
 - Verify: King death = game over, permadeath toasts appear, Victory/GameOver stats display
+- Run selected-unit regression checks with Godot 4.7+: `godot --headless --path . res://tests/arena_selection_test.tscn` (use the installed Godot executable if it is not on PATH).
+- Arena regression tests use a scene-based `Node` runner, not `--script`: the `DeckManager` autoload must be registered before Arena is compiled.
 
 ## Required Reading
 
@@ -81,6 +83,8 @@ Before working on any **unit** design, balance, or ability task, every agent **m
 - `reference/legion_td_mega_book.md` — full extracted text of the *Legion TD Mega Book (Overall Strategical Guide) 3.41* forum thread. This is the **primary and exclusive external reference for unit design** — tower stats, abilities, tiers, armor/damage types, upgrades, and balance. Use it to inform unit stats, abilities, and upgrade paths.
 
 > **Note:** The Mega Book also covers King mechanics, income, placement, and other systems. Those parts are **reference only** — TJT's King, economy, and meta-systems follow `Game Design Document.md`, not the Mega Book. Use the reference exclusively for **units** (towers/defenders).
+
+Keep `reference/` ignored by Git; reference files must not become commit candidates. Configure agent access separately instead of removing Git ignore rules. If the running session still blocks access, ask the user to reload the session or explicitly approve another local reference.
 
 ## Current Priorities
 
